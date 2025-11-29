@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="img/png" href="index-files/imgs/onchain-small.png">
+    <title>Onchain - Gateway to Web3 Journey</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="index-files/styles.css">
+</head>
+
+<body>
+    <!-- Particles Background -->
+    <div id="particles-js"></div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <img src="index-files/imgs/onchain-small.png" alt="Onchain Logo">
+                <span class="logo-text">Onchain</span>
+            </div>
+
+            <nav class="desktop-nav">
+                <ul>
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="#how-it-works">How It Works</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <div class="mobile-nav" id="mobileNav">
+                <div class="mobile-nav-header">
+                    <div class="logo">
+                        <img src="index-files/imgs/onchain-small.png" alt="Onchain Logo">
+                        <span class="logo-text">Onchain</span>
+                    </div>
+                    <button class="close-mobile-menu" id="closeMobileMenu">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <ul>
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="#how-it-works">How It Works</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1>Gateway to Your <span>Web3 Journey</span></h1>
+            <p>Buy Airtime, Pay Bills, Trade Assets—All On-Chain with TON Blockchain.</p>
+            <div class="cta-buttons">
+                <button class="btn primary-btn" onclick="window.location.href = 'app/login'">Login</button>
+                <button class="btn secondary-btn" onclick="window.location.href = 'app/register'">Sign-Up</button>
+            </div>
+            <div class="onchain-coin">
+
+                <img src="index-files/imgs/onchain.png" alt="" srcset="">
+            </div>
+        </section>
+
+        <!-- Services Section -->
+        <section class="section" id="services">
+            <div class="section-title">
+                <h2>Our Services</h2>
+                <p>Everything you need for your daily life, powered by blockchain</p>
+            </div>
+            <div class="services-grid">
+                <div class="service-card" data-service="airtime">
+                    <div class="icon"><i class="fas fa-mobile-alt"></i></div>
+                    <h3>Airtime</h3>
+                    <p>Top up your phone instantly using TON blockchain</p>
+                    <div class="ton-badge"></div>
+                </div>
+                <div class="service-card" data-service="data">
+                    <div class="icon"><i class="fas fa-wifi"></i></div>
+                    <h3>Data</h3>
+                    <p>Purchase mobile data packages securely on-chain</p>
+                    <div class="ton-badge"></div>
+                </div>
+                <div class="service-card" data-service="bills">
+                    <div class="icon"><i class="fas fa-lightbulb"></i></div>
+                    <h3>Bills</h3>
+                    <p>Pay electricity and utility bills with crypto</p>
+                    <div class="ton-badge"></div>
+                </div>
+                <div class="service-card" data-service="education">
+                    <div class="icon"><i class="fas fa-graduation-cap"></i></div>
+                    <h3>Education</h3>
+                    <p>Pay for WAEC, NECO, JAMB and more</p>
+                    <div class="ton-badge"></div>
+                </div>
+                <div class="service-card" data-service="marketplace">
+                    <div class="icon"><i class="fas fa-store"></i></div>
+                    <h3>Marketplace</h3>
+                    <p>Trade real-world assets peer-to-peer</p>
+                    <div class="ton-badge"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Value Proposition Section -->
+        <section class="section">
+            <div class="container">
+                <div class="value-prop">
+                    <div class="value-prop-image">
+                        <div class="blockchain-visual"></div>
+                    </div>
+                    <div class="value-prop-content">
+                        <h3>Why Choose Onchain?</h3>
+                        <div class="benefit-item" id="benefit1">
+                            <div class="benefit-icon"><i class="fas fa-bolt"></i></div>
+                            <div>
+                                <h4>Lightning Fast</h4>
+                                <p>TON blockchain enables transactions that are faster and cheaper than traditional
+                                    methods.</p>
+                            </div>
+                        </div>
+                        <div class="benefit-item" id="benefit2">
+                            <div class="benefit-icon"><i class="fas fa-lock"></i></div>
+                            <div>
+                                <h4>Secure & Transparent</h4>
+                                <p>Every transaction is recorded on-chain, providing unmatched security and
+                                    transparency.</p>
+                            </div>
+                        </div>
+                        <div class="benefit-item" id="benefit3">
+                            <div class="benefit-icon"><i class="fas fa-exchange-alt"></i></div>
+                            <div>
+                                <h4>Peer-to-Peer</h4>
+                                <p>Cut out middlemen and trade directly with other users in our marketplace.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section class="section" id="how-it-works">
+            <div class="section-title">
+                <h2>How It Works</h2>
+                <p>Get started with Onchain in just 3 simple steps</p>
+            </div>
+            <div class="steps-container">
+                <div class="progress-line" id="progressLine"></div>
+                <div class="steps">
+                    <div class="step active" data-step="1">
+                        <div class="step-circle">1</div>
+                        <div class="step-text">Connect Wallet</div>
+                    </div>
+                    <div class="step" data-step="2">
+                        <div class="step-circle">2</div>
+                        <div class="step-text">Select Service</div>
+                    </div>
+                    <div class="step" data-step="3">
+                        <div class="step-circle">3</div>
+                        <div class="step-text">Confirm On-Chain</div>
+                    </div>
+                </div>
+                <div class="step-content">
+                    <div class="step-panel active" data-step="1">
+                        <h3>Connect Your TON Wallet</h3>
+                        <p>Securely connect your favorite TON wallet to get started. We support all major TON wallets.
+                        </p>
+                        <img src="index-files/imgs/onchain.png" alt="TON Wallet" style="height: 100px; margin: 20px 0;">
+                    </div>
+                    <div class="step-panel" data-step="2">
+                        <h3>Choose Your Service</h3>
+                        <p>Select from our range of services - airtime, data, bills, education payments, or marketplace.
+                        </p>
+                        <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px;">
+                            <i class="fas fa-mobile-alt" style="font-size: 2rem; color: var(--accent);"></i>
+                            <i class="fas fa-wifi" style="font-size: 2rem; color: var(--accent);"></i>
+                            <i class="fas fa-lightbulb" style="font-size: 2rem; color: var(--accent);"></i>
+                            <i class="fas fa-graduation-cap" style="font-size: 2rem; color: var(--accent);"></i>
+                        </div>
+                    </div>
+                    <div class="step-panel" data-step="3">
+                        <h3>Confirm On Blockchain</h3>
+                        <p>Review and confirm your transaction. It will be processed instantly on the TON blockchain.
+                        </p>
+                        <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px;">
+                            <i class="fas fa-lock" style="font-size: 2rem; color: var(--accent);"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="backed-by">
+            <h2>Backed By</h2>
+            <p>ACC (AREWA CRYPTO COMMUNITY)</p>
+            <img src="index-files/imgs/acc.png" alt="">
+            <div class="social-links">
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-telegram"></i></a>
+                <a href="#"><i class="fab fa-discord"></i></a>
+            </div>
+        </section>
+        <!-- Final CTA Section -->
+        <section class="final-cta">
+            <h2>Ready for Your Web3 Journey?</h2>
+            <p>Join thousands of users already enjoying seamless on-chain transactions with Onchain</p>
+            <button class="glow-btn">Start Now</button>
+            <div class="tooltip">No wallet? Click here to learn how!</div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <div class="footer-logo">
+                <img src="index-files/imgs/onchain-black.png" alt="TON Logo">
+                <span class="logo-text">Onchain</span>
+            </div>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-telegram"></i></a>
+                <a href="#"><i class="fab fa-discord"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+            </div>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">FAQ</a>
+                <a href="#">Contact Us</a>
+            </div>
+            <div class="ton-powered">
+                <span>Powered by</span>
+                <img src="https://ton.org/download/ton_symbol.svg" alt="TON">
+                <span>TON Blockchain</span>
+            </div>
+            <div class="copyright">
+                &copy; 2023 Onchain. All rights reserved.
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        // Mobile Menu Toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const closeMobileMenu = document.getElementById('closeMobileMenu');
+        const mobileNav = document.getElementById('mobileNav');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileNav.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        closeMobileMenu.addEventListener('click', () => {
+            mobileNav.classList.remove('active');
+            document.body.style.overflow = '';
+        });
+
+        // Close mobile menu when clicking on a link
+        document.querySelectorAll('.mobile-nav a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileNav.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+        });
+
+        // Particles.js Configuration
+        particlesJS('particles-js', {
+            "particles": {
+                "number": {
+                    "value": 80,
+                    "density": {
+                        "enable": true,
+                        "value_area": 800
+                    }
+                },
+                "color": {
+                    "value": "#00f2c3"
+                },
+                "shape": {
+                    "type": "circle",
+                    "stroke": {
+                        "width": 0,
+                        "color": "#000000"
+                    },
+                    "polygon": {
+                        "nb_sides": 5
+                    }
+                },
+                "opacity": {
+                    "value": 0.3,
+                    "random": false,
+                    "anim": {
+                        "enable": false,
+                        "speed": 1,
+                        "opacity_min": 0.1,
+                        "sync": false
+                    }
+                },
+                "size": {
+                    "value": 3,
+                    "random": true,
+                    "anim": {
+                        "enable": false,
+                        "speed": 40,
+                        "size_min": 0.1,
+                        "sync": false
+                    }
+                },
+                "line_linked": {
+                    "enable": true,
+                    "distance": 150,
+                    "color": "#00f2c3",
+                    "opacity": 0.2,
+                    "width": 1
+                },
+                "move": {
+                    "enable": true,
+                    "speed": 2,
+                    "direction": "none",
+                    "random": false,
+                    "straight": false,
+                    "out_mode": "out",
+                    "bounce": false,
+                    "attract": {
+                        "enable": false,
+                        "rotateX": 600,
+                        "rotateY": 1200
+                    }
+                }
+            },
+            "interactivity": {
+                "detect_on": "canvas",
+                "events": {
+                    "onhover": {
+                        "enable": true,
+                        "mode": "grab"
+                    },
+                    "onclick": {
+                        "enable": true,
+                        "mode": "push"
+                    },
+                    "resize": true
+                },
+                "modes": {
+                    "grab": {
+                        "distance": 140,
+                        "line_linked": {
+                            "opacity": 1
+                        }
+                    },
+                    "bubble": {
+                        "distance": 400,
+                        "size": 40,
+                        "duration": 2,
+                        "opacity": 8,
+                        "speed": 3
+                    },
+                    "repulse": {
+                        "distance": 200,
+                        "duration": 0.4
+                    },
+                    "push": {
+                        "particles_nb": 4
+                    },
+                    "remove": {
+                        "particles_nb": 2
+                    }
+                }
+            },
+            "retina_detect": true
+        });
+
+        // Animate Benefits on Scroll
+        const animateOnScroll = () => {
+            const benefit1 = document.getElementById('benefit1');
+            const benefit2 = document.getElementById('benefit2');
+            const benefit3 = document.getElementById('benefit3');
+
+            const elementInView = (el) => {
+                const rect = el.getBoundingClientRect();
+                return (
+                    rect.top <= (window.innerHeight || document.documentElement.clientHeight) * 0.75
+                );
+            };
+
+            if (elementInView(benefit1)) {
+                benefit1.classList.add('visible');
+                setTimeout(() => {
+                    benefit2.classList.add('visible');
+                    setTimeout(() => {
+                        benefit3.classList.add('visible');
+                    }, 300);
+                }, 300);
+            }
+        };
+
+        window.addEventListener('scroll', animateOnScroll);
+        animateOnScroll(); // Run once on load in case elements are already in view
+
+        // How It Works Steps Animation
+        const steps = document.querySelectorAll('.step');
+        const stepPanels = document.querySelectorAll('.step-panel');
+        const progressLine = document.getElementById('progressLine');
+
+        steps.forEach(step => {
+            step.addEventListener('click', () => {
+                const stepNumber = step.getAttribute('data-step');
+
+                // Update active step
+                steps.forEach(s => s.classList.remove('active'));
+                step.classList.add('active');
+
+                // Update active panel
+                stepPanels.forEach(panel => panel.classList.remove('active'));
+                document.querySelector(`.step-panel[data-step="${stepNumber}"]`).classList.add('active');
+
+                // Update progress line
+                if (stepNumber === '1') {
+                    progressLine.style.setProperty('--progress', '0%');
+                } else if (stepNumber === '2') {
+                    progressLine.style.setProperty('--progress', '50%');
+                } else if (stepNumber === '3') {
+                    progressLine.style.setProperty('--progress', '100%');
+                }
+            });
+        });
+
+        // Auto-rotate steps (demo purposes)
+        let currentStep = 1;
+        setInterval(() => {
+            currentStep = currentStep < 3 ? currentStep + 1 : 1;
+            document.querySelector(`.step[data-step="${currentStep}"]`).click();
+        }, 3000);
+
+        // Service Card Hover Effects
+        const serviceCards = document.querySelectorAll('.service-card');
+        serviceCards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-10px)';
+                card.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.2)';
+                card.style.borderColor = 'rgba(0, 242, 195, 0.3)';
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = '';
+                card.style.boxShadow = '';
+                card.style.borderColor = '';
+            });
+        });
+
+        // Glow Button Effect
+        const glowBtn = document.querySelector('.glow-btn');
+        glowBtn.addEventListener('mouseenter', () => {
+            document.querySelector('.tooltip').style.opacity = '1';
+            document.querySelector('.tooltip').style.bottom = '-50px';
+        });
+
+        glowBtn.addEventListener('mouseleave', () => {
+            document.querySelector('.tooltip').style.opacity = '0';
+            document.querySelector('.tooltip').style.bottom = '-40px';
+        });
+    </script>
+</body>
+
+</html>

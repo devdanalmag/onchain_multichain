@@ -1,0 +1,52 @@
+# PHP CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-php/ for more details
+#
+version: 2.1
+
+jobs:
+  build:
+    parameters:
+      version:
+        type: string
+    docker:
+      - image: dailygrommet/php-cli-base:<< parameters.version >>
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "composer.json" }}
+
+      - run:
+          name: Composer install
+          command: composer install -n --prefer-dist
+
+      - save_cache:
+          paths:
+            - ./vendor
+          key: v1-dependencies-{{ checksum "composer.json" }}
+
+      - run:
+          name: CodeSniff
+          command: composer fmt-check
+
+      - run:
+          name: PHPUnit
+          command: composer test
+
+workflows:
+  workflow:
+    jobs:
+      - build:
+          context: ["build-bot"]
+          matrix:
+            parameters:
+              version: ["7.3", "7.4"]

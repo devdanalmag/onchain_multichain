@@ -1,0 +1,34 @@
+[03-Jan-2023 02:20:03 Africa/Lagos] PHP Warning:  Undefined variable $queryC in /home/hopejjiu/ameenwebkey.com.ng/core/Models/AdminModel.php on line 437
+[03-Jan-2023 02:20:03 Africa/Lagos] PHP Fatal error:  Uncaught Error: Call to a member function bindParam() on null in /home/hopejjiu/ameenwebkey.com.ng/core/Models/AdminModel.php:437
+Stack trace:
+#0 /home/hopejjiu/ameenwebkey.com.ng/core/Controllers/AdminController.php(387): AdminModel->updateAlphaTopup()
+#1 /home/hopejjiu/ameenwebkey.com.ng/aminuyahayaabbas/dashboard/includes/route.php(168): AdminController->updateAlphaTopup()
+#2 /home/hopejjiu/ameenwebkey.com.ng/aminuyahayaabbas/dashboard/index.php(1): require_once('/home/hopejjiu/...')
+#3 {main}
+  thrown in /home/hopejjiu/ameenwebkey.com.ng/core/Models/AdminModel.php on line 437
+[03-Jan-2023 02:21:02 Africa/Lagos] PHP Warning:  Undefined variable $queryC in /home/hopejjiu/ameenwebkey.com.ng/core/Models/AdminModel.php on line 437
+[03-Jan-2023 02:21:02 Africa/Lagos] PHP Fatal error:  Uncaught Error: Call to a member function bindParam() on null in /home/hopejjiu/ameenwebkey.com.ng/core/Models/AdminModel.php:437
+Stack trace:
+#0 /home/hopejjiu/ameenwebkey.com.ng/core/Controllers/AdminController.php(387): AdminModel->updateAlphaTopup()
+#1 /home/hopejjiu/ameenwebkey.com.ng/aminuyahayaabbas/dashboard/includes/route.php(168): AdminController->updateAlphaTopup()
+#2 /home/hopejjiu/ameenwebkey.com.ng/aminuyahayaabbas/dashboard/index.php(1): require_once('/home/hopejjiu/...')
+#3 {main}
+  thrown in /home/hopejjiu/ameenwebkey.com.ng/core/Models/AdminModel.php on line 437
+[03-Jan-2023 02:21:09 Africa/Lagos] PHP Warning:  Undefined variable $queryC in /home/hopejjiu/ameenwebkey.com.ng/core/Models/AdminModel.php on line 437
+[03-Jan-2023 02:21:09 Africa/Lagos] PHP Fatal error:  Uncaught Error: Call to a member function bindParam() on null in /home/hopejjiu/ameenwebkey.com.ng/core/Models/AdminModel.php:437
+Stack trace:
+#0 /home/hopejjiu/ameenwebkey.com.ng/core/Controllers/AdminController.php(387): AdminModel->updateAlphaTopup()
+#1 /home/hopejjiu/ameenwebkey.com.ng/aminuyahayaabbas/dashboard/includes/route.php(168): AdminController->updateAlphaTopup()
+#2 /home/hopejjiu/ameenwebkey.com.ng/aminuyahayaabbas/dashboard/index.php(1): require_once('/home/hopejjiu/...')
+#3 {main}
+  thrown in /home/hopejjiu/ameenwebkey.com.ng/core/Models/AdminModel.php on line 437
+[03-Jan-2023 02:22:15 Africa/Lagos] PHP Warning:  Undefined variable $queryC in /home/hopejjiu/ameenwebkey.com.ng/core/Models/AdminModel.php on line 437
+[03-Jan-2023 02:22:15 Africa/Lagos] PHP Fatal error:  Uncaught Error: Call to a member function bindParam() on null in /home/hopejjiu/ameenwebkey.com.ng/core/Models/AdminModel.php:437
+Stack trace:
+#0 /home/hopejjiu/ameenwebkey.com.ng/core/Controllers/AdminController.php(387): AdminModel->updateAlphaTopup()
+#1 /home/hopejjiu/ameenwebkey.com.ng/aminuyahayaabbas/dashboard/includes/route.php(168): AdminController->updateAlphaTopup()
+#2 /home/hopejjiu/ameenwebkey.com.ng/aminuyahayaabbas/dashboard/index.php(1): require_once('/home/hopejjiu/...')
+#3 {main}
+  thrown in /home/hopejjiu/ameenwebkey.com.ng/core/Models/AdminModel.php on line 437
+[03-Jan-2023 03:51:23 Africa/Lagos] PHP Warning:  Undefined array key "searchfor" in /home/hopejjiu/ameenwebkey.com.ng/aminuyahayaabbas/dashboard/transactions.php on line 41
+[03-Jan-2023 04:28:39 Africa/Lagos] PHP Warning:  Undefined array key "searchfor" in /home/hopejjiu/ameenwebkey.com.ng/aminuyahayaabbas/dashboard/transactions.php on line 41

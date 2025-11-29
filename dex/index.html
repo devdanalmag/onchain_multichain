@@ -1,0 +1,2080 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TON DEX - Airtime & Data Marketplace</title>
+  <link rel="icon" href="/assets/img/favicon.ico" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert@2.1.2/dist/sweetalert.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <!-- Self-hosted approach: no external Web3Onboard. Use EIP-1193/EIP-6963 detection. -->
+  <script>
+    // Collect EIP-6963 announced providers
+    window.availableInjectedProviders = [];
+    window.addEventListener('eip6963:announceProvider', (event) => {
+      try {
+        const info = event.detail?.info;
+        const provider = event.detail?.provider;
+        if (!info || !provider) return;
+        const exists = window.availableInjectedProviders.some(p => p.info?.rdns === info.rdns);
+        if (!exists) window.availableInjectedProviders.push({ info, provider });
+      } catch (_) { }
+    });
+    // Trigger discovery (EIP-6963 uses singular 'requestProvider')
+    window.dispatchEvent(new Event('eip6963:requestProvider'));
+  </script>
+  <style>
+    :root {
+      --primary: #6C38FF;
+      --primary-dark: #5A2BE3;
+      --secondary: #00C2FF;
+      --accent: #FF3E80;
+      --dark: #0F1423;
+      --darker: #0A0E1A;
+      --light: #F5F7FF;
+      --gray: #8A94A6;
+      --success: #00D897;
+      --warning: #FFB547;
+      --error: #FF4757;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --border-radius: 16px;
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+      color: var(--light);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Header Styles */
+    header {
+      padding: 20px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .logo-text {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .wallet-connect {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    /* Site Navigation */
+    .site-nav {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .nav-links a {
+      color: var(--text-color);
+      text-decoration: none;
+      font-weight: 600;
+      opacity: 0.9;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      min-height: 48px;
+      border-radius: 8px;
+      transition: var(--transition);
+    }
+
+    .nav-links a:hover {
+      background: rgba(255, 255, 255, 0.06);
+      opacity: 1;
+    }
+
+    /* Hamburger (mobile) */
+    .hamburger {
+      display: none;
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .hamburger:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(108, 56, 255, 0.4);
+    }
+
+    .hamburger .bars {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .hamburger .bars span {
+      width: 24px;
+      height: 2px;
+      background: white;
+      border-radius: 2px;
+      transition: transform 0.3s ease, opacity 0.3s ease, background-color 0.2s ease;
+    }
+
+    .hamburger:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .hamburger.active .bars span:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+    }
+
+    .hamburger.active .bars span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger.active .bars span:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
+    }
+
+    /* Mobile nav panel */
+    .mobile-nav {
+      position: fixed;
+      top: 0;
+      right: 0;
+      height: 100%;
+      width: 250px;
+      background: var(--dark);
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      z-index: 1100;
+      padding: 20px;
+      box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .mobile-nav.open {
+      transform: translateX(0);
+    }
+
+    .mobile-nav a {
+      display: flex;
+      align-items: center;
+      min-height: 48px;
+      padding: 12px 16px;
+      color: var(--text-color);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .mobile-nav a:last-child {
+      border-bottom: none;
+    }
+
+    /* Wallet mobile address */
+    .wallet-address-mobile {
+      font-size: 12px;
+      color: var(--darker);
+      margin-left: 6px;
+    }
+
+    .wallet-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--card-bg);
+      padding: 10px 15px;
+      border-radius: var(--border-radius);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .wallet-status {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 14px;
+    }
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--error);
+    }
+
+    .status-indicator.connected {
+      background: var(--success);
+    }
+
+    .wallet-address {
+      font-family: monospace;
+      font-size: 14px;
+      color: var(--gray);
+    }
+
+    /* Main Content */
+    .main-content {
+      padding: 40px 0;
+    }
+
+    .page-title {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .page-title h1 {
+      font-size: 36px;
+      margin-bottom: 10px;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .page-title p {
+      color: var(--gray);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Tabs Navigation */
+    .tabs {
+      display: flex;
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 8px;
+      margin-bottom: 25px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 14px 20px;
+      text-align: center;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .tab:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab.active {
+      background: var(--primary);
+      box-shadow: 0 4px 12px rgba(108, 56, 255, 0.3);
+    }
+
+    /* Tab Content */
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Card Styles */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 25px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: var(--transition);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .airtime-icon {
+      background: linear-gradient(135deg, var(--primary), #8A5CFF);
+    }
+
+    .data-icon {
+      background: linear-gradient(135deg, var(--secondary), #00A3FF);
+    }
+
+    .card-title {
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    /* Form Elements */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray);
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.2);
+      color: var(--light);
+      font-size: 16px;
+      transition: var(--transition);
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(108, 56, 255, 0.2);
+    }
+
+    input[readonly] {
+      background: rgba(0, 0, 0, 0.3);
+      color: var(--gray);
+    }
+
+    .divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.1);
+      margin: 20px 0;
+    }
+
+    /* Buttons */
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      padding: 14px 24px;
+      border-radius: 10px;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      flex: 1;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(108, 56, 255, 0.4);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--light);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Status Messages */
+    .status-message {
+      margin-top: 15px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-success {
+      background: rgba(0, 216, 151, 0.1);
+      border: 1px solid rgba(0, 216, 151, 0.3);
+      color: var(--success);
+    }
+
+    .status-error {
+      background: rgba(255, 71, 87, 0.1);
+      border: 1px solid rgba(255, 71, 87, 0.3);
+      color: var(--error);
+    }
+
+    /* Tips Section */
+    .tips-section {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 25px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-top: 30px;
+    }
+
+    .tips-title {
+      font-size: 20px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tips-list {
+      list-style: none;
+    }
+
+    .tips-list li {
+      padding: 10px 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .tips-list li:before {
+      content: "•";
+      color: var(--primary);
+      font-size: 20px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .logo {
+        position: absolute;
+        left: 5px;
+        margin-top: 20px;
+      }
+
+      .header-content {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .wallet-connect {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      .tabs {
+        flex-direction: column;
+      }
+    }
+
+    /* Animation for loading */
+    @keyframes pulse {
+      0% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+
+      100% {
+        opacity: 1;
+      }
+    }
+
+    .loading {
+      animation: pulse 1.5s infinite;
+    }
+
+    .wallet-connect {
+      position: relative;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .wallet-select {
+      display: none;
+    }
+
+    .wallet-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: var(--dark);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      min-width: 220px;
+      display: none;
+      z-index: 1000;
+    }
+
+    .wallet-dropdown.open {
+      display: block;
+    }
+
+    .wallet-dropdown-header {
+      padding: 10px 12px;
+      font-weight: 600;
+      color: var(--gray);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .wallet-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .wallet-option:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .wallet-option .icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .btn.connected {
+      background: var(--success);
+      color: #052b1e;
+      border-color: rgba(0, 0, 0, 0.2);
+    }
+
+    .auth-steps {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      margin-left: 8px;
+    }
+
+    .auth-steps .step {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--gray);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .auth-steps .step.completed {
+      color: var(--success);
+      border-color: var(--success);
+      background: rgba(46, 204, 113, 0.08);
+    }
+
+    .auth-steps .step.error {
+      color: var(--error);
+      border-color: var(--error);
+      background: rgba(231, 76, 60, 0.08);
+    }
+
+    /* Alert modal */
+    .alert-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: none;
+    }
+
+    .alert-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .alert-content {
+      position: relative;
+      margin: 60px auto;
+      max-width: 420px;
+      background: var(--dark);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      padding: 16px;
+      color: var(--text-color);
+    }
+
+    .alert-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .alert-message {
+      font-size: 14px;
+      color: var(--gray);
+      margin: 8px 0 16px;
+    }
+
+    .alert-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .btn.btn-link {
+      background: transparent;
+      border: none;
+      color: var(--gray);
+      padding: 6px;
+      cursor: pointer;
+    }
+
+    /* Mobile responsiveness improvements */
+    .wallet-connect .btn {
+      min-height: 48px;
+      padding: 10px 14px;
+      font-size: 14px;
+    }
+
+    .wallet-option {
+      min-height: 48px;
+    }
+
+    .wallet-option .icon {
+      font-size: 16px;
+    }
+
+    .auth-steps {
+      flex-wrap: wrap;
+    }
+
+    .auth-steps .step {
+      line-height: 1;
+    }
+
+    @media (max-width: 768px) {
+      .wallet-connect {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+
+      .auth-steps {
+        justify-content: center;
+        margin-left: 0;
+      }
+
+      .wallet-dropdown {
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-width: none;
+      }
+
+      .alert-content {
+        margin: 40px 12px;
+        max-width: none;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .hamburger {
+        display: inline-flex;
+        position: fixed;
+        top: 12px;
+        right: 12px;
+        z-index: 1200;
+      }
+
+      .mobile-nav {
+        margin-top: 114px;
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 600px;
+        width: 260px;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+      }
+
+      .mobile-nav.open {
+        transform: translateX(0);
+      }
+
+      .header-content {
+        padding-right: 62px;
+        padding-left: 62px;
+        margin-top: -22px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hamburger .bars span {
+        transition: none;
+      }
+
+      .mobile-nav {
+        transition: none;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .wallet-connect .btn {
+        min-height: 48px;
+        font-size: 13px;
+        padding: 10px 12px;
+      }
+
+      .auth-steps .step {
+        font-size: 11px;
+        padding: 4px 6px;
+      }
+
+      .wallet-option {
+        padding: 10px;
+      }
+    }
+
+    /* Custom wallet dropdown and connect UI */
+  </style>
+  <!-- MetaMask / EVM only -->
+</head>
+
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <div class="logo-icon">A</div>
+          <!-- <div class="logo-text">Assetchain DEX</div> -->
+        </div>
+        <nav class="site-nav" aria-label="Primary Navigation">
+          <ul class="nav-links">
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="../app/home/index.php">CEX App</a></li>
+            <li><a href="../app/home/about-us.php">About</a></li>
+          </ul>
+          <button id="hamburger" class="hamburger" aria-label="Open menu" aria-expanded="false"
+            aria-controls="mobile-nav">
+            <div class="bars"><span></span><span></span><span></span></div>
+          </button>
+        </nav>
+        <div class="wallet-connect">
+          <select id="wallet-select" class="wallet-select" aria-label="Select wallet">
+            <option value="MetaMask" selected>MetaMask</option>
+            <option value="Bitget">Bitget Wallet</option>
+            <option value="OKX">OKX Wallet</option>
+          </select>
+          <button id="onboard-connect-btn" class="btn btn-secondary">
+            <i class="fas fa-wallet"></i> Connect Wallet
+          </button>
+          <div id="auth-steps" class="auth-steps" aria-live="polite">
+            <span class="step step-connect" data-step="connect" title="Wallet connection step">Connect</span>
+            <span class="step step-network" data-step="network" title="Assetchain network step">Network</span>
+            <span class="step step-signin" data-step="signin" title="Sign-in step">Sign-in</span>
+          </div>
+          <button id="sign-in-btn" class="btn btn-primary" style="display:none;margin-left:8px;">
+            <i class="fas fa-user-check"></i> Sign In
+          </button>
+          <div id="alert-modal" class="alert-modal" aria-hidden="true" role="dialog" aria-modal="true"
+            style="display:none;">
+            <div class="alert-backdrop"></div>
+            <div class="alert-content" role="document">
+              <div class="alert-header">
+                <span id="alert-title">Notice</span>
+                <button id="alert-close" class="btn btn-link" aria-label="Close"><i class="fas fa-times"></i></button>
+              </div>
+              <div id="alert-message" class="alert-message"></div>
+              <div class="alert-actions">
+                <button id="alert-cancel" class="btn btn-secondary" style="display:none;">Cancel</button>
+                <button id="alert-ok" class="btn btn-primary">OK</button>
+              </div>
+            </div>
+          </div>
+          <div id="wallet-dropdown" class="wallet-dropdown" role="menu" aria-label="Wallet options">
+            <div class="wallet-dropdown-header">Select Wallet</div>
+            <div class="wallet-option" data-wallet="MetaMask">
+              <span class="icon"><img src="https://images.ctfassets.net/clixtyxoaeas/4rnpEzy1ATWRKVBOLxZ1Fm/a74dc1eed36d23d7ea6030383a4d5163/MetaMask-icon-fox.svg" width="18" ></span>
+              <span>MetaMask</span>
+            </div>
+            <div class="wallet-option" data-wallet="Bitget">
+              <span class="icon"><img src="https://play-lh.googleusercontent.com/QbNP8A9GE_UM1s3RFNF8i599yWm_F37iwL4viYCueD9XhJaIZ2yZjMnEwsegeTaHa7Q=w240-h480-rw" width="18"></span>
+              <span>Bitget Wallet</span>
+            </div>
+            <div class="wallet-option" data-wallet="OKX">
+              <span class="icon"><img src="https://play-lh.googleusercontent.com/N00SbjLJJrhg4hbdnkk3Llk2oedNNgCU29DvR9cpep7Lr0VkzvBkmLqajWNgFb0d7IOO" width="18" ></span>
+              <span>OKX Wallet</span>
+            </div>
+            <div id="wallet-disconnect-option" class="wallet-option" data-wallet="__disconnect__"
+              style="display:none;border-top:1px solid rgba(255,255,255,0.1);">
+              <span class="icon" style="background: var(--error);"><i class="fas fa-sign-out-alt"></i></span>
+              <span>Disconnect</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="mobile-nav" class="mobile-nav" role="menu" aria-label="Mobile Navigation">
+        <a href="../index.html">Home</a>
+        <a href="../app/home/index.php">CEX App</a>
+        <a href="../app/home/about-us.php">About</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Wallet selection UI handled by custom dropdown -->
+
+  <main class="main-content">
+    <div class="container">
+      <div class="page-title">
+        <h1>Buy Airtime & Data with CNGN</h1>
+        <p>Purchase mobile airtime and data plans instantly using CNGN on Assetchain. Fast, secure, and decentralized.
+        </p>
+      </div>
+
+      <!-- Tabs Navigation -->
+      <div class="tabs">
+        <div class="tab active" data-tab="airtime">
+          <i class="fas fa-phone-alt"></i>
+          Airtime Top-up
+        </div>
+        <div class="tab" data-tab="data">
+          <i class="fas fa-wifi"></i>
+          Data Plans
+        </div>
+      </div>
+
+      <!-- Airtime Tab Content -->
+      <div class="tab-content active" id="airtime-tab">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon airtime-icon">
+              <i class="fas fa-phone-alt"></i>
+            </div>
+            <h2 class="card-title">Airtime Top-up</h2>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="airtime-network">Network Provider</label>
+              <select id="airtime-network"></select>
+            </div>
+
+            <div class="form-group">
+              <label for="airtime-phone">Phone Number</label>
+              <input id="airtime-phone" type="tel" placeholder="e.g. 08012345678" />
+            </div>
+
+            <div class="form-group">
+              <label for="airtime-amount">Amount (NGN)</label>
+              <input id="airtime-amount" type="number" min="50" step="10" placeholder="500" />
+            </div>
+
+            <div class="form-group">
+              <label for="airtime-ref">Reference ID</label>
+              <input id="airtime-ref" class="mono" readonly />
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="airtime-target">Receiving EVM Address</label>
+              <input id="airtime-target" class="mono" placeholder="Site EVM receiving address" />
+            </div>
+
+            <div class="form-group">
+              <label for="airtime-nano">Amount (wei)</label>
+              <input id="airtime-nano" class="mono" placeholder="Auto-calculated" readonly />
+            </div>
+          </div>
+
+          <div class="button-group">
+            <button id="airtime-calc" class="btn btn-secondary">
+              <i class="fas fa-calculator"></i> Calculate Amount
+            </button>
+            <button id="airtime-send" class="btn btn-primary" disabled>
+              <i class="fas fa-paper-plane"></i> Send CNGN
+            </button>
+            <button id="airtime-reset" class="btn btn-secondary">
+              <i class="fas fa-redo"></i> Reset
+            </button>
+          </div>
+
+          <div id="airtime-status"></div>
+        </div>
+      </div>
+
+      <!-- Data Tab Content -->
+      <div class="tab-content" id="data-tab">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon data-icon">
+              <i class="fas fa-wifi"></i>
+            </div>
+            <h2 class="card-title">Data Plans</h2>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="data-network">Network Provider</label>
+              <select id="data-network"></select>
+            </div>
+
+            <div class="form-group">
+              <label for="data-plan">Data Plan</label>
+              <select id="data-plan"></select>
+            </div>
+
+            <div class="form-group">
+              <label for="data-phone">Phone Number</label>
+              <input id="data-phone" type="tel" placeholder="e.g. 08012345678" />
+            </div>
+
+            <div class="form-group">
+              <label for="data-ref">Reference ID</label>
+              <input id="data-ref" class="mono" readonly />
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="data-target">Receiving EVM Address</label>
+              <input id="data-target" class="mono" placeholder="Site EVM receiving address" />
+            </div>
+
+            <div class="form-group">
+              <label for="data-nano">Amount (wei)</label>
+              <input id="data-nano" class="mono" placeholder="Auto-calculated" readonly />
+            </div>
+          </div>
+
+          <div class="button-group">
+            <button id="data-calc" class="btn btn-secondary">
+              <i class="fas fa-calculator"></i> Calculate Amount
+            </button>
+            <button id="data-send" class="btn btn-primary" disabled>
+              <i class="fas fa-paper-plane"></i> Send CNGN
+            </button>
+            <button id="data-reset" class="btn btn-secondary">
+              <i class="fas fa-redo"></i> Reset
+            </button>
+          </div>
+
+          <div id="data-status"></div>
+        </div>
+      </div>
+
+      <div class="tips-section">
+        <h3 class="tips-title"><i class="fas fa-lightbulb"></i> How It Works</h3>
+        <ul class="tips-list">
+          <li>Use the Account Center to connect and manage your wallet</li>
+          <li>Select your network provider and enter your phone number</li>
+          <li>Choose the amount (for airtime) or data plan you want to purchase</li>
+          <li>Calculate the CNGN amount (wei) and send the payment</li>
+          <li>Your transaction will be verified on-chain and your airtime/data will be delivered</li>
+          <li>All transactions are secure and processed on the Assetchain network</li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Custom wallet provider detection and dropdown UI
+    // DOM utility functions
+    const $ = (s) => document.querySelector(s);
+    const $$ = (s) => document.querySelectorAll(s);
+    const apiBase = '/onchain_multichain/api';
+
+    // Web3Onboard removed; using custom wallet dropdown and EIP-1193 providers
+
+    // Tab functionality
+    function initTabs() {
+      const tabs = $$('.tab');
+      const tabContents = $$('.tab-content');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const tabId = tab.getAttribute('data-tab');
+
+          // Remove active class from all tabs and contents
+          tabs.forEach(t => t.classList.remove('active'));
+          tabContents.forEach(c => c.classList.remove('active'));
+
+          // Add active class to clicked tab and corresponding content
+          tab.classList.add('active');
+          $(`#${tabId}-tab`).classList.add('active');
+        });
+      });
+    }
+
+    // Onboard initialization is triggered after libraries load above
+
+    // Manual connect button handler (programmatic connect; no Account Center UI)
+    // Safe notification helper with responsive toast configuration
+    function notify(type, message) {
+      try {
+        if (window.toastr) {
+          const isMobile = window.matchMedia('(max-width: 576px)').matches;
+          toastr.options = {
+            positionClass: isMobile ? 'toast-top-center' : 'toast-bottom-right',
+            timeOut: 3500,
+            extendedTimeOut: 2000,
+            closeButton: true,
+            progressBar: true,
+            newestOnTop: true,
+            preventDuplicates: true,
+          };
+          const fn = typeof toastr[type] === 'function' ? toastr[type] : toastr.info;
+          fn(message);
+        } else {
+          const level = type === 'error' ? 'error' : 'log';
+          console[level](message);
+        }
+      } catch (_) {
+        console.log(message);
+      }
+    }
+
+    // Light alert/confirm modal for critical errors or confirmations
+    function showAlert(title, message, options) {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('alert-modal');
+        const elTitle = document.getElementById('alert-title');
+        const elMsg = document.getElementById('alert-message');
+        const btnOk = document.getElementById('alert-ok');
+        const btnCancel = document.getElementById('alert-cancel');
+        const btnClose = document.getElementById('alert-close');
+        if (!modal || !elTitle || !elMsg || !btnOk || !btnCancel || !btnClose) {
+          alert(message || '');
+          resolve(true);
+          return;
+        }
+        const opts = options || {};
+        elTitle.textContent = title || 'Notice';
+        elMsg.textContent = message || '';
+        const isConfirm = opts.type === 'confirm';
+        btnCancel.style.display = isConfirm ? 'inline-flex' : 'none';
+        btnOk.textContent = isConfirm ? (opts.confirmText || 'Confirm') : (opts.okText || 'OK');
+
+        const cleanup = () => {
+          modal.style.display = 'none';
+          modal.setAttribute('aria-hidden', 'true');
+          document.removeEventListener('keydown', onKey);
+        };
+        const onKey = (ev) => { if (ev.key === 'Escape') { cleanup(); resolve(false); } };
+        document.addEventListener('keydown', onKey);
+
+        btnOk.onclick = () => { cleanup(); resolve(true); };
+        btnCancel.onclick = () => { cleanup(); resolve(false); };
+        btnClose.onclick = () => { cleanup(); resolve(false); };
+        const backdrop = modal.querySelector('.alert-backdrop');
+        if (backdrop) backdrop.onclick = () => { cleanup(); resolve(false); };
+
+        modal.style.display = 'block';
+        modal.setAttribute('aria-hidden', 'false');
+      });
+    }
+
+    function confirmDialog(title, message, opts) {
+      return showAlert(title, message, { ...(opts || {}), type: 'confirm' });
+    }
+
+    // Resolve a provider by selected wallet name using EIP-6963 info and common flags
+    function resolveProviderBySelection(name) {
+      const providers = Array.isArray(window.availableInjectedProviders) ? window.availableInjectedProviders : [];
+      const matchInfo = (pred) => providers.find(p => {
+        const infoName = (p.info?.name || '').toLowerCase();
+        const rdns = (p.info?.rdns || '').toLowerCase();
+        return pred(infoName, rdns);
+      });
+
+      let infoMatch;
+      if (name === 'MetaMask') {
+        infoMatch = matchInfo((n, r) => n.includes('metamask') || r.includes('io.metamask'));
+      } else if (name === 'OKX') {
+        infoMatch = matchInfo((n, r) => n.includes('okx') || r.includes('com.okex') || r.includes('com.okx'));
+      } else if (name === 'Bitget') {
+        infoMatch = matchInfo((n, r) => n.includes('bitget') || n.includes('bitkeep') || r.includes('com.bitget') || r.includes('com.bitkeep'));
+      }
+      if (infoMatch) return infoMatch.provider;
+
+      const eth = window.ethereum;
+      if (eth) {
+        if (name === 'MetaMask' && eth.isMetaMask) return eth;
+        if (name === 'OKX' && (eth.isOKXWallet || eth.isOkxWallet)) return eth;
+        if (name === 'Bitget' && (eth.isBitgetWallet || eth.isBitKeep || eth.isBitkeep)) return eth;
+      }
+      if (name === 'OKX' && window.okxwallet) return window.okxwallet.ethereum || window.okxwallet;
+      if (name === 'Bitget' && window.bitkeep && window.bitkeep.ethereum) return window.bitkeep.ethereum;
+      return null;
+    }
+
+    function formatAddress(addr) {
+      if (!addr || typeof addr !== 'string') return '';
+      return addr.slice(0, 6) + '…' + addr.slice(-4);
+    }
+
+    function walletIconHtml(name) {
+      const n = (name || '').toLowerCase();
+      if (n.includes('metamask')) return '<img src="https://images.ctfassets.net/clixtyxoaeas/4rnpEzy1ATWRKVBOLxZ1Fm/a74dc1eed36d23d7ea6030383a4d5163/MetaMask-icon-fox.svg" width="25" >';
+      if (n.includes('okx')) return '<img src="https://play-lh.googleusercontent.com/N00SbjLJJrhg4hbdnkk3Llk2oedNNgCU29DvR9cpep7Lr0VkzvBkmLqajWNgFb0d7IOO" width="25" >';
+      if (n.includes('bitget') || n.includes('bitkeep')) return '<img src="https://play-lh.googleusercontent.com/QbNP8A9GE_UM1s3RFNF8i599yWm_F37iwL4viYCueD9XhJaIZ2yZjMnEwsegeTaHa7Q=w240-h480-rw" width="25" >';
+      return '<i class="fas fa-wallet"></i>';
+    }
+
+    async function getChainId(provider) {
+      try {
+        const p = provider || window.currentProvider || window.ethereum;
+        if (!p) return null;
+        const id = await p.request({ method: 'eth_chainId' });
+        return (id || '').toLowerCase();
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function updateAuthIndicators(state) {
+      const s = state || window.authState || {};
+      const elConnect = document.querySelector('#auth-steps .step-connect');
+      const elNetwork = document.querySelector('#auth-steps .step-network');
+      const elSignin = document.querySelector('#auth-steps .step-signin');
+      if (elConnect) {
+        elConnect.classList.toggle('completed', !!s.connected);
+        elConnect.classList.toggle('error', !s.connected);
+      }
+      if (elNetwork) {
+        elNetwork.classList.toggle('completed', !!s.networkOk);
+        elNetwork.classList.toggle('error', s.connected && !s.networkOk);
+      }
+      if (elSignin) {
+        elSignin.classList.toggle('completed', !!s.signedIn);
+        elSignin.classList.toggle('error', s.networkOk && !s.signedIn);
+      }
+      const signBtn = document.getElementById('sign-in-btn');
+      if (signBtn) {
+        signBtn.style.display = s.connected && s.networkOk && !s.signedIn ? 'inline-flex' : 'none';
+      }
+    }
+
+    async function setConnectedUI(address, walletName) {
+      const btn = document.getElementById('onboard-connect-btn');
+      const disconnectOpt = document.getElementById('wallet-disconnect-option');
+      if (btn) {
+        const short = formatAddress(address);
+        const chainId = await getChainId();
+        const netShort = chainId && chainId.toLowerCase() === ASSETCHAIN_ID_HEX.toLowerCase() ? 'Assetchain' : 'Wrong Network';
+        const isMobile = window.matchMedia('(max-width: 768px)').matches;
+        const icon = walletIconHtml(walletName);
+        if (isMobile) {
+          btn.innerHTML = `${icon} <span class="wallet-address-mobile">${short}</span>`;
+        } else {
+          btn.innerHTML = `${icon} ${short} • ${netShort}`;
+        }
+        btn.classList.add('connected');
+      }
+      if (disconnectOpt) {
+        disconnectOpt.style.display = 'flex';
+      }
+      window.authState = {
+        ...(window.authState || {}),
+        connected: true,
+        networkOk: (await getChainId()) === ASSETCHAIN_ID_HEX.toLowerCase(),
+        signedIn: !!(window.dexAuth && window.dexAuth.valid),
+        address: address,
+        wallet: walletName
+      };
+      updateAuthIndicators();
+    }
+
+    function setDisconnectedUI() {
+      const btn = document.getElementById('onboard-connect-btn');
+      const disconnectOpt = document.getElementById('wallet-disconnect-option');
+      if (btn) {
+        btn.innerHTML = '<i class="fas fa-wallet"></i> Connect Wallet';
+        btn.classList.remove('connected');
+      }
+      if (disconnectOpt) {
+        disconnectOpt.style.display = 'none';
+      }
+      window.authState = { connected: false, networkOk: false, signedIn: false, address: null, wallet: null };
+      updateAuthIndicators();
+    }
+
+    function subscribeToProvider(provider) {
+      try {
+        const listeners = window._providerListeners || {};
+        // Remove previous listeners
+        if (listeners.provider && listeners.accountsChanged && typeof listeners.provider.removeListener === 'function') {
+          try { listeners.provider.removeListener('accountsChanged', listeners.accountsChanged); } catch (_) { }
+        }
+        if (listeners.provider && listeners.chainChanged && typeof listeners.provider.removeListener === 'function') {
+          try { listeners.provider.removeListener('chainChanged', listeners.chainChanged); } catch (_) { }
+        }
+        const onAccountsChanged = (accounts) => {
+          const addr = Array.isArray(accounts) ? accounts[0] : null;
+          window.currentAddress = addr || window.currentAddress || null;
+          if (window.currentAddress) {
+            // If session address differs, clear session
+            if (window.dexAuth && window.dexAuth.address && window.dexAuth.address.toLowerCase() !== window.currentAddress.toLowerCase()) {
+              clearSession();
+              window.authState = { ...(window.authState || {}), signedIn: false };
+            }
+            setConnectedUI(window.currentAddress, window.currentWalletName || 'Wallet');
+          }
+          else setDisconnectedUI();
+        };
+        const onChainChanged = async (_) => {
+          const netOk = (await getChainId()) === ASSETCHAIN_ID_HEX.toLowerCase();
+          window.authState = { ...(window.authState || {}), networkOk: !!netOk };
+          updateAuthIndicators();
+          if (!netOk) {
+            notify('warning', 'Switched away from Assetchain. Please switch back to continue.');
+            showAlert('Wrong Network', 'You switched away from Assetchain Mainnet. Please switch back to continue.', { okText: 'Got it' });
+          }
+        };
+        if (provider && typeof provider.on === 'function') {
+          provider.on('accountsChanged', onAccountsChanged);
+          provider.on('chainChanged', onChainChanged);
+        }
+        window._providerListeners = { provider, accountsChanged: onAccountsChanged, chainChanged: onChainChanged };
+      } catch (e) { console.warn('subscribeToProvider failed', e); }
+    }
+
+    function loadSession() {
+      try {
+        const raw = localStorage.getItem('dex_auth_session');
+        if (!raw) { window.dexAuth = { valid: false }; return window.dexAuth; }
+        const session = JSON.parse(raw);
+        const now = Date.now();
+        const valid = !!session && now < Number(session.expires || 0);
+        window.dexAuth = { ...(session || {}), valid };
+        return window.dexAuth;
+      } catch (_) { window.dexAuth = { valid: false }; return window.dexAuth; }
+    }
+
+    function saveSession(session) {
+      try {
+        localStorage.setItem('dex_auth_session', JSON.stringify(session));
+        window.dexAuth = { ...(session || {}), valid: true };
+      } catch (_) { }
+    }
+
+    function clearSession() {
+      try { localStorage.removeItem('dex_auth_session'); } catch (_) { }
+      window.dexAuth = { valid: false };
+    }
+
+    function buildSignMessage(address) {
+      const ts = new Date().toISOString();
+      const nonce = Math.random().toString(36).slice(2);
+      const domain = 'onchain-dex-v1';
+      return `Sign in to Assetchain DEX\nAddress: ${address}\nTime: ${ts}\nNonce: ${nonce}\nDomain: ${domain}`;
+    }
+
+    async function promptSignIn() {
+      try {
+        const { signer } = getEthers();
+        const address = await signer.getAddress();
+        const msg = buildSignMessage(address);
+        notify('info', 'Please sign the message to complete sign-in.');
+        const signature = await signer.signMessage(msg);
+        const recovered = ethers.utils.verifyMessage(msg, signature);
+        if (recovered?.toLowerCase() !== address?.toLowerCase()) {
+          notify('error', 'Signature verification failed.');
+          window.authState = { ...(window.authState || {}), signedIn: false };
+          updateAuthIndicators();
+          return false;
+        }
+        const TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+        const session = {
+          address,
+          wallet: window.currentWalletName,
+          signature,
+          msg,
+          signedAt: Date.now(),
+          expires: Date.now() + TTL_MS
+        };
+        saveSession(session);
+        window.authState = { ...(window.authState || {}), signedIn: true };
+        updateAuthIndicators();
+        notify('success', 'Signed in successfully. Features unlocked.');
+        return true;
+      } catch (e) {
+        notify('error', e?.message || 'Sign-in failed.');
+        window.authState = { ...(window.authState || {}), signedIn: false };
+        updateAuthIndicators();
+        return false;
+      }
+    }
+
+    async function ensureNetwork(provider) {
+      const ethProvider = provider || window.currentProvider || window.ethereum;
+      if (!ethProvider) return false;
+      try {
+        const chainId = await ethProvider.request({ method: 'eth_chainId' });
+        if (chainId?.toLowerCase() === ASSETCHAIN_ID_HEX.toLowerCase()) return true;
+        try {
+          await ethProvider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: ASSETCHAIN_ID_HEX }] });
+          return true;
+        } catch (e) {
+          if (e && (e.code === 4902 || /not/i.test(String(e.message)))) {
+            try {
+              await ethProvider.request({
+                method: 'wallet_addEthereumChain', params: [{
+                  chainId: ASSETCHAIN_ID_HEX,
+                  chainName: 'Assetchain Mainnet',
+                  nativeCurrency: { name: 'ASET', symbol: 'ASET', decimals: 18 },
+                  rpcUrls: ['https://mainnet-rpc.assetchain.org/'],
+                  blockExplorerUrls: ['https://explorer.assetchain.org']
+                }]
+              });
+              return true;
+            } catch (_) { return false; }
+          }
+          return false;
+        }
+      } catch (_) { return false; }
+    }
+
+    async function requireAuthSequence() {
+      try {
+        const selected = document.getElementById('wallet-select')?.value || 'MetaMask';
+        let provider = window.currentProvider || resolveProviderBySelection(selected);
+        if (!provider) {
+          notify('error', 'No wallet provider found.');
+          return false;
+        }
+        // 1) Verify connection
+        const accounts = await provider.request({ method: 'eth_accounts' });
+        if (!accounts || accounts.length === 0) {
+          notify('info', 'Please connect your wallet to continue.');
+          await connectButtonHandler();
+          provider = window.currentProvider;
+        }
+        const addr = window.currentAddress || (accounts && accounts[0]);
+        if (!addr) {
+          notify('error', 'Wallet connection is required.');
+          window.authState = { ...(window.authState || {}), connected: false };
+          updateAuthIndicators();
+          return false;
+        }
+        window.authState = { ...(window.authState || {}), connected: true };
+        updateAuthIndicators();
+        // 2) Confirm network change to Assetchain
+        const netOk = await ensureNetwork(provider);
+        window.authState = { ...(window.authState || {}), networkOk: !!netOk };
+        updateAuthIndicators();
+        if (!netOk) {
+          notify('error', 'Please switch to Assetchain to proceed.');
+          return false;
+        }
+        // 3) Prompt sign-in if not already signed
+        loadSession();
+        const sessionValid = !!(window.dexAuth && window.dexAuth.valid && window.dexAuth.address?.toLowerCase() === addr?.toLowerCase());
+        if (!sessionValid) {
+          const ok = await promptSignIn();
+          if (!ok) return false;
+        } else {
+          window.authState = { ...(window.authState || {}), signedIn: true };
+          updateAuthIndicators();
+        }
+        window.authGranted = true;
+        return true;
+      } catch (e) {
+        notify('error', e?.message || 'Authentication sequence failed.');
+        return false;
+      }
+    }
+    async function disconnectWallet() {
+      try {
+        const listeners = window._providerListeners || {};
+        const provider = listeners.provider || window.currentProvider;
+        if (provider && typeof provider.removeListener === 'function') {
+          try { if (listeners.accountsChanged) provider.removeListener('accountsChanged', listeners.accountsChanged); } catch (_) { }
+          try { if (listeners.chainChanged) provider.removeListener('chainChanged', listeners.chainChanged); } catch (_) { }
+        }
+        window._providerListeners = {};
+        window.currentProvider = null;
+        window.currentWalletName = null;
+        window.currentAddress = null;
+        setDisconnectedUI();
+        notify('info', 'Disconnected wallet');
+        clearSession();
+      } catch (e) {
+        notify('error', e?.message || 'Failed to disconnect');
+      }
+    }
+
+    async function connectButtonHandler() {
+      try {
+        const selected = document.getElementById('wallet-select')?.value || 'MetaMask';
+        const ethProvider = resolveProviderBySelection(selected);
+
+        if (ethProvider && typeof ethProvider.request === 'function') {
+          const accounts = await ethProvider.request({ method: 'eth_requestAccounts' });
+          try {
+            await ethProvider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: ASSETCHAIN_ID_HEX }] });
+          } catch (e) {
+            if (e && (e.code === 4902 || /not/i.test(String(e.message)))) {
+              try {
+                await ethProvider.request({
+                  method: 'wallet_addEthereumChain',
+                  params: [{
+                    chainId: ASSETCHAIN_ID_HEX,
+                    chainName: 'Assetchain Mainnet',
+                    nativeCurrency: { name: 'ASET', symbol: 'ASET', decimals: 18 },
+                    rpcUrls: ['https://mainnet-rpc.assetchain.org/'],
+                    blockExplorerUrls: ['https://explorer.assetchain.org']
+                  }]
+                });
+              } catch (_) { }
+            }
+          }
+          window.currentProvider = ethProvider;
+          window.currentWalletName = selected;
+          window.currentAddress = Array.isArray(accounts) ? accounts[0] : null;
+          window.ethereum = ethProvider; // Normalize for downstream usage for ethers
+          subscribeToProvider(ethProvider);
+          setConnectedUI(window.currentAddress, selected);
+          notify('success', `${selected} connected`);
+          try {
+            localStorage.setItem('dex_last_wallet', selected);
+            if (window.currentAddress) localStorage.setItem('dex_last_address', window.currentAddress);
+          } catch (_) { }
+          // Update indicators for network status
+          const netOk = (await getChainId()) === ASSETCHAIN_ID_HEX.toLowerCase();
+          window.authState = { ...(window.authState || {}), networkOk: !!netOk };
+          updateAuthIndicators();
+          if (netOk) {
+            notify('info', 'Network confirmed. You can now sign in.');
+          } else {
+            notify('warning', 'Please switch to Assetchain to proceed.');
+          }
+          return;
+        }
+        notify('error', `${selected} wallet not installed or unavailable.`);
+      } catch (e) {
+        notify('error', e?.message || 'Failed to connect wallet');
+      }
+    }
+
+    // Wire up manual connect button and dropdown menu
+    (function wireConnectUI() {
+      const bind = () => {
+        const btn = document.getElementById('onboard-connect-btn');
+        const menu = document.getElementById('wallet-dropdown');
+        const select = document.getElementById('wallet-select');
+        const disconnectOpt = document.getElementById('wallet-disconnect-option');
+        const signBtn = document.getElementById('sign-in-btn');
+        const hamburger = document.getElementById('hamburger');
+        const mobileNav = document.getElementById('mobile-nav');
+        if (!btn) { console.warn('[dex] Connect button not found'); return; }
+        if (!menu) { console.warn('[dex] Wallet dropdown menu not found'); return; }
+
+        const openMenu = () => { menu.classList.add('open'); };
+        const closeMenu = () => { menu.classList.remove('open'); };
+        const isOpen = () => menu.classList.contains('open');
+
+        // Click connect: show menu if closed; if open, proceed to connect
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (!isOpen()) {
+            openMenu();
+          } else {
+            connectButtonHandler();
+          }
+        });
+
+        // Wallet option click selects and connects
+        menu.querySelectorAll('.wallet-option').forEach(opt => {
+          opt.addEventListener('click', async () => {
+            const w = opt.getAttribute('data-wallet');
+            if (w === '__disconnect__') {
+              closeMenu();
+              const ok = await confirmDialog('Disconnect Wallet', 'Are you sure you want to disconnect?', { confirmText: 'Disconnect', cancelText: 'Cancel' });
+              if (ok) disconnectWallet();
+              return;
+            }
+            if (select) select.value = w;
+            try { localStorage.setItem('dex_last_wallet', w); } catch (_) { }
+            closeMenu();
+            connectButtonHandler();
+          });
+        });
+
+        // Click outside closes menu
+        document.addEventListener('click', (evt) => {
+          if (!menu.contains(evt.target) && evt.target !== btn) {
+            closeMenu();
+          }
+        });
+        // Sign-in button
+        if (signBtn) {
+          signBtn.addEventListener('click', async () => {
+            const ok = await promptSignIn();
+            if (ok) window.authGranted = true;
+          });
+        }
+
+        // Hamburger toggle
+        if (hamburger && mobileNav) {
+          const toggleMenu = (e) => {
+            if (e) e.preventDefault();
+            const open = mobileNav.classList.toggle('open');
+            hamburger.classList.toggle('active', open);
+            hamburger.setAttribute('aria-expanded', open ? 'true' : 'false');
+            hamburger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+          };
+          hamburger.addEventListener('click', toggleMenu);
+          hamburger.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter' || ev.key === ' ') {
+              ev.preventDefault();
+              toggleMenu();
+            }
+          });
+          // Close mobile nav on outside click
+          document.addEventListener('click', (evt) => {
+            if (!mobileNav.contains(evt.target) && evt.target !== hamburger && !hamburger.contains(evt.target)) {
+              mobileNav.classList.remove('open');
+              hamburger.setAttribute('aria-expanded', 'false');
+              hamburger.classList.remove('active');
+              hamburger.setAttribute('aria-label', 'Open menu');
+            }
+          });
+        }
+
+        // Initialize UI and attempt auto-reconnect
+        setDisconnectedUI();
+        autoReconnect();
+        // Adjust wallet button display on resize (mobile vs desktop)
+        window.addEventListener('resize', () => {
+          if (window.authState && window.authState.connected && window.currentAddress && window.currentWalletName) {
+            setConnectedUI(window.currentAddress, window.currentWalletName);
+          }
+        });
+        console.info('[dex] Connect UI wired');
+      };
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bind);
+      } else {
+        bind();
+      }
+    })();
+
+    async function autoReconnect() {
+      try {
+        const last = localStorage.getItem('dex_last_wallet');
+        if (!last) return;
+        const provider = resolveProviderBySelection(last);
+        if (!provider) return;
+        const accounts = await provider.request({ method: 'eth_accounts' });
+        if (accounts && accounts.length > 0) {
+          window.currentProvider = provider;
+          window.currentWalletName = last;
+          window.currentAddress = accounts[0];
+          window.ethereum = provider;
+          subscribeToProvider(provider);
+          await setConnectedUI(window.currentAddress, last);
+          const netOk = await ensureNetwork(provider);
+          window.authState = { ...(window.authState || {}), networkOk: !!netOk };
+          updateAuthIndicators();
+          loadSession();
+          const sessionValid = !!(window.dexAuth && window.dexAuth.valid && window.dexAuth.address?.toLowerCase() === window.currentAddress?.toLowerCase());
+          if (sessionValid && netOk) {
+            window.authState = { ...(window.authState || {}), signedIn: true };
+            updateAuthIndicators();
+            window.authGranted = true;
+            notify('success', 'Reconnected to wallet and restored session.');
+          } else {
+            notify('info', 'Wallet reconnected. Please sign in to unlock features.');
+          }
+        }
+      } catch (e) { console.warn('autoReconnect failed', e); }
+    }
+
+    // MetaMask handles status via initMetaMaskHeader
+
+    // Generate random reference IDs
+    const randRef = () => 'REF-' + Math.random().toString(36).slice(2, 10).toUpperCase();
+    $('#airtime-ref').value = randRef();
+    $('#data-ref').value = randRef();
+
+    // Fetch network providers
+    async function fetchNetworks() {
+      try {
+        const res = await fetch(`${apiBase}/access.php?action=getNetworks`);
+        const data = await res.json();
+        const netsRaw = data.networks || data.data || [];
+        const nets = netsRaw.filter(n => (n.status || 'On') === 'On');
+        if (!nets.length) throw new Error('No networks available');
+        const networkOptions = nets.map(n =>
+          `<option value="${n.id}">${n.name || n.network}</option>`
+        ).join('');
+        $('#airtime-network').innerHTML = networkOptions;
+        $('#data-network').innerHTML = networkOptions;
+        // Default select first network
+        $('#airtime-network').value = nets[0]?.id || '';
+        $('#data-network').value = nets[0]?.id || '';
+      } catch (e) {
+        console.warn('Networks fetch failed', e);
+        showStatus($('#airtime-status'), 'Failed to load networks', false);
+      }
+    }
+
+    // Fetch data plans based on selected network
+    async function fetchDataPlans() {
+      try {
+        const network = $('#data-network').value;
+        if (!network) return;
+        const res = await fetch(`${apiBase}/access.php?action=getDataPlans&network=${encodeURIComponent(network)}`);
+        const data = await res.json();
+        const plans = data.plans || data.data || [];
+        if (!plans.length) { $('#data-plan').innerHTML = ''; return; }
+        $('#data-plan').innerHTML = plans.map(p => {
+          const labelParts = [p.name, p.type, p.day ? `${p.day}d` : ''].filter(Boolean);
+          return `<option value="${p.id || p.plan_id}">${labelParts.join(' ')}</option>`;
+        }).join('');
+        // Default select first plan
+        const firstId = plans[0]?.id || plans[0]?.plan_id || '';
+        if (firstId) $('#data-plan').value = firstId;
+      } catch (e) {
+        console.warn('Plans fetch failed', e);
+        showStatus($('#data-status'), 'Failed to load data plans', false);
+      }
+    }
+
+    // Fetch site settings for TON address
+    async function fetchSiteSettings() {
+      try {
+        const res = await fetch(`${apiBase}/access.php?action=getSiteSettings`);
+        const data = await res.json();
+        const siteaddr = data.walletaddress || data.tonaddress || data.siteaddress || '';
+
+        if (siteaddr) {
+          $('#airtime-target').value = siteaddr;
+          $('#data-target').value = siteaddr;
+        }
+      } catch (e) {
+        console.warn('Site settings fetch failed', e);
+      }
+    }
+
+    // Set up event listeners
+    $('#data-network').addEventListener('change', fetchDataPlans);
+
+    // Initialize data and tabs
+    fetchNetworks().then(fetchDataPlans).then(fetchSiteSettings);
+    initTabs();
+
+    // Calculate CNGN amount in wei for airtime
+    function calcWeiFromNaira(naira) {
+      try {
+        const ngnInt = Math.floor(Number(naira || 0));
+        if (!ngnInt || ngnInt <= 0) return '';
+        const wei = ethers.BigNumber.from(ngnInt.toString()).mul(ethers.BigNumber.from('1000000'));
+        return wei.toString();
+      } catch (e) {
+        return '';
+      }
+    }
+
+    // Set up calculation buttons
+    $('#airtime-calc').addEventListener('click', async () => {
+      const ngn = parseFloat($('#airtime-amount').value || '0');
+      const wei = calcWeiFromNaira(ngn);
+      $('#airtime-nano').value = wei;
+      $('#airtime-send').disabled = !wei;
+      if (!wei) {
+        showStatus($('#airtime-status'), 'Failed to calculate amount in wei', false);
+      }
+    });
+
+    $('#data-calc').addEventListener('click', async () => {
+      const network = $('#data-network').value;
+      const plan = $('#data-plan').value;
+      const res = await fetch(`${apiBase}/access.php?action=checkDataPlanPrice&network=${encodeURIComponent(network)}&plan=${encodeURIComponent(plan)}`);
+      const data = await res.json();
+      const ngn = Number(data.amount || data.price || data.naira || 0);
+      const wei = ngn ? calcWeiFromNaira(ngn) : '';
+      $('#data-nano').value = wei;
+      $('#data-send').disabled = !wei;
+      if (!wei) {
+        showStatus($('#data-status'), 'Failed to calculate amount in wei', false);
+      }
+    });
+
+    function prepareTransactionDataDex(data) {
+      const txHash = data.hash || data.in_msg?.hash;
+      const value = data.out_msgs?.[0]?.value || data.in_msg?.value || 0;
+      const userAddress = data.account?.address || '';
+      return {
+        tx_hash: txHash,
+        user_address: userAddress,
+        amount_wei: String(value),
+        token_contract: '0x7923C0f6FA3d1BA6EAFCAedAaD93e737Fd22FC4F'
+      };
+    }
+
+    // --- Assetchain + Ethers.js helpers (no Onboard) ---
+    const ASSETCHAIN_ID_HEX = '0xA5B4'; // 42420
+    const CNGN_CONTRACT = '0x7923C0f6FA3d1BA6EAFCAedAaD93e737Fd22FC4F';
+
+    function getEthers() {
+      if (!window.ethers) {
+        if (window.toastr) toastr.error('Ethers.js failed to load. Check your connection.');
+        throw new Error('ethers not loaded');
+      }
+      const walletProvider = window.currentProvider || window.ethereum || null;
+      if (!walletProvider || typeof walletProvider.request !== 'function') {
+        if (window.toastr) toastr.error('No wallet connected. Please connect a wallet.');
+        throw new Error('no provider');
+      }
+      const web3Provider = new ethers.providers.Web3Provider(walletProvider, 'any');
+      const signer = web3Provider.getSigner();
+      return { provider: web3Provider, signer };
+    }
+
+    function getErc20Contract(address, signer) {
+      const abi = [
+      'function transfer(address to, uint256 amount) returns (bool)',
+      'function balanceOf(address owner) view returns (uint256)'
+    ];
+      return new ethers.Contract(address, abi, signer);
+    }
+
+    function toWeiFromInput(inputValue) {
+      const v = (inputValue || '').trim();
+      if (!v) return null;
+      if (!/^\d+$/.test(v)) {
+        toastr.error('Amount must be a positive integer in wei.');
+        return null;
+      }
+      return ethers.BigNumber.from(v);
+    }
+
+    async function sendCngnTransfer(signer, toAddress, amountWeiBN) {
+      const erc20 = getErc20Contract(CNGN_CONTRACT, signer);
+      const tx = await erc20.transfer(toAddress, amountWeiBN);
+      const receipt = await tx.wait();
+      return receipt;
+    }
+
+    // Fetch DEX authorization token
+    async function getDexToken() {
+      try {
+        const res = await fetch(`${apiBase}/access.php?action=getDexToken`);
+        const data = await res.json();
+        return data.status === 'success' ? data.token : null;
+      } catch (e) {
+        console.error('Failed to fetch DEX token:', e);
+        return null;
+      }
+    }
+
+    // Verify and fulfill order
+    async function verifyAndFulfil(service, payload) {
+      const endpoint = service === 'airtime' ? `${apiBase}/airtime/` : `${apiBase}/data/`;
+      const token = await getDexToken();
+
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Token ${token}`;
+      }
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(payload)
+      });
+      return res.json();
+    }
+
+    // Handle sending CNGN via selected wallet provider on Assetchain
+    async function handleSend(service) {
+      try {
+        const statusEl = service === 'airtime' ? $('#airtime-status') : $('#data-status');
+        const authOk = await requireAuthSequence();
+        if (!authOk) {
+          showStatus(statusEl, 'Authentication required: connect wallet, switch to Assetchain, then sign in.', false);
+          return;
+        }
+        const selected = document.getElementById('wallet-select')?.value || window.currentWalletName || 'MetaMask';
+        const ethProvider = window.currentProvider || resolveProviderBySelection(selected);
+        if (!ethProvider || typeof ethProvider.request !== 'function') {
+          showStatus(statusEl, `${selected} wallet not installed or unavailable.`, false);
+          return;
+        }
+
+        try {
+          await ethProvider.request({ method: 'eth_requestAccounts' });
+        } catch (e) {
+          showStatus(statusEl, e?.message || 'Wallet connection cancelled or failed.', false);
+          return;
+        }
+
+        // Ensure Assetchain
+        try {
+          await ethProvider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: ASSETCHAIN_ID_HEX }] });
+        } catch (switchErr) {
+          const code = switchErr?.code;
+          if (code === 4902 || code === -4902 || code === -32603) {
+            try {
+              await ethProvider.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                  chainId: ASSETCHAIN_ID_HEX,
+                  chainName: 'Assetchain Mainnet',
+                  nativeCurrency: { name: 'ASET', symbol: 'ASET', decimals: 18 },
+                  rpcUrls: ['https://mainnet-rpc.assetchain.org/'],
+                  blockExplorerUrls: ['https://explorer.assetchain.org']
+                }]
+              });
+            } catch (_) { }
+          } else {
+            showStatus(statusEl, 'Please switch to Assetchain Mainnet.', false);
+            return;
+          }
+        }
+
+        // Normalize provider for Ethers usage
+        window.ethereum = ethProvider;
+        const { signer } = getEthers();
+        const userAddress = await signer.getAddress();
+
+        const target = service === 'airtime' ? $('#airtime-target').value.trim() : $('#data-target').value.trim();
+        const nano = service === 'airtime' ? $('#airtime-nano').value.trim() : $('#data-nano').value.trim();
+
+        if (!/^0x[a-fA-F0-9]{40}$/.test(target)) {
+          showStatus(statusEl, 'Target address must be a valid EVM address.', false);
+          return;
+        }
+
+        const amountWeiBN = toWeiFromInput(nano);
+        if (!amountWeiBN) { return; }
+
+        const erc20 = getErc20Contract(CNGN_CONTRACT, signer);
+        const balance = await erc20.balanceOf(userAddress);
+        if (balance.lt(amountWeiBN)) {
+          showStatus(statusEl, 'Insufficient CNGN balance for this transfer.', false);
+          return;
+        }
+        showStatus(statusEl, 'Sending transaction...', true);
+        const receipt = await sendCngnTransfer(signer, target, amountWeiBN);
+        showStatus(statusEl, 'Transaction sent. Verifying on-chain...', true);
+
+        const base = {
+          target_address: target,
+          tx_hash: receipt.transactionHash,
+          user_address: userAddress,
+          amount_wei: amountWeiBN.toString(),
+          token_contract: CNGN_CONTRACT
+        };
+
+        let payload;
+        if (service === 'airtime') {
+          payload = {
+            ...base,
+            network: $('#airtime-network').value,
+            phone: $('#airtime-phone').value,
+            amount: $('#airtime-amount').value,
+            ref: $('#airtime-ref').value
+          };
+        } else {
+          payload = {
+            ...base,
+            network: $('#data-network').value,
+            data_plan: $('#data-plan').value,
+            phone: $('#data-phone').value,
+            ref: $('#data-ref').value
+          };
+        }
+
+        const out = await verifyAndFulfil(service, payload);
+        const isSuccess = (out.status === 'success') || (out.status === true) || (out.success === true);
+
+        showStatus(
+          statusEl,
+          out.msg || out.message || (isSuccess ? 'Transaction successful!' : 'Transaction failed'),
+          isSuccess
+        );
+
+        if (isSuccess) {
+          notify('success', 'Transaction successful!');
+        } else {
+          notify('error', 'Transaction failed.');
+        }
+
+        if (isSuccess) {
+          if (service === 'airtime') {
+            $('#airtime-ref').value = randRef();
+          } else {
+            $('#data-ref').value = randRef();
+          }
+        }
+      } catch (e) {
+        const statusEl = service === 'airtime' ? $('#airtime-status') : $('#data-status');
+        showStatus(statusEl, 'Error: ' + (e && e.message ? e.message : 'Unknown error'), false);
+        showAlert('Error', e && e.message ? e.message : 'Unknown error occurred.', { okText: 'OK' });
+      }
+    }
+
+    // Show status message
+    function showStatus(element, message, isSuccess) {
+      element.innerHTML = `
+        <div class="status-message ${isSuccess ? 'status-success' : 'status-error'}">
+          <i class="fas ${isSuccess ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+          ${message}
+        </div>
+      `;
+    }
+
+    // Set up send buttons
+    $('#airtime-send').addEventListener('click', () => handleSend('airtime'));
+    $('#data-send').addEventListener('click', () => handleSend('data'));
+
+    // Set up reset buttons
+    $('#airtime-reset').addEventListener('click', () => {
+      $('#airtime-phone').value = '';
+      $('#airtime-amount').value = '';
+      $('#airtime-nano').value = '';
+      $('#airtime-ref').value = randRef();
+      $('#airtime-status').innerHTML = '';
+    });
+
+    $('#data-reset').addEventListener('click', () => {
+      $('#data-phone').value = '';
+      $('#data-nano').value = '';
+      $('#data-ref').value = randRef();
+      $('#data-status').innerHTML = '';
+    });
+  </script>
+  <!-- Onboard initialization removed; using custom wallet dropdown and EIP-1193 providers -->
+</body>
+
+</html>

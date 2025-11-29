@@ -1,0 +1,135 @@
+[03-Jan-2023 00:21:31 Africa/Lagos] PHP Fatal error:  Uncaught PDOException: SQLSTATE[28000] [1045] Access denied for user 'root'@'localhost' (using password: NO) in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php:29
+Stack trace:
+#0 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(29): PDO->__construct()
+#1 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(23): Model->connectDb()
+#2 /home/hopejjiu/ameenwebkey.com.ng/core/Controllers/Subscriber.php(53): Model->__construct()
+#3 /home/hopejjiu/ameenwebkey.com.ng/mobile/home/includes/route.php(55): Subscriber->__construct()
+#4 /home/hopejjiu/ameenwebkey.com.ng/mobile/login/index.php(24): require_once('/home/hopejjiu/...')
+#5 {main}
+  thrown in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php on line 29
+[03-Jan-2023 00:21:34 Africa/Lagos] PHP Fatal error:  Uncaught PDOException: SQLSTATE[28000] [1045] Access denied for user 'root'@'localhost' (using password: NO) in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php:29
+Stack trace:
+#0 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(29): PDO->__construct()
+#1 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(23): Model->connectDb()
+#2 /home/hopejjiu/ameenwebkey.com.ng/core/Controllers/Subscriber.php(53): Model->__construct()
+#3 /home/hopejjiu/ameenwebkey.com.ng/mobile/home/includes/route.php(55): Subscriber->__construct()
+#4 /home/hopejjiu/ameenwebkey.com.ng/mobile/login/index.php(24): require_once('/home/hopejjiu/...')
+#5 {main}
+  thrown in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php on line 29
+[03-Jan-2023 00:21:36 Africa/Lagos] PHP Fatal error:  Uncaught PDOException: SQLSTATE[28000] [1045] Access denied for user 'root'@'localhost' (using password: NO) in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php:29
+Stack trace:
+#0 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(29): PDO->__construct()
+#1 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(23): Model->connectDb()
+#2 /home/hopejjiu/ameenwebkey.com.ng/core/Controllers/Subscriber.php(53): Model->__construct()
+#3 /home/hopejjiu/ameenwebkey.com.ng/mobile/home/includes/route.php(55): Subscriber->__construct()
+#4 /home/hopejjiu/ameenwebkey.com.ng/mobile/login/index.php(24): require_once('/home/hopejjiu/...')
+#5 {main}
+  thrown in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php on line 29
+[03-Jan-2023 00:21:37 Africa/Lagos] PHP Fatal error:  Uncaught PDOException: SQLSTATE[28000] [1045] Access denied for user 'root'@'localhost' (using password: NO) in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php:29
+Stack trace:
+#0 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(29): PDO->__construct()
+#1 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(23): Model->connectDb()
+#2 /home/hopejjiu/ameenwebkey.com.ng/core/Controllers/Subscriber.php(53): Model->__construct()
+#3 /home/hopejjiu/ameenwebkey.com.ng/mobile/home/includes/route.php(55): Subscriber->__construct()
+#4 /home/hopejjiu/ameenwebkey.com.ng/mobile/login/index.php(24): require_once('/home/hopejjiu/...')
+#5 {main}
+  thrown in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php on line 29
+[03-Jan-2023 00:21:39 Africa/Lagos] PHP Fatal error:  Uncaught PDOException: SQLSTATE[28000] [1045] Access denied for user 'root'@'localhost' (using password: NO) in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php:29
+Stack trace:
+#0 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(29): PDO->__construct()
+#1 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(23): Model->connectDb()
+#2 /home/hopejjiu/ameenwebkey.com.ng/core/Controllers/Subscriber.php(53): Model->__construct()
+#3 /home/hopejjiu/ameenwebkey.com.ng/mobile/home/includes/route.php(55): Subscriber->__construct()
+#4 /home/hopejjiu/ameenwebkey.com.ng/mobile/login/index.php(24): require_once('/home/hopejjiu/...')
+#5 {main}
+  thrown in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php on line 29
+[03-Jan-2023 00:21:41 Africa/Lagos] PHP Fatal error:  Uncaught PDOException: SQLSTATE[28000] [1045] Access denied for user 'root'@'localhost' (using password: NO) in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php:29
+Stack trace:
+#0 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(29): PDO->__construct()
+#1 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(23): Model->connectDb()
+#2 /home/hopejjiu/ameenwebkey.com.ng/core/Controllers/Subscriber.php(53): Model->__construct()
+#3 /home/hopejjiu/ameenwebkey.com.ng/mobile/home/includes/route.php(55): Subscriber->__construct()
+#4 /home/hopejjiu/ameenwebkey.com.ng/mobile/login/index.php(24): require_once('/home/hopejjiu/...')
+#5 {main}
+  thrown in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php on line 29
+[03-Jan-2023 00:21:50 Africa/Lagos] PHP Fatal error:  Uncaught PDOException: SQLSTATE[28000] [1045] Access denied for user 'root'@'localhost' (using password: NO) in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php:29
+Stack trace:
+#0 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(29): PDO->__construct()
+#1 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(23): Model->connectDb()
+#2 /home/hopejjiu/ameenwebkey.com.ng/core/Controllers/Subscriber.php(53): Model->__construct()
+#3 /home/hopejjiu/ameenwebkey.com.ng/mobile/home/includes/route.php(55): Subscriber->__construct()
+#4 /home/hopejjiu/ameenwebkey.com.ng/mobile/login/index.php(24): require_once('/home/hopejjiu/...')
+#5 {main}
+  thrown in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php on line 29
+[03-Jan-2023 00:22:41 Africa/Lagos] PHP Fatal error:  Uncaught PDOException: SQLSTATE[28000] [1045] Access denied for user 'root'@'localhost' (using password: NO) in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php:29
+Stack trace:
+#0 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(29): PDO->__construct()
+#1 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(23): Model->connectDb()
+#2 /home/hopejjiu/ameenwebkey.com.ng/core/Controllers/Subscriber.php(53): Model->__construct()
+#3 /home/hopejjiu/ameenwebkey.com.ng/mobile/home/includes/route.php(55): Subscriber->__construct()
+#4 /home/hopejjiu/ameenwebkey.com.ng/mobile/login/index.php(24): require_once('/home/hopejjiu/...')
+#5 {main}
+  thrown in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php on line 29
+[03-Jan-2023 00:22:47 Africa/Lagos] PHP Fatal error:  Uncaught PDOException: SQLSTATE[28000] [1045] Access denied for user 'root'@'localhost' (using password: NO) in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php:29
+Stack trace:
+#0 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(29): PDO->__construct()
+#1 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(23): Model->connectDb()
+#2 /home/hopejjiu/ameenwebkey.com.ng/core/Controllers/Subscriber.php(53): Model->__construct()
+#3 /home/hopejjiu/ameenwebkey.com.ng/mobile/home/includes/route.php(55): Subscriber->__construct()
+#4 /home/hopejjiu/ameenwebkey.com.ng/mobile/login/index.php(24): require_once('/home/hopejjiu/...')
+#5 {main}
+  thrown in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php on line 29
+[03-Jan-2023 00:22:51 Africa/Lagos] PHP Fatal error:  Uncaught PDOException: SQLSTATE[28000] [1045] Access denied for user 'root'@'localhost' (using password: NO) in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php:29
+Stack trace:
+#0 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(29): PDO->__construct()
+#1 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(23): Model->connectDb()
+#2 /home/hopejjiu/ameenwebkey.com.ng/core/Controllers/Subscriber.php(53): Model->__construct()
+#3 /home/hopejjiu/ameenwebkey.com.ng/mobile/home/includes/route.php(55): Subscriber->__construct()
+#4 /home/hopejjiu/ameenwebkey.com.ng/mobile/login/index.php(24): require_once('/home/hopejjiu/...')
+#5 {main}
+  thrown in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php on line 29
+[03-Jan-2023 00:22:58 Africa/Lagos] PHP Fatal error:  Uncaught PDOException: SQLSTATE[28000] [1045] Access denied for user 'root'@'localhost' (using password: NO) in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php:29
+Stack trace:
+#0 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(29): PDO->__construct()
+#1 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(23): Model->connectDb()
+#2 /home/hopejjiu/ameenwebkey.com.ng/core/Controllers/Subscriber.php(53): Model->__construct()
+#3 /home/hopejjiu/ameenwebkey.com.ng/mobile/home/includes/route.php(55): Subscriber->__construct()
+#4 /home/hopejjiu/ameenwebkey.com.ng/mobile/login/index.php(24): require_once('/home/hopejjiu/...')
+#5 {main}
+  thrown in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php on line 29
+[03-Jan-2023 00:23:03 Africa/Lagos] PHP Fatal error:  Uncaught PDOException: SQLSTATE[28000] [1045] Access denied for user 'root'@'localhost' (using password: NO) in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php:29
+Stack trace:
+#0 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(29): PDO->__construct()
+#1 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(23): Model->connectDb()
+#2 /home/hopejjiu/ameenwebkey.com.ng/core/Controllers/Subscriber.php(53): Model->__construct()
+#3 /home/hopejjiu/ameenwebkey.com.ng/mobile/home/includes/route.php(55): Subscriber->__construct()
+#4 /home/hopejjiu/ameenwebkey.com.ng/mobile/login/index.php(24): require_once('/home/hopejjiu/...')
+#5 {main}
+  thrown in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php on line 29
+[03-Jan-2023 00:23:24 Africa/Lagos] PHP Fatal error:  Uncaught PDOException: SQLSTATE[28000] [1045] Access denied for user 'root'@'localhost' (using password: NO) in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php:29
+Stack trace:
+#0 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(29): PDO->__construct()
+#1 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(23): Model->connectDb()
+#2 /home/hopejjiu/ameenwebkey.com.ng/core/Controllers/Subscriber.php(53): Model->__construct()
+#3 /home/hopejjiu/ameenwebkey.com.ng/mobile/home/includes/route.php(55): Subscriber->__construct()
+#4 /home/hopejjiu/ameenwebkey.com.ng/mobile/login/index.php(24): require_once('/home/hopejjiu/...')
+#5 {main}
+  thrown in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php on line 29
+[03-Jan-2023 00:23:28 Africa/Lagos] PHP Fatal error:  Uncaught PDOException: SQLSTATE[28000] [1045] Access denied for user 'root'@'localhost' (using password: NO) in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php:29
+Stack trace:
+#0 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(29): PDO->__construct()
+#1 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(23): Model->connectDb()
+#2 /home/hopejjiu/ameenwebkey.com.ng/core/Controllers/Subscriber.php(53): Model->__construct()
+#3 /home/hopejjiu/ameenwebkey.com.ng/mobile/home/includes/route.php(55): Subscriber->__construct()
+#4 /home/hopejjiu/ameenwebkey.com.ng/mobile/login/index.php(24): require_once('/home/hopejjiu/...')
+#5 {main}
+  thrown in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php on line 29
+[03-Jan-2023 00:23:41 Africa/Lagos] PHP Fatal error:  Uncaught PDOException: SQLSTATE[28000] [1045] Access denied for user 'root'@'localhost' (using password: NO) in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php:29
+Stack trace:
+#0 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(29): PDO->__construct()
+#1 /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php(23): Model->connectDb()
+#2 /home/hopejjiu/ameenwebkey.com.ng/core/Controllers/Subscriber.php(53): Model->__construct()
+#3 /home/hopejjiu/ameenwebkey.com.ng/mobile/home/includes/route.php(55): Subscriber->__construct()
+#4 /home/hopejjiu/ameenwebkey.com.ng/mobile/login/index.php(24): require_once('/home/hopejjiu/...')
+#5 {main}
+  thrown in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php on line 29

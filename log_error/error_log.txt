@@ -1,0 +1,14 @@
+{"timestamp":"2025-11-25 04:52:59","From":"Controller:: Airtime","message":"API Error: Server\/Network Error","context":{"timestamp":"2025-11-25 04:52:59","request":{"network":"1","amount":"100","mobile_number":"08063563530","Ported_number":"true","request-id":"REF-HPTQDCS5","airtime_type":"VTU"},"response":"{\"detail\":\"Invalid token.\"}","error":"","http_code":401},"ip":"::1","user_id":"unknown"}
+[2025-11-25 04:52:59] ERROR: Unknown
+From: Api :: Airtime Index
+IP Address: ::1
+Request Data: []
+User ID: Unknown
+--------------------------------------------------
+{"timestamp":"2025-11-28 07:48:52","From":"Controller:: Airtime","message":"API Error: Server\/Network Error","context":{"timestamp":"2025-11-28 07:48:52","request":{"network":"1","amount":"100","mobile_number":"08063563530","Ported_number":"false","request-id":"REF-3RV5ZQ4Q","airtime_type":"VTU"},"response":"{\"detail\":\"Invalid token.\"}","error":"","http_code":401},"ip":"::1","user_id":"unknown"}
+[2025-11-28 07:48:52] ERROR: Unknown
+From: Api :: Airtime Index
+IP Address: ::1
+Request Data: []
+User ID: Unknown
+--------------------------------------------------

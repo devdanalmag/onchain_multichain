@@ -1,0 +1,15 @@
+[15-May-2023 22:48:23 Africa/Lagos] PHP Warning:  Invalid argument supplied for foreach() in /home/vtunaija/apitelecomplug/mobile/home/crypto.php on line 57
+[15-May-2023 22:54:41 Africa/Lagos] PHP Warning:  Invalid argument supplied for foreach() in /home/vtunaija/apitelecomplug/mobile/home/crypto.php on line 57
+[15-May-2023 23:13:58 Africa/Lagos] PHP Warning:  Invalid argument supplied for foreach() in /home/vtunaija/apitelecomplug/mobile/home/crypto.php on line 57
+[20-May-2023 22:29:06 Africa/Lagos] PHP Warning:  Invalid argument supplied for foreach() in /home/vtunaija/apitelecomplug/mobile/home/airtime2cash.php on line 56
+[20-May-2023 23:07:01 Africa/Lagos] PHP Parse error:  syntax error, unexpected '.' in /home/vtunaija/apitelecomplug/mobile/home/airtime2cash.php on line 93
+[20-May-2023 23:08:57 Africa/Lagos] PHP Parse error:  syntax error, unexpected '.' in /home/vtunaija/apitelecomplug/mobile/home/airtime2cash.php on line 93
+[23-May-2023 18:25:05 Africa/Lagos] PHP Fatal error:  Uncaught PDOException: SQLSTATE[08004] [1040] Too many connections in /home/vtunaija/sesomtopup.com.ng/core/Models/Model.php:29
+Stack trace:
+#0 /home/vtunaija/sesomtopup.com.ng/core/Models/Model.php(29): PDO->__construct('mysql:host=loca...', 'vtunaija_sesomn...', 'vtunaija_sesomn...')
+#1 /home/vtunaija/sesomtopup.com.ng/core/Models/Model.php(23): Model->connectDb()
+#2 /home/vtunaija/sesomtopup.com.ng/core/Controllers/Subscriber.php(44): Model->__construct()
+#3 /home/vtunaija/sesomtopup.com.ng/mobile/home/includes/route.php(87): Subscriber->__construct()
+#4 /home/vtunaija/sesomtopup.com.ng/mobile/home/index.php(1): require_once('/home/vtunaija/...')
+#5 {main}
+  thrown in /home/vtunaija/sesomtopup.com.ng/core/Models/Model.php on line 29

@@ -1,0 +1,5 @@
+{
+  "token": "dex_f6a4c7e2b93a4db19c56a8e0b7f1c3d2",
+  "generated_at": "2025-10-30T12:00:00Z",
+  "note": "Authorization token used by DEX frontend to call backend APIs"
+}

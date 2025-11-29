@@ -1,0 +1,7 @@
+[03-Jan-2023 04:24:15 Africa/Lagos] PHP Fatal error:  Uncaught Error: Class "PHPMailer\PHPMailer\PHPMailer" not found in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php:42
+Stack trace:
+#0 /home/hopejjiu/ameenwebkey.com.ng/core/Models/ApiModel.php(543): Model->sendMail()
+#1 /home/hopejjiu/ameenwebkey.com.ng/core/Controllers/ApiAccess.php(406): ApiModel->sendAlphaNotification()
+#2 /home/hopejjiu/ameenwebkey.com.ng/api/alphatopup/index.php(191): ApiAccess->sendAlphaNotification()
+#3 {main}
+  thrown in /home/hopejjiu/ameenwebkey.com.ng/core/Models/Model.php on line 42

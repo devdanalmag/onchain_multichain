@@ -1,0 +1,7 @@
+RewriteEngine On
+
+#RewriteRule ^([^/]+)/? index.php?url=$1&arg=$2 [L,QSA]
+#RewriteRule ^([a-z]{2,2})/([a-zA-Z0-9_-]+)/? index.php?url=$1&arg=$2 [QSA]
+RewriteRule ^([a-zA-Z0-9-/+]+)? index.php?url=$1&arg=$2 [L,QSA]
+
+

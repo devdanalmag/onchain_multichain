@@ -1,0 +1,6 @@
+{
+  "rpc_url": "https://mainnet-rpc.assetchain.org/",
+  "chain_id": 42420,
+  "site_address": "0x0000000000000000000000000000000000000000",
+  "cngn_contract": "0x7923C0f6FA3d1BA6EAFCAedAaD93e737Fd22FC4F"
+}

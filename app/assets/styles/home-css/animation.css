@@ -1,0 +1,271 @@
+#notification {
+    /* position:initial;  */
+    top: 50%;
+    margin-left: 25%;
+    transform: translate(-50%, -50%);
+    background-color: #f1f1f1;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 5px 2px 5px rgb(192, 191, 191);
+    display: none;
+    text-align: center;
+    border-radius: 0%;
+    z-index: 5;
+    padding: 20px;
+    position: fixed;
+  }
+  
+  /* .asia{
+  
+  } */
+  
+  #edit {
+    top: 10%;
+    margin-left: 25%;
+    transform: translate(-50%, -50%);
+    background-color: #f1f1f1;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 5px 2px 5px rgb(192, 191, 191);
+    display: block;
+    text-align: center;
+    border-radius: 0%;
+    z-index: 99;
+    padding: 20px;
+    position: fixed;
+    width: 350px;
+  }
+  
+  #tost {
+    width: 120mm;
+    height: 100px;
+    z-index: 50;
+    position: fixed;
+    margin-left: 586px;
+    border-radius: 20px;
+    top: -20px;
+    display: none;
+    /* animation: showing 2.7s  forwards; */
+  }
+  
+  .tost_2 {
+    background-color: #d41f07;
+  }
+  #tost h3 {
+    top: 45px;
+    padding-left: 5px;
+    z-index: 9999;
+    position: fixed;
+    text-align: center;
+  }
+  
+  .show-tost {
+    animation: showing 2.7s forwards;
+  }
+  
+  .hide-tost {
+    animation: hidding 2.7s backwards;
+  }
+  
+  @keyframes showing {
+    0% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+  
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes hidding {
+    0% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  
+    100% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+  }
+  
+  .fade-out {
+    animation: slide-out 0.5s forwards;
+  }
+  
+  .fade-in {
+    animation: slide-in 500ms forwards;
+  }
+  
+  #notification h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+  
+  #notification-message {
+    margin: 0;
+  }
+  
+  #notification button {
+    margin-top: 15px;
+  }
+  
+  .bdo {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #b1aca8d2;
+    position: fixed;
+    z-index: 4;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  
+  @keyframes slide-in {
+    0% {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+  
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slide-out {
+    0% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  
+    100% {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+  }
+  /* 
+  @media (max-width: 425px) {
+    #notification {
+      margin-left: 58px;
+      width: 265px;
+    }
+    #tost {
+      margin-left: 58px;
+      width: 20mm;
+      height: 100px;
+    }
+    #tost h3 {
+      top: 46px;
+      padding-left: 5px;
+      z-index: 999999;
+      position: fixed;
+      text-align: center;
+    }
+  }*/
+  
+  @media (max-width: 768px) {
+    #notification {
+      margin-left: 107px;
+      width: 389px;
+    } 
+    #tost {
+      width: 82mm;
+      height: 86px;
+      margin-left: 245px;
+    }
+    #tost h3 {
+      top: 45px;
+      padding-left: 5px;
+      font-size: 20px;
+    }
+    #edit {
+      top: 3px;
+    }
+  }
+  
+  @media (max-width: 425px) {
+    #notification {
+      margin-left: 39px;
+      width: 290px;
+    }
+    #edit {
+      margin-left: 62px;
+      width: 260px;
+      top: 6px;
+    }
+    #tost {
+      margin-left: 224px;
+      width: 46mm;
+      height: 55px;
+    }
+    #tost h3 {
+      top: 30px;
+      padding-left: 3px;
+      font-size: smaller;
+    }
+  }
+  
+  @media (max-width: 375px) {
+    #notification {
+      margin-left: 10px;
+      width: 259px;
+    }
+  
+    #edit {
+      margin-left: 30px;
+      width: 260px;
+      top: 6px;
+    }
+    
+    #tost {
+      margin-left: 254px;
+      width: 20mm;
+      height: 100px;
+      top: -34px;
+    }
+    #tost h3 {
+      top: 40px;
+      padding-left: 3px;
+      font-size: smaller;
+    }
+  }
+  
+  
+  #code {
+    position: fixed;
+    top: 50%;
+    left: 55%;
+    transform: translate(-50%, -50%);
+    background-color: #f1f1f1;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0px 2px 5px rgb(192, 191, 191);
+    display: block;
+    text-align: center;
+    border-radius: 10%;
+    z-index: 4;
+  }
+  
+  #code-message {
+    margin: 0;
+  }
+  
+  #adminDiv {
+    display: none;
+  }
+  
+  /* #bdo {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #b1aca8d2;
+    position: fixed;
+    z-index: 3;
+    width: 100%;
+    height: 100%;
+    display: block;
+  } */
