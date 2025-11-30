@@ -533,7 +533,32 @@ class ApiModel extends Model
     }
     // Record Onchain transaction
 
-    public function recordchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status)
+    private function ensureTransactionsTokenColumns()
+    {
+        $dbh = self::connect();
+        try {
+            $checkSql = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='transactions' AND COLUMN_NAME IN ('transaction_type','token_name','token_contract')";
+            $q = $dbh->prepare($checkSql);
+            $q->execute();
+            $found = array_map(function ($r) { return $r['COLUMN_NAME']; }, $q->fetchAll(PDO::FETCH_ASSOC));
+            $needType = !in_array('transaction_type', $found);
+            $needName = !in_array('token_name', $found);
+            $needContract = !in_array('token_contract', $found);
+            if ($needType) {
+                $dbh->exec("ALTER TABLE transactions ADD COLUMN transaction_type VARCHAR(10) NOT NULL DEFAULT 'app'");
+            }
+            if ($needName) {
+                $dbh->exec("ALTER TABLE transactions ADD COLUMN token_name VARCHAR(64) NULL");
+            }
+            if ($needContract) {
+                $dbh->exec("ALTER TABLE transactions ADD COLUMN token_contract VARCHAR(66) NULL");
+            }
+        } catch (\Throwable $e) {
+            // Ignore migration errors to avoid breaking runtime
+        }
+    }
+
+    public function recordchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status, $transaction_type = 'app', $token_name = null, $token_contract = null)
     {
         $dbh = self::connect();
         $userid = (float) $userid;
@@ -541,9 +566,10 @@ class ApiModel extends Model
         $date = date("Y-m-d H:i:s");
         $oldbalance = '0';
         $newbalance = '0';
+        $this->ensureTransactionsTokenColumns();
         //Record Transaction
-        $sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, nanoton, date) 
-        VALUES (:user, :ref, :sn, :sd, :a, :s, :ob, :nb, :txh, :taddy, :uaddy, :ton, :d)";
+        $sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, nanoton, date, transaction_type, token_name, token_contract) 
+        VALUES (:user, :ref, :sn, :sd, :a, :s, :ob, :nb, :txh, :taddy, :uaddy, :ton, :d, :ttype, :tname, :tcontract)";
         $query = $dbh->prepare($sql);
         $query->bindParam(':user', $userid, PDO::PARAM_INT);
         $query->bindParam(':ref', $ref, PDO::PARAM_STR);
@@ -558,6 +584,9 @@ class ApiModel extends Model
         $query->bindParam(':uaddy', $user_address, PDO::PARAM_STR);
         $query->bindParam(':ton', $nanoamount, PDO::PARAM_STR);
         $query->bindParam(':d', $date, PDO::PARAM_STR);
+        $query->bindParam(':ttype', $transaction_type, PDO::PARAM_STR);
+        $query->bindParam(':tname', $token_name, PDO::PARAM_STR);
+        $query->bindParam(':tcontract', $token_contract, PDO::PARAM_STR);
         $query->execute();
 
 
@@ -569,7 +598,7 @@ class ApiModel extends Model
         }
     }
     // Record Refund Transaction
-    public function recordrefundchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status)
+    public function recordrefundchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status, $transaction_type = 'app', $token_name = null, $token_contract = null)
     {
         $dbh = self::connect();
         $userid = (float) $userid;
@@ -577,9 +606,10 @@ class ApiModel extends Model
         $date = date("Y-m-d H:i:s");
         $oldbalance = '0';
         $newbalance = '0';
+        $this->ensureTransactionsTokenColumns();
         //Record Transaction
-        $sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, nanoton, date) 
-    VALUES (:user, :ref, :sn, :sd, :a, :s, :ob, :nb, :txh, :taddy, :uaddy, :ton, :d)";
+        $sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, nanoton, date, transaction_type, token_name, token_contract) 
+    VALUES (:user, :ref, :sn, :sd, :a, :s, :ob, :nb, :txh, :taddy, :uaddy, :ton, :d, :ttype, :tname, :tcontract)";
         $query = $dbh->prepare($sql);
         $query->bindParam(':user', $userid, PDO::PARAM_INT);
         $query->bindParam(':ref', $ref, PDO::PARAM_STR);
@@ -594,6 +624,9 @@ class ApiModel extends Model
         $query->bindParam(':uaddy', $user_address, PDO::PARAM_STR);
         $query->bindParam(':ton', $nanoamount, PDO::PARAM_STR);
         $query->bindParam(':d', $date, PDO::PARAM_STR);
+        $query->bindParam(':ttype', $transaction_type, PDO::PARAM_STR);
+        $query->bindParam(':tname', $token_name, PDO::PARAM_STR);
+        $query->bindParam(':tcontract', $token_contract, PDO::PARAM_STR);
         $query->execute();
 
 

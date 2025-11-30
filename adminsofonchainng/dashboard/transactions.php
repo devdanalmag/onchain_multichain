@@ -36,10 +36,14 @@
         <?php if(isset($_GET["search"])): echo $controller->createNotification1("alert-info","<b>Showing Result For Search Key: '".$_GET["search"]."' For ".ucwords($_GET["searchfor"])." Transaction </b> "); endif; ?> 
         
         <div class="box">
-            <div class="box-header with-border d-flex justify-content-between">
-              <h4 class="box-title">All Transactions</h4>
-              <a class="btn btn-info btn-sm" href="transactions?page=<?php echo $pageCount; if(isset($_GET["search"])): echo "&search=".$_GET["search"]; endif; ?>">Next 1000 Transaction</a>
-			</div>
+            <div class="box-header with-border d-flex justify-content-between align-items-center">
+              <h4 class="box-title">Transactions</h4>
+              <div class="btn-group" role="group" aria-label="tx-type-tabs">
+                <a class="btn btn-outline-primary btn-sm<?php echo (!isset($_GET['tx_type'])||$_GET['tx_type']=='app')?' active':''; ?>" href="transactions?tx_type=app<?php if(isset($_GET['search'])): echo '&search='.$_GET['search'].'&searchfor='.$_GET['searchfor']; endif; ?>">App</a>
+                <a class="btn btn-outline-primary btn-sm<?php echo (isset($_GET['tx_type'])&&$_GET['tx_type']=='dex')?' active':''; ?>" href="transactions?tx_type=dex<?php if(isset($_GET['search'])): echo '&search='.$_GET['search'].'&searchfor='.$_GET['searchfor']; endif; ?>">DEX</a>
+              </div>
+              <a class="btn btn-info btn-sm" href="transactions?page=<?php echo $pageCount; if(isset($_GET["search"])): echo "&search=".$_GET["search"]."&searchfor=".$_GET["searchfor"]; endif; if(isset($_GET['tx_type'])): echo "&tx_type=".$_GET['tx_type']; endif; ?>">Next 1000</a>
+            </div>
             <!-- /.box-header -->
             <div class="box-body">
 				<div class="table-responsive">
@@ -53,7 +57,10 @@
 			                <th>Phone</th>
 			                <th>Service</th>
 			                <th>Description</th>
-			                <th>Amount</th>
+                            <th>Amount</th>
+                            <th>Type</th>
+                            <th>Token</th>
+                            <th>Contract</th>
 			                <th>Profit</th>
 			                <th>Status</th>
 			                <th>Date</th>
@@ -73,6 +80,9 @@
                             <td><?php echo $result->servicename;?></td>
                             <td><?php echo $result->servicedesc;?></td>
                             <td>N<?php echo $result->amount;?></td>
+                            <td><?php echo isset($result->transaction_type)? strtoupper($result->transaction_type):'APP'; ?></td>
+                            <td><?php echo isset($result->token_name)? $result->token_name:''; ?></td>
+                            <td style="font-family: monospace; font-size: 12px;"><?php echo isset($result->token_contract)? $result->token_contract:''; ?></td>
                             <td>N<?php echo $result->profit;?></td>
                             <td><?php echo $controller->formatTransStatus($result->status); ?></td>
                             <td><?php echo $controller->formatDate($result->date);?></td>

@@ -313,10 +313,10 @@ class ApiAccess extends Controller
     }
 
     //   Record Onchain Transaction
-    public function recordchainTransaction($userid, $servicename, $servicedesc, $amountopay, $ref, $target_address, $tx_hash, $user_address, $nanoamount, $status)
+    public function recordchainTransaction($userid, $servicename, $servicedesc, $amountopay, $ref, $target_address, $tx_hash, $user_address, $nanoamount, $status, $transaction_type = 'app', $token_name = null, $token_contract = null)
     {
         $response = array();
-        $result = $this->model->recordchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status);
+        $result = $this->model->recordchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status, $transaction_type, $token_name, $token_contract);
         // if (!$result) {
         //     $response["status"] = "fail";
         //     $response["msg"] = "Failed To Record Transaction";
@@ -329,10 +329,10 @@ class ApiAccess extends Controller
         return $response;
     }
     // Record and Refund Transaction
-    public function recordrefundchainTransaction($userid, $servicename, $servicedesc, $amountopay, $reference, $target_address, $tx_hash, $sender_adress, $nanoamount, $status)
+    public function recordrefundchainTransaction($userid, $servicename, $servicedesc, $amountopay, $reference, $target_address, $tx_hash, $sender_adress, $nanoamount, $status, $transaction_type = 'app', $token_name = null, $token_contract = null)
     {
         $response = array();
-        $result = $this->model->recordrefundchainTransaction($userid, $servicename, $servicedesc, $reference, $amountopay, $target_address, $tx_hash, $sender_adress, $nanoamount, $status);
+        $result = $this->model->recordrefundchainTransaction($userid, $servicename, $servicedesc, $reference, $amountopay, $target_address, $tx_hash, $sender_adress, $nanoamount, $status, $transaction_type, $token_name, $token_contract);
         // if (!$result) {
         //     $response["status"] = "fail";
         //     $response["msg"] = "Failed To Record Transaction";

@@ -1478,13 +1478,18 @@ class AdminModel extends Model
 			}
 		}
 
-		$sql = "SELECT a.sFname,a.sPhone,a.sEmail,a.sType,b.* FROM subscribers a, transactions b WHERE a.sId=b.sId ";
-		$sql .= $addon . " ORDER BY b.date DESC LIMIT $limit, 1000";
-		$query = $dbh->prepare($sql);
-		if (isset($_GET["search"])): if ($search <> ""): $query->bindValue(':search', '%' . $search . '%');
-			endif;
-		endif;
-		$query->execute();
+        $sql = "SELECT a.sFname,a.sPhone,a.sEmail,a.sType,b.* FROM subscribers a, transactions b WHERE a.sId=b.sId ";
+        // Optional transaction_type filter
+        $txType = isset($_GET['tx_type']) ? strtolower(trim($_GET['tx_type'])) : '';
+        $allowedTxType = ($txType === 'dex' || $txType === 'app');
+        if ($allowedTxType) {
+            $sql .= " AND b.transaction_type = :tx_type ";
+        }
+        $sql .= $addon . " ORDER BY b.date DESC LIMIT $limit, 1000";
+        $query = $dbh->prepare($sql);
+        if (isset($_GET["search"])): if ($search <> ""): $query->bindValue(':search', '%' . $search . '%'); endif; endif;
+        if ($allowedTxType) { $query->bindValue(':tx_type', $txType); }
+        $query->execute();
 		$results = $query->fetchAll(PDO::FETCH_OBJ);
 		return $results;
 	}

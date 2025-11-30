@@ -31,6 +31,15 @@
                         <?php echo $data->txhash; ?>
                     </li>
                     <li class="list-group-item">
+                        <b>Transaction Type:</b> <?php echo isset($data->transaction_type)? strtoupper($data->transaction_type):'APP'; ?>
+                    </li>
+                    <li class="list-group-item">
+                        <b>Token:</b> <?php echo isset($data->token_name)? $data->token_name:''; ?>
+                    </li>
+                    <li class="list-group-item">
+                        <b>Contract:</b> <span style="font-family: monospace; font-size: 12px;"><?php echo isset($data->token_contract)? $data->token_contract:''; ?></span>
+                    </li>
+                    <li class="list-group-item">
                         <b>Sender Wallet:</b>
                         <?php echo $data->senderaddress; ?>
                     </li>

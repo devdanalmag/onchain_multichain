@@ -235,7 +235,7 @@ if ($result["status"] == "fail") {
         $refundwallet = $refund["sender"] ?? $siteaddress;
         $targetwallet = $refund["receiver"] ?? $fuser_address;
         $refund_hash = $refund["hash"] ?? "N/A";
-        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tokenamount, "9");
+$controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tokenamount, "9", $transaction_type, $token_name, $normTokenContract);
     }
 
     echo json_encode($response);
@@ -278,7 +278,7 @@ if ($airtime_type == "Share And Sell") {
             $refundwallet = $refund["sender"] ?? $siteaddress;
             $targetwallet = $refund["receiver"] ?? $fuser_address;
             $refund_hash = $refund["hash"] ?? "N/A";
-            $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tokenamount, "9");
+$controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tokenamount, "9", $transaction_type, $token_name, $normTokenContract);
         }
 
         echo json_encode($response);
@@ -316,7 +316,7 @@ if ($airtime_type == "VTU") {
             $refundwallet = $refund["sender"] ?? $siteaddress;
             $targetwallet = $refund["receiver"] ?? $fuser_address;
             $refund_hash = $refund["hash"] ?? "N/A";
-            $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tokenamount, "9");
+$controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tokenamount, "9", $transaction_type, $token_name, $normTokenContract);
         }
 
         echo json_encode($response);
@@ -352,7 +352,7 @@ if ($ported_number == "false") {
         $refundwallet = $refund["sender"] ?? $siteaddress;
         $targetwallet = $refund["receiver"] ?? $fuser_address;
         $refund_hash = $refund["hash"] ?? "N/A";
-        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tokenamount, "9");
+$controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tokenamount, "9", $transaction_type, $token_name, $normTokenContract);
 
         echo json_encode($response);
         exit();
@@ -407,7 +407,7 @@ if ($amount < $airtimemin) {
     $refundwallet = $refund["sender"] ?? $siteaddress;
     $targetwallet = $refund["receiver"] ?? $fuser_address;
     $refund_hash = $refund["hash"] ?? "N/A";
-    $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tokenamount, "9");
+$controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tokenamount, "9", $transaction_type, $token_name, $normTokenContract);
 
     echo json_encode($response);
     exit();
@@ -434,7 +434,7 @@ if ($amount > $airtimemax) {
     $refundwallet = $refund["sender"] ?? $siteaddress;
     $targetwallet = $refund["receiver"] ?? $fuser_address;
     $refund_hash = $refund["hash"] ?? "N/A";
-    $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tokenamount, "9");
+$controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tokenamount, "9", $transaction_type, $token_name, $normTokenContract);
 
     echo json_encode($response);
     exit();
@@ -460,6 +460,18 @@ if ($result["status"] == "fail") {
 // token amount already computed above
 $servicename = "Airtime";
 $servicedesc = "{$networkDetails["network"]} Airtime purchase of N{$amount} @ {$tokenamount} CNGN for phone number {$phone}";
+
+// Transaction classification and token metadata
+$transaction_type = $isDexToken ? 'dex' : 'app';
+$normTokenContract = $controller->normalizeEvmAddress($token_contract);
+$cngnContractCfg = '';
+if (file_exists(__DIR__ . '/../../config/assetchain.json')) {
+    $cfg = json_decode(file_get_contents(__DIR__ . '/../../config/assetchain.json'), true);
+    if (is_array($cfg) && !empty($cfg['cngn_contract'])) {
+        $cngnContractCfg = $controller->normalizeEvmAddress($cfg['cngn_contract']);
+    }
+}
+$token_name = ($normTokenContract && $normTokenContract === $cngnContractCfg) ? 'cNGN' : (($normTokenContract) ? 'ERC20' : 'ASET');
 
 
 $result = $controller->checkTransactionDuplicate($servicename, $servicedesc);
@@ -557,7 +569,7 @@ if (!$isDexToken && $fuser_address <> $user_saved_address) {
 // token amount already computed above
 // Check User Adress
 //  Record Transaction As Processing With Status 5
-$transRecord = $controller->recordchainTransaction($userid, $servicename, $servicedesc, $amountopay, $body->ref, $ftarget_address, $tx_hash, $fuser_address, $tokenamount, "5");
+$transRecord = $controller->recordchainTransaction($userid, $servicename, $servicedesc, $amountopay, $body->ref, $ftarget_address, $tx_hash, $fuser_address, $tokenamount, "5", $transaction_type, $token_name, $normTokenContract);
 if ($transRecord["status"] == "fail") {
     header('HTTP/1.0 400 Transaction Failed');
     $response['status'] = "fail";
@@ -603,7 +615,7 @@ if ($checkprice['status'] == 'fail') {
         $refundwallet = $refund["sender"] ?? $siteaddress;
         $targetwallet = $refund["receiver"] ?? $fuser_address;
         $refund_hash = $refund["hash"] ?? "N/A";
-        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tokenamount, "9");
+$controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tokenamount, "9", $transaction_type, $token_name, $normTokenContract);
     }
 
     // $controller->updateFailedTransactionStatus($userid, $servicedesc, $ref, $amountopay, "1");
