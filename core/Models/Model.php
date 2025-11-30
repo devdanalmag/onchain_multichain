@@ -8,7 +8,7 @@
 	class Model{
 
 		public static $host="localhost";
-		public static $dbName="onchainc_db"; //Database Name
+		public static $dbName="onchainc_onchainbills"; //Database Name
 		public static $username="onchainc_admin"; // Database Username
 		public static $password="onchainc_admin"; //Database Password
 
