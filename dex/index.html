@@ -859,6 +859,36 @@
     }
 
     /* Custom wallet dropdown and connect UI */
+    /* Transaction Receipts */
+    .receipts-container {
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    @media (min-width: 992px) {
+      .receipts-container { grid-template-columns: 1fr 1fr; }
+    }
+    .receipt-card { background: var(--card-bg); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: var(--border-radius); overflow: hidden; }
+    .receipt-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+    .receipt-title { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+    .status-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+    .status-success { background: rgba(0, 216, 151, 0.15); color: #00D897; border: 1px solid rgba(0, 216, 151, 0.35); }
+    .status-failed { background: rgba(255, 71, 87, 0.15); color: #FF4757; border: 1px solid rgba(255, 71, 87, 0.35); }
+    .receipt-body { padding: 14px 16px; }
+    .receipt-grid { display: grid; grid-template-columns: 1fr; gap: 8px 16px; }
+    @media (min-width: 768px) { .receipt-grid { grid-template-columns: 1fr 1fr; } }
+    .kv { display: flex; gap: 8px; align-items: center; }
+    .kv .k { color: var(--gray); min-width: 120px; }
+    .kv .v { font-family: monospace; font-size: 13px; word-break: break-all; }
+    .receipt-footer { border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 12px 16px; display: flex; gap: 8px; justify-content: flex-end; }
+
+    /* Print styles */
+    @media print {
+      body { background: #fff; color: #000; }
+      header, .tabs, .tips-section, .button-group, #airtime-status, #data-status { display: none !important; }
+      .receipt-card { break-inside: avoid; border-color: #000; }
+    }
   </style>
   <!-- MetaMask / EVM only -->
 </head>
@@ -1101,6 +1131,7 @@
           <li>All transactions are secure and processed on the Assetchain network</li>
         </ul>
       </div>
+      <div id="tx-receipts" class="receipts-container" aria-live="polite" aria-label="Transaction receipts"></div>
     </div>
   </main>
 
@@ -1804,6 +1835,127 @@
       }
     }
 
+    // Explorer mapping and utilities
+    const ExplorerMap = {
+      '0xA5B4': { base: 'https://scan.assetchain.org', paths: { tx: (h) => `/tx/${h}`, address: (a) => `/address/${a}` } }
+    };
+    function isHexTx(hash) { return /^0x[a-fA-F0-9]{64}$/.test(String(hash || '')); }
+    function isHexAddress(addr) { return /^0x[a-fA-F0-9]{40}$/.test(String(addr || '')); }
+    function buildExplorerUrl(kind, chainIdHex, value) {
+      const map = ExplorerMap[(chainIdHex || '').toUpperCase()];
+      if (!map) return null;
+      if (kind === 'tx' && isHexTx(value)) return map.base + map.paths.tx(value);
+      if (kind === 'address' && isHexAddress(value)) return map.base + map.paths.address(value);
+      return null;
+    }
+
+    // Formatting helpers
+    function formatTokenAmount(weiStr, decimals, symbol) {
+      try {
+        const wei = ethers.BigNumber.from(String(weiStr));
+        const scale = ethers.BigNumber.from('1' + '0'.repeat(Number(decimals || 0)));
+        const whole = wei.div(scale).toString();
+        const frac = wei.mod(scale).toString().padStart(Number(decimals || 0), '0').replace(/0+$/, '');
+        return frac ? `${whole}.${frac} ${symbol || ''}`.trim() : `${whole} ${symbol || ''}`.trim();
+      } catch (_) { return `${weiStr} ${symbol || ''}`.trim(); }
+    }
+    function computeGasFee(receipt, priceUnit = 'ASET') {
+      try {
+        const gasUsed = receipt.gasUsed || receipt.gas || ethers.BigNumber.from(0);
+        const gasPrice = receipt.effectiveGasPrice || receipt.gasPrice || ethers.BigNumber.from(0);
+        const feeWei = gasUsed.mul(gasPrice);
+        const fee = ethers.utils.formatEther(feeWei);
+        return `${fee} ${priceUnit}`;
+      } catch (_) { return `0 ${priceUnit}`; }
+    }
+
+    // Receipt rendering
+    function renderReceipt(model) {
+      const wrap = document.getElementById('tx-receipts');
+      if (!wrap) return null;
+      const card = document.createElement('div');
+      card.className = 'receipt-card';
+      const header = document.createElement('div'); header.className = 'receipt-header';
+      const title = document.createElement('div'); title.className = 'receipt-title';
+      const tIcon = document.createElement('span'); tIcon.innerHTML = `<i class="fas ${model.status==='success'?'fa-check-circle':'fa-exclamation-circle'}"></i>`;
+      const tText = document.createElement('span'); tText.textContent = model.status === 'success' ? 'Transaction Successful' : 'Transaction Failed';
+      title.appendChild(tIcon); title.appendChild(tText);
+      const badge = document.createElement('div'); badge.className = 'status-badge ' + (model.status==='success'?'status-success':'status-failed');
+      badge.setAttribute('aria-label', model.status);
+      badge.textContent = (model.status==='success'?'SUCCESS':'FAILED') + ' • ' + (model.backendStatus || 'ON-CHAIN');
+      header.appendChild(title); header.appendChild(badge);
+
+      const body = document.createElement('div'); body.className = 'receipt-body';
+      const grid = document.createElement('div'); grid.className = 'receipt-grid';
+      const fields = [
+        { k: 'Timestamp', v: new Date(model.timestamp || Date.now()).toLocaleString() },
+        { k: 'Network', v: `${model.networkName || 'Assetchain'} (${model.chainId || '0xA5B4'})` },
+        { k: 'From', v: model.from || '' },
+        { k: 'To', v: model.to || '' },
+        { k: 'Amount', v: formatTokenAmount(model.amountWei || '0', model.decimals || 6, model.symbol || 'CNGN') },
+        { k: 'Gas Fee', v: model.gasFee || '—' },
+      ];
+      if (model.hash) {
+        const kv = document.createElement('div'); kv.className = 'kv';
+        const k = document.createElement('div'); k.className = 'k'; k.textContent = 'Transaction Hash';
+        const v = document.createElement('a'); v.className = 'v'; v.textContent = model.hash;
+        const url = buildExplorerUrl('tx', model.chainIdHex || '0xA5B4', model.hash);
+        if (url) { v.href = url; v.target = '_blank'; v.rel = 'noopener noreferrer'; }
+        kv.appendChild(k); kv.appendChild(v); grid.appendChild(kv);
+      }
+      fields.forEach(({k, v}) => {
+        const kv = document.createElement('div'); kv.className = 'kv';
+        const kk = document.createElement('div'); kk.className = 'k'; kk.textContent = k;
+        const vv = document.createElement('div'); vv.className = 'v'; vv.textContent = v;
+        kv.appendChild(kk); kv.appendChild(vv); grid.appendChild(kv);
+      });
+      if (model.message) {
+        const kvm = document.createElement('div'); kvm.className = 'kv';
+        const kk = document.createElement('div'); kk.className = 'k'; kk.textContent = 'Message';
+        const vv = document.createElement('div'); vv.className = 'v'; vv.textContent = model.message;
+        kvm.appendChild(kk); kvm.appendChild(vv); grid.appendChild(kvm);
+      }
+      body.appendChild(grid);
+
+      const footer = document.createElement('div'); footer.className = 'receipt-footer';
+      const btnPrint = document.createElement('button'); btnPrint.className = 'btn btn-secondary'; btnPrint.textContent = 'Print'; btnPrint.setAttribute('aria-label','Print receipt');
+      const btnDl = document.createElement('button'); btnDl.className = 'btn btn-primary'; btnDl.textContent = 'Download as Image'; btnDl.setAttribute('aria-label','Download receipt as image');
+      btnPrint.onclick = () => { printReceipt(card); };
+      btnDl.onclick = () => { exportReceiptAsImage(card).catch(() => notify('error','Export failed')); };
+      footer.appendChild(btnPrint); footer.appendChild(btnDl);
+
+      card.appendChild(header); card.appendChild(body); card.appendChild(footer);
+      wrap.prepend(card);
+      return card;
+    }
+
+    function printReceipt(node) {
+      try { window.focus(); window.print(); return true; } catch (_) { return false; }
+    }
+
+    async function exportReceiptAsImage(node, type='png') {
+      const rect = node.getBoundingClientRect();
+      const w = Math.ceil(rect.width);
+      const h = Math.ceil(rect.height);
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', w); svg.setAttribute('height', h);
+      svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+      const fo = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+      fo.setAttribute('x', '0'); fo.setAttribute('y', '0'); fo.setAttribute('width', w); fo.setAttribute('height', h);
+      const cloned = node.cloneNode(true);
+      cloned.style.margin = '0'; cloned.style.width = `${w}px`;
+      const div = document.createElement('div'); div.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml'); div.appendChild(cloned);
+      fo.appendChild(div); svg.appendChild(fo);
+      const data = new XMLSerializer().serializeToString(svg);
+      const img = new Image();
+      const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(data);
+      await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = url; });
+      const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0);
+      const mime = type === 'jpeg' ? 'image/jpeg' : 'image/png';
+      const dl = document.createElement('a'); dl.href = canvas.toDataURL(mime, 0.92); dl.download = `transaction_${Date.now()}.${type==='jpeg'?'jpg':'png'}`; dl.click();
+    }
+
     // Set up calculation buttons
     $('#airtime-calc').addEventListener('click', async () => {
       const ngn = parseFloat($('#airtime-amount').value || '0');
@@ -1988,6 +2140,25 @@
         const receipt = await sendCngnTransfer(signer, target, amountWeiBN);
         showStatus(statusEl, 'Transaction sent. Verifying on-chain...', true);
 
+        const network = await signer.provider.getNetwork();
+        const chainIdHex = '0x' + Number(network.chainId || 0).toString(16).toUpperCase();
+        const model = {
+          status: 'success',
+          backendStatus: 'PENDING',
+          timestamp: Date.now(),
+          hash: receipt.transactionHash,
+          from: userAddress,
+          to: target,
+          amountWei: amountWeiBN.toString(),
+          decimals: 6,
+          symbol: 'CNGN',
+          gasFee: computeGasFee(receipt),
+          networkName: 'Assetchain Mainnet',
+          chainId: chainIdHex,
+          chainIdHex
+        };
+        const card = renderReceipt(model);
+
         const base = {
           target_address: target,
           tx_hash: receipt.transactionHash,
@@ -2026,8 +2197,23 @@
 
         if (isSuccess) {
           notify('success', 'Transaction successful!');
+          if (card) {
+            const badge = card.querySelector('.status-badge');
+            if (badge) { badge.textContent = 'SUCCESS • VERIFIED'; badge.classList.remove('status-failed'); badge.classList.add('status-success'); }
+          }
         } else {
           notify('error', 'Transaction failed.');
+          if (card) {
+            const badge = card.querySelector('.status-badge');
+            if (badge) { badge.textContent = 'FAILED • VERIFICATION'; badge.classList.remove('status-success'); badge.classList.add('status-failed'); }
+            const body = card.querySelector('.receipt-body .receipt-grid');
+            if (body) {
+              const kvm = document.createElement('div'); kvm.className = 'kv';
+              const kk = document.createElement('div'); kk.className = 'k'; kk.textContent = 'Message';
+              const vv = document.createElement('div'); vv.className = 'v'; vv.textContent = out.msg || out.message || 'Unknown error';
+              kvm.appendChild(kk); kvm.appendChild(vv); body.appendChild(kvm);
+            }
+          }
         }
 
         if (isSuccess) {
@@ -2040,6 +2226,26 @@
       } catch (e) {
         const statusEl = service === 'airtime' ? $('#airtime-status') : $('#data-status');
         showStatus(statusEl, 'Error: ' + (e && e.message ? e.message : 'Unknown error'), false);
+        try {
+          const provider = window.currentProvider || window.ethereum;
+          const chainIdHex = await getChainId(provider) || ASSETCHAIN_ID_HEX;
+          renderReceipt({
+            status: 'failed',
+            backendStatus: 'CLIENT',
+            timestamp: Date.now(),
+            hash: null,
+            from: window.currentAddress || '',
+            to: (service==='airtime'?$('#airtime-target').value:$('#data-target').value) || '',
+            amountWei: (service==='airtime'?$('#airtime-nano').value:$('#data-nano').value) || '0',
+            decimals: 6,
+            symbol: 'CNGN',
+            gasFee: '—',
+            networkName: 'Assetchain Mainnet',
+            chainId: chainIdHex,
+            chainIdHex,
+            message: e && e.message ? e.message : 'Unknown error'
+          });
+        } catch (_) { }
         showAlert('Error', e && e.message ? e.message : 'Unknown error occurred.', { okText: 'OK' });
       }
     }
@@ -2073,6 +2279,26 @@
       $('#data-ref').value = randRef();
       $('#data-status').innerHTML = '';
     });
+
+    // Inline unit tests (run with ?test=1)
+    (function runInlineTests(){
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (!params.get('test')) return;
+        const tests = [];
+        const assert = (name, cond) => { tests.push({ name, pass: !!cond }); };
+        assert('isHexTx valid', isHexTx('0x' + 'a'.repeat(64)));
+        assert('isHexTx invalid', !isHexTx('0x123'));
+        assert('isHexAddress valid', isHexAddress('0x' + 'b'.repeat(40)));
+        assert('buildExplorerUrl tx', !!buildExplorerUrl('tx','0xA5B4','0x'+'a'.repeat(64)));
+        assert('formatTokenAmount basic', formatTokenAmount('1000000',6,'CNGN').includes('1'));
+        const dummyReceipt = { gasUsed: ethers.BigNumber.from('21000'), effectiveGasPrice: ethers.BigNumber.from('1000000000') };
+        assert('computeGasFee', computeGasFee(dummyReceipt).includes('ASET'));
+        const node = document.createElement('div'); node.className='receipt-card'; node.textContent='test'; document.body.appendChild(node);
+        exportReceiptAsImage(node).then(()=>{ assert('exportReceiptAsImage resolves', true); finish(); }).catch(()=>{ assert('exportReceiptAsImage resolves', false); finish(); });
+        function finish(){ console.group('Inline Tests'); tests.forEach(t=>console[t.pass?'log':'error'](`${t.pass?'PASS':'FAIL'}: ${t.name}`)); console.groupEnd(); }
+      } catch (e) { console.error('Tests failed to run', e); }
+    })();
   </script>
   <!-- Onboard initialization removed; using custom wallet dropdown and EIP-1193 providers -->
 </body>
