@@ -1063,12 +1063,45 @@
             </div>
             <h2 class="card-title">Your Transaction History</h2>
           </div>
+          <div class="history-controls" role="region" aria-label="History controls">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="history-sort">Sort By</label>
+                <select id="history-sort" aria-label="Sort transactions">
+                  <option value="date_desc">Date (Newest)</option>
+                  <option value="date_asc">Date (Oldest)</option>
+                  <option value="amount_desc">Amount (High)</option>
+                  <option value="amount_asc">Amount (Low)</option>
+                  <option value="status">Status</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="history-filter">Filter</label>
+                <select id="history-filter" aria-label="Filter transactions">
+                  <option value="all">All</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="failed">Failed</option>
+                  <option value="pending">Pending</option>
+                </select>
+              </div>
+            </div>
+          </div>
           <div id="history-status" class="mono" aria-live="polite"></div>
           <div id="history-list" class="history-list"></div>
           <div class="history-pagination" role="navigation" aria-label="Pagination controls">
             <button id="history-prev" class="btn btn-secondary" disabled aria-label="Previous page"><i class="fas fa-chevron-left"></i> Prev</button>
             <span id="history-page" class="mono" aria-live="polite"></span>
             <button id="history-next" class="btn btn-secondary" disabled aria-label="Next page">Next <i class="fas fa-chevron-right"></i></button>
+          </div>
+        </div>
+        <div id="tx-modal" class="tx-modal" style="display:none;" aria-hidden="true" role="dialog" aria-modal="true">
+          <div class="tx-backdrop"></div>
+          <div class="tx-content" role="document">
+            <div class="tx-header">
+              <h3 id="tx-modal-title">Transaction Details</h3>
+              <button id="tx-modal-close" class="btn btn-link" aria-label="Close"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="tx-modal-body" class="tx-body"></div>
           </div>
         </div>
       </div>
@@ -1857,9 +1890,10 @@
     const styleHist = document.createElement('style');
     styleHist.textContent = `
       .history-list { display: grid; grid-template-columns: 1fr; gap: 8px; }
-      .history-item { border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; display: grid; gap: 6px; }
+      .history-item { border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; display: grid; gap: 6px; cursor: pointer; transition: var(--transition); }
+      .history-item:hover { background: rgba(255,255,255,0.06); }
       .history-row { display: flex; justify-content: space-between; align-items: center; }
-      .history-hash a { font-family: monospace; font-size: 12px; }
+      .history-hash a, .history-hash span { font-family: monospace; font-size: 12px; white-space: nowrap; }
       .history-meta { color: var(--gray); font-size: 12px; }
       .history-amount { font-weight: 600; }
       .history-type { font-size: 12px; }
@@ -1868,9 +1902,25 @@
       .history-status.failed { color: #FF4757; }
       .history-status.pending { color: #FFB547; }
       .history-pagination { display:flex; align-items:center; gap:10px; justify-content:flex-end; margin-top:12px; }
+      .history-controls { margin: 10px 0; }
       @media (min-width: 768px) { .history-item { grid-template-columns: 1.4fr 1fr 1fr; } }
     `;
     document.head.appendChild(styleHist);
+
+    const styleModal = document.createElement('style');
+    styleModal.textContent = `
+      .tx-modal { position: fixed; inset: 0; z-index: 1300; }
+      .tx-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.6); }
+      .tx-content { position: relative; max-width: 720px; margin: 40px auto; background: var(--card-bg); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+      .tx-header { display:flex; align-items:center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+      .tx-body { max-height: 60vh; overflow: auto; padding: 14px 16px; }
+      .tx-grid { display: grid; grid-template-columns: 1fr; gap: 8px 16px; }
+      @media (min-width: 768px) { .tx-grid { grid-template-columns: 1fr 1fr; } }
+      .tx-kv { display: flex; gap: 8px; }
+      .tx-kv .k { color: var(--gray); min-width: 140px; }
+      .tx-kv .v { font-family: monospace; font-size: 13px; word-break: break-all; }
+    `;
+    document.head.appendChild(styleModal);
 
     function statusLabel(s) {
       const n = Number(s);
@@ -1886,6 +1936,16 @@
       if (to === u && from !== u) return 'withdrawal';
       return 'other';
     }
+    function truncateCenter(text, start=5, end=5) {
+      const t = String(text||'');
+      if (t.length <= start+end) return t;
+      return t.slice(0, start) + '…' + t.slice(-end);
+    }
+    function pad2(n){ return String(n).padStart(2,'0'); }
+    function formatDateTime(s){
+      try { const d = new Date(s); if (isNaN(d.getTime())) return s; return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`; }
+      catch(_) { return s; }
+    }
     function renderHistoryItems(items, userAddr, chainIdHex) {
       const list = document.getElementById('history-list');
       if (!list) return;
@@ -1896,13 +1956,15 @@
       }
       items.forEach(item => {
         const row = document.createElement('div'); row.className = 'history-item';
+        row.setAttribute('tabindex','0');
         const top = document.createElement('div'); top.className = 'history-row';
         const hashEl = document.createElement('div'); hashEl.className = 'history-hash';
         const h = item.txhash || '';
         const url = h ? buildExplorerUrl('tx', chainIdHex || ASSETCHAIN_ID_HEX, h) : null;
-        if (url) { const a = document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener noreferrer'; a.textContent=h; hashEl.appendChild(a); }
-        else { const span = document.createElement('span'); span.textContent=h||'—'; hashEl.appendChild(span); }
-        const meta = document.createElement('div'); meta.className = 'history-meta'; meta.textContent = (item.date || '').replace('T',' ');
+        const displayHash = h ? truncateCenter(h, 7, 5) : '—';
+        if (url) { const a = document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener noreferrer'; a.textContent=displayHash; a.title=h; hashEl.appendChild(a); }
+        else { const span = document.createElement('span'); span.textContent=displayHash; span.title=h; hashEl.appendChild(span); }
+        const meta = document.createElement('div'); meta.className = 'history-meta'; meta.textContent = formatDateTime(item.date || '');
         top.appendChild(hashEl); top.appendChild(meta);
 
         const mid = document.createElement('div'); mid.className = 'history-row';
@@ -1917,8 +1979,55 @@
         bot.appendChild(amount); bot.appendChild(statusEl);
 
         row.appendChild(top); row.appendChild(mid); row.appendChild(bot);
+        const onOpen = () => { openTxModal(item); };
+        row.addEventListener('click', onOpen);
+        row.addEventListener('keydown', (ev) => { if (ev.key==='Enter' || ev.key===' ') { ev.preventDefault(); onOpen(); } });
         list.appendChild(row);
       });
+    }
+    async function fetchGasFee(hash) {
+      try {
+        let provider;
+        if (window.ethereum) { const p = new ethers.providers.Web3Provider(window.ethereum, 'any'); provider = p; }
+        else { provider = new ethers.providers.JsonRpcProvider('https://mainnet-rpc.assetchain.org/'); }
+        const receipt = await provider.getTransactionReceipt(hash);
+        if (!receipt) return 'N/A';
+        return computeGasFee(receipt);
+      } catch(_) { return 'N/A'; }
+    }
+    function openTxModal(item) {
+      const modal = document.getElementById('tx-modal');
+      const body = document.getElementById('tx-modal-body');
+      const title = document.getElementById('tx-modal-title');
+      if (!modal || !body || !title) return;
+      title.textContent = 'Transaction Details';
+      body.innerHTML = '';
+      const grid = document.createElement('div'); grid.className = 'tx-grid';
+      const add = (k,v)=>{ const kv=document.createElement('div'); kv.className='tx-kv'; const kk=document.createElement('div'); kk.className='k'; kk.textContent=k; const vv=document.createElement('div'); vv.className='v'; vv.textContent=v; kv.appendChild(kk); kv.appendChild(vv); grid.appendChild(kv); };
+      add('Hash', item.txhash || '—');
+      add('Date/Time', (function(){ return formatDateTime(item.date || ''); })());
+      add('Sender', item.senderaddress || '—');
+      add('Receiver', item.targetaddress || '—');
+      add('Amount', `N${item.amount || '0.00'}`);
+      const st = statusLabel(item.status);
+      add('Status', st.text);
+      add('Token', item.token_name || '—');
+      add('Contract', item.token_contract || '—');
+      const feeRow = document.createElement('div'); feeRow.className='tx-kv';
+      const feeK = document.createElement('div'); feeK.className='k'; feeK.textContent='Gas Fee';
+      const feeV = document.createElement('div'); feeV.className='v'; feeV.textContent='Loading...';
+      feeRow.appendChild(feeK); feeRow.appendChild(feeV); grid.appendChild(feeRow);
+      body.appendChild(grid);
+      (async () => { feeV.textContent = item.txhash ? await fetchGasFee(item.txhash) : 'N/A'; })();
+      const closeBtn = document.getElementById('tx-modal-close');
+      const backdrop = modal.querySelector('.tx-backdrop');
+      const close = ()=>{ modal.style.display='none'; modal.setAttribute('aria-hidden','true'); document.removeEventListener('keydown', onKey); };
+      const onKey = (ev)=>{ if (ev.key==='Escape') close(); };
+      document.addEventListener('keydown', onKey);
+      if (closeBtn) closeBtn.onclick = close;
+      if (backdrop) backdrop.onclick = close;
+      modal.style.display='block';
+      modal.setAttribute('aria-hidden','false');
     }
     async function fetchWalletHistory(address, page=0, perPage=10) {
       const url = `${apiBase}/access.php?action=getWalletTransactions&address=${encodeURIComponent(address)}&page=${page}&limit=${perPage}`;
@@ -1940,18 +2049,44 @@
         status.textContent = 'Loading history...';
         const network = window.ethereum ? await window.ethereum.request({ method: 'eth_chainId' }) : ASSETCHAIN_ID_HEX;
         let page = 0; const perPage = 10;
+        let lastData = null;
+        const sortSel = document.getElementById('history-sort');
+        const filterSel = document.getElementById('history-filter');
+        const sortItems = (items)=>{
+          const v = sortSel?.value || 'date_desc';
+          const cp = [...items];
+          if (v==='date_asc') cp.sort((a,b)=> new Date(a.date)-new Date(b.date));
+          else if (v==='date_desc') cp.sort((a,b)=> new Date(b.date)-new Date(a.date));
+          else if (v==='amount_asc') cp.sort((a,b)=> Number(a.amount)-Number(b.amount));
+          else if (v==='amount_desc') cp.sort((a,b)=> Number(b.amount)-Number(a.amount));
+          else if (v==='status') cp.sort((a,b)=> String(a.status).localeCompare(String(b.status)));
+          return cp;
+        };
+        const filterItems = (items)=>{
+          const v = filterSel?.value || 'all';
+          if (v==='all') return items;
+          return items.filter(i=>{
+            const s = statusLabel(i.status).text;
+            return s === v;
+          });
+        };
         const update = async () => {
           status.textContent = 'Loading history...';
           const data = await fetchWalletHistory(address, page, perPage);
           if (data.status !== 'success') { status.textContent = data.msg || 'Failed to load history'; return; }
           status.textContent = '';
-          renderHistoryItems(data.items || [], address, network);
+          lastData = data.items || [];
+          const filtered = filterItems(lastData);
+          const sorted = sortItems(filtered);
+          renderHistoryItems(sorted, address, network);
           const pages = Number(data.pages || 0);
           pageEl.textContent = pages ? `Page ${Number(data.page || 0)+1} of ${pages}` : '';
           prev.disabled = page <= 0; next.disabled = !pages || (page+1) >= pages;
         };
         prev.onclick = async () => { if (page > 0) { page--; await update(); } };
         next.onclick = async () => { page++; await update(); };
+        if (sortSel) sortSel.addEventListener('change', update);
+        if (filterSel) filterSel.addEventListener('change', update);
         await update();
       } catch (e) {
         const status = document.getElementById('history-status');
