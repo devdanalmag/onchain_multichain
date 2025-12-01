@@ -207,6 +207,7 @@
       z-index: 1100;
       padding: 20px;
       box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+      display: none;
     }
 
     .mobile-nav.open {
@@ -810,6 +811,7 @@
       }
 
       .mobile-nav {
+        display: none;
         margin-top: 114px;
         position: fixed;
         top: 0;
@@ -866,28 +868,118 @@
       grid-template-columns: 1fr;
       gap: 16px;
     }
+
     @media (min-width: 992px) {
-      .receipts-container { grid-template-columns: 1fr 1fr; }
+      .receipts-container {
+        grid-template-columns: 1fr 1fr;
+      }
     }
-    .receipt-card { background: var(--card-bg); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: var(--border-radius); overflow: hidden; }
-    .receipt-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
-    .receipt-title { display: flex; align-items: center; gap: 10px; font-weight: 600; }
-    .status-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; }
-    .status-success { background: rgba(0, 216, 151, 0.15); color: #00D897; border: 1px solid rgba(0, 216, 151, 0.35); }
-    .status-failed { background: rgba(255, 71, 87, 0.15); color: #FF4757; border: 1px solid rgba(255, 71, 87, 0.35); }
-    .receipt-body { padding: 14px 16px; }
-    .receipt-grid { display: grid; grid-template-columns: 1fr; gap: 8px 16px; }
-    @media (min-width: 768px) { .receipt-grid { grid-template-columns: 1fr 1fr; } }
-    .kv { display: flex; gap: 8px; align-items: center; }
-    .kv .k { color: var(--gray); min-width: 120px; }
-    .kv .v { font-family: monospace; font-size: 13px; word-break: break-all; }
-    .receipt-footer { border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 12px 16px; display: flex; gap: 8px; justify-content: flex-end; }
+
+    .receipt-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--border-radius);
+      overflow: hidden;
+    }
+
+    .receipt-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .receipt-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .status-success {
+      background: rgba(0, 216, 151, 0.15);
+      color: #00D897;
+      border: 1px solid rgba(0, 216, 151, 0.35);
+    }
+
+    .status-failed {
+      background: rgba(255, 71, 87, 0.15);
+      color: #FF4757;
+      border: 1px solid rgba(255, 71, 87, 0.35);
+    }
+
+    .receipt-body {
+      padding: 14px 16px;
+    }
+
+    .receipt-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px 16px;
+    }
+
+    @media (min-width: 768px) {
+      .receipt-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .kv {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .kv .k {
+      color: var(--gray);
+      min-width: 120px;
+    }
+
+    .kv .v {
+      font-family: monospace;
+      font-size: 13px;
+      word-break: break-all;
+    }
+
+    .receipt-footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 12px 16px;
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
 
     /* Print styles */
     @media print {
-      body { background: #fff; color: #000; }
-      header, .tabs, .tips-section, .button-group, #airtime-status, #data-status { display: none !important; }
-      .receipt-card { break-inside: avoid; border-color: #000; }
+      body {
+        background: #fff;
+        color: #000;
+      }
+
+      header,
+      .tabs,
+      .tips-section,
+      .button-group,
+      #airtime-status,
+      #data-status {
+        display: none !important;
+      }
+
+      .receipt-card {
+        break-inside: avoid;
+        border-color: #000;
+      }
     }
   </style>
   <!-- MetaMask / EVM only -->
@@ -947,15 +1039,21 @@
           <div id="wallet-dropdown" class="wallet-dropdown" role="menu" aria-label="Wallet options">
             <div class="wallet-dropdown-header">Select Wallet</div>
             <div class="wallet-option" data-wallet="MetaMask">
-              <span class="icon"><img src="https://images.ctfassets.net/clixtyxoaeas/4rnpEzy1ATWRKVBOLxZ1Fm/a74dc1eed36d23d7ea6030383a4d5163/MetaMask-icon-fox.svg" width="18" ></span>
+              <span class="icon"><img
+                  src="https://images.ctfassets.net/clixtyxoaeas/4rnpEzy1ATWRKVBOLxZ1Fm/a74dc1eed36d23d7ea6030383a4d5163/MetaMask-icon-fox.svg"
+                  width="18"></span>
               <span>MetaMask</span>
             </div>
             <div class="wallet-option" data-wallet="Bitget">
-              <span class="icon"><img src="https://play-lh.googleusercontent.com/QbNP8A9GE_UM1s3RFNF8i599yWm_F37iwL4viYCueD9XhJaIZ2yZjMnEwsegeTaHa7Q=w240-h480-rw" width="18"></span>
+              <span class="icon"><img
+                  src="https://play-lh.googleusercontent.com/QbNP8A9GE_UM1s3RFNF8i599yWm_F37iwL4viYCueD9XhJaIZ2yZjMnEwsegeTaHa7Q=w240-h480-rw"
+                  width="18"></span>
               <span>Bitget Wallet</span>
             </div>
             <div class="wallet-option" data-wallet="OKX">
-              <span class="icon"><img src="https://play-lh.googleusercontent.com/N00SbjLJJrhg4hbdnkk3Llk2oedNNgCU29DvR9cpep7Lr0VkzvBkmLqajWNgFb0d7IOO" width="18" ></span>
+              <span class="icon"><img
+                  src="https://play-lh.googleusercontent.com/N00SbjLJJrhg4hbdnkk3Llk2oedNNgCU29DvR9cpep7Lr0VkzvBkmLqajWNgFb0d7IOO"
+                  width="18"></span>
               <span>OKX Wallet</span>
             </div>
             <div id="wallet-disconnect-option" class="wallet-option" data-wallet="__disconnect__"
@@ -1089,9 +1187,11 @@
           <div id="history-status" class="mono" aria-live="polite"></div>
           <div id="history-list" class="history-list"></div>
           <div class="history-pagination" role="navigation" aria-label="Pagination controls">
-            <button id="history-prev" class="btn btn-secondary" disabled aria-label="Previous page"><i class="fas fa-chevron-left"></i> Prev</button>
+            <button id="history-prev" class="btn btn-secondary" disabled aria-label="Previous page"><i
+                class="fas fa-chevron-left"></i> Prev</button>
             <span id="history-page" class="mono" aria-live="polite"></span>
-            <button id="history-next" class="btn btn-secondary" disabled aria-label="Next page">Next <i class="fas fa-chevron-right"></i></button>
+            <button id="history-next" class="btn btn-secondary" disabled aria-label="Next page">Next <i
+                class="fas fa-chevron-right"></i></button>
           </div>
         </div>
         <div id="tx-modal" class="tx-modal" style="display:none;" aria-hidden="true" role="dialog" aria-modal="true">
@@ -1727,8 +1827,10 @@
         if (hamburger && mobileNav) {
           const toggleMenu = (e) => {
             if (e) e.preventDefault();
+            // mobileNav.style.display = "inline";
             const open = mobileNav.classList.toggle('open');
             hamburger.classList.toggle('active', open);
+            mobileNav.setAttribute('style', open ? 'display: inline;' : 'display: none;');
             hamburger.setAttribute('aria-expanded', open ? 'true' : 'false');
             hamburger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
           };
@@ -1743,6 +1845,7 @@
           document.addEventListener('click', (evt) => {
             if (!mobileNav.contains(evt.target) && evt.target !== hamburger && !hamburger.contains(evt.target)) {
               mobileNav.classList.remove('open');
+              mobileNav.style.display = "none";
               hamburger.setAttribute('aria-expanded', 'false');
               hamburger.classList.remove('active');
               hamburger.setAttribute('aria-label', 'Open menu');
@@ -1936,15 +2039,15 @@
       if (to === u && from !== u) return 'withdrawal';
       return 'other';
     }
-    function truncateCenter(text, start=5, end=5) {
-      const t = String(text||'');
-      if (t.length <= start+end) return t;
+    function truncateCenter(text, start = 5, end = 5) {
+      const t = String(text || '');
+      if (t.length <= start + end) return t;
       return t.slice(0, start) + '…' + t.slice(-end);
     }
-    function pad2(n){ return String(n).padStart(2,'0'); }
-    function formatDateTime(s){
-      try { const d = new Date(s); if (isNaN(d.getTime())) return s; return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`; }
-      catch(_) { return s; }
+    function pad2(n) { return String(n).padStart(2, '0'); }
+    function formatDateTime(s) {
+      try { const d = new Date(s); if (isNaN(d.getTime())) return s; return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`; }
+      catch (_) { return s; }
     }
     function renderHistoryItems(items, userAddr, chainIdHex) {
       const list = document.getElementById('history-list');
@@ -1956,14 +2059,14 @@
       }
       items.forEach(item => {
         const row = document.createElement('div'); row.className = 'history-item';
-        row.setAttribute('tabindex','0');
+        row.setAttribute('tabindex', '0');
         const top = document.createElement('div'); top.className = 'history-row';
         const hashEl = document.createElement('div'); hashEl.className = 'history-hash';
         const h = item.txhash || '';
         const url = h ? buildExplorerUrl('tx', chainIdHex || ASSETCHAIN_ID_HEX, h) : null;
         const displayHash = h ? truncateCenter(h, 7, 5) : '—';
-        if (url) { const a = document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener noreferrer'; a.textContent=displayHash; a.title=h; hashEl.appendChild(a); }
-        else { const span = document.createElement('span'); span.textContent=displayHash; span.title=h; hashEl.appendChild(span); }
+        if (url) { const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = displayHash; a.title = h; hashEl.appendChild(a); }
+        else { const span = document.createElement('span'); span.textContent = displayHash; span.title = h; hashEl.appendChild(span); }
         const meta = document.createElement('div'); meta.className = 'history-meta'; meta.textContent = formatDateTime(item.date || '');
         top.appendChild(hashEl); top.appendChild(meta);
 
@@ -1981,7 +2084,7 @@
         row.appendChild(top); row.appendChild(mid); row.appendChild(bot);
         const onOpen = () => { openTxModal(item); };
         row.addEventListener('click', onOpen);
-        row.addEventListener('keydown', (ev) => { if (ev.key==='Enter' || ev.key===' ') { ev.preventDefault(); onOpen(); } });
+        row.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); onOpen(); } });
         list.appendChild(row);
       });
     }
@@ -1993,7 +2096,7 @@
         const receipt = await provider.getTransactionReceipt(hash);
         if (!receipt) return 'N/A';
         return computeGasFee(receipt);
-      } catch(_) { return 'N/A'; }
+      } catch (_) { return 'N/A'; }
     }
     function openTxModal(item) {
       const modal = document.getElementById('tx-modal');
@@ -2003,9 +2106,9 @@
       title.textContent = 'Transaction Details';
       body.innerHTML = '';
       const grid = document.createElement('div'); grid.className = 'tx-grid';
-      const add = (k,v)=>{ const kv=document.createElement('div'); kv.className='tx-kv'; const kk=document.createElement('div'); kk.className='k'; kk.textContent=k; const vv=document.createElement('div'); vv.className='v'; vv.textContent=v; kv.appendChild(kk); kv.appendChild(vv); grid.appendChild(kv); };
+      const add = (k, v) => { const kv = document.createElement('div'); kv.className = 'tx-kv'; const kk = document.createElement('div'); kk.className = 'k'; kk.textContent = k; const vv = document.createElement('div'); vv.className = 'v'; vv.textContent = v; kv.appendChild(kk); kv.appendChild(vv); grid.appendChild(kv); };
       add('Hash', item.txhash || '—');
-      add('Date/Time', (function(){ return formatDateTime(item.date || ''); })());
+      add('Date/Time', (function () { return formatDateTime(item.date || ''); })());
       add('Sender', item.senderaddress || '—');
       add('Receiver', item.targetaddress || '—');
       add('Amount', `N${item.amount || '0.00'}`);
@@ -2013,23 +2116,23 @@
       add('Status', st.text);
       add('Token', item.token_name || '—');
       add('Contract', item.token_contract || '—');
-      const feeRow = document.createElement('div'); feeRow.className='tx-kv';
-      const feeK = document.createElement('div'); feeK.className='k'; feeK.textContent='Gas Fee';
-      const feeV = document.createElement('div'); feeV.className='v'; feeV.textContent='Loading...';
+      const feeRow = document.createElement('div'); feeRow.className = 'tx-kv';
+      const feeK = document.createElement('div'); feeK.className = 'k'; feeK.textContent = 'Gas Fee';
+      const feeV = document.createElement('div'); feeV.className = 'v'; feeV.textContent = 'Loading...';
       feeRow.appendChild(feeK); feeRow.appendChild(feeV); grid.appendChild(feeRow);
       body.appendChild(grid);
       (async () => { feeV.textContent = item.txhash ? await fetchGasFee(item.txhash) : 'N/A'; })();
       const closeBtn = document.getElementById('tx-modal-close');
       const backdrop = modal.querySelector('.tx-backdrop');
-      const close = ()=>{ modal.style.display='none'; modal.setAttribute('aria-hidden','true'); document.removeEventListener('keydown', onKey); };
-      const onKey = (ev)=>{ if (ev.key==='Escape') close(); };
+      const close = () => { modal.style.display = 'none'; modal.setAttribute('aria-hidden', 'true'); document.removeEventListener('keydown', onKey); };
+      const onKey = (ev) => { if (ev.key === 'Escape') close(); };
       document.addEventListener('keydown', onKey);
       if (closeBtn) closeBtn.onclick = close;
       if (backdrop) backdrop.onclick = close;
-      modal.style.display='block';
-      modal.setAttribute('aria-hidden','false');
+      modal.style.display = 'block';
+      modal.setAttribute('aria-hidden', 'false');
     }
-    async function fetchWalletHistory(address, page=0, perPage=10) {
+    async function fetchWalletHistory(address, page = 0, perPage = 10) {
       const url = `${apiBase}/access.php?action=getWalletTransactions&address=${encodeURIComponent(address)}&page=${page}&limit=${perPage}`;
       const res = await fetch(url);
       return res.json();
@@ -2052,20 +2155,20 @@
         let lastData = null;
         const sortSel = document.getElementById('history-sort');
         const filterSel = document.getElementById('history-filter');
-        const sortItems = (items)=>{
+        const sortItems = (items) => {
           const v = sortSel?.value || 'date_desc';
           const cp = [...items];
-          if (v==='date_asc') cp.sort((a,b)=> new Date(a.date)-new Date(b.date));
-          else if (v==='date_desc') cp.sort((a,b)=> new Date(b.date)-new Date(a.date));
-          else if (v==='amount_asc') cp.sort((a,b)=> Number(a.amount)-Number(b.amount));
-          else if (v==='amount_desc') cp.sort((a,b)=> Number(b.amount)-Number(a.amount));
-          else if (v==='status') cp.sort((a,b)=> String(a.status).localeCompare(String(b.status)));
+          if (v === 'date_asc') cp.sort((a, b) => new Date(a.date) - new Date(b.date));
+          else if (v === 'date_desc') cp.sort((a, b) => new Date(b.date) - new Date(a.date));
+          else if (v === 'amount_asc') cp.sort((a, b) => Number(a.amount) - Number(b.amount));
+          else if (v === 'amount_desc') cp.sort((a, b) => Number(b.amount) - Number(a.amount));
+          else if (v === 'status') cp.sort((a, b) => String(a.status).localeCompare(String(b.status)));
           return cp;
         };
-        const filterItems = (items)=>{
+        const filterItems = (items) => {
           const v = filterSel?.value || 'all';
-          if (v==='all') return items;
-          return items.filter(i=>{
+          if (v === 'all') return items;
+          return items.filter(i => {
             const s = statusLabel(i.status).text;
             return s === v;
           });
@@ -2080,8 +2183,8 @@
           const sorted = sortItems(filtered);
           renderHistoryItems(sorted, address, network);
           const pages = Number(data.pages || 0);
-          pageEl.textContent = pages ? `Page ${Number(data.page || 0)+1} of ${pages}` : '';
-          prev.disabled = page <= 0; next.disabled = !pages || (page+1) >= pages;
+          pageEl.textContent = pages ? `Page ${Number(data.page || 0) + 1} of ${pages}` : '';
+          prev.disabled = page <= 0; next.disabled = !pages || (page + 1) >= pages;
         };
         prev.onclick = async () => { if (page > 0) { page--; await update(); } };
         next.onclick = async () => { page++; await update(); };
@@ -2135,12 +2238,12 @@
       card.className = 'receipt-card';
       const header = document.createElement('div'); header.className = 'receipt-header';
       const title = document.createElement('div'); title.className = 'receipt-title';
-      const tIcon = document.createElement('span'); tIcon.innerHTML = `<i class="fas ${model.status==='success'?'fa-check-circle':'fa-exclamation-circle'}"></i>`;
+      const tIcon = document.createElement('span'); tIcon.innerHTML = `<i class="fas ${model.status === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>`;
       const tText = document.createElement('span'); tText.textContent = model.status === 'success' ? 'Transaction Successful' : 'Transaction Failed';
       title.appendChild(tIcon); title.appendChild(tText);
-      const badge = document.createElement('div'); badge.className = 'status-badge ' + (model.status==='success'?'status-success':'status-failed');
+      const badge = document.createElement('div'); badge.className = 'status-badge ' + (model.status === 'success' ? 'status-success' : 'status-failed');
       badge.setAttribute('aria-label', model.status);
-      badge.textContent = (model.status==='success'?'SUCCESS':'FAILED') + ' • ' + (model.backendStatus || 'ON-CHAIN');
+      badge.textContent = (model.status === 'success' ? 'SUCCESS' : 'FAILED') + ' • ' + (model.backendStatus || 'ON-CHAIN');
       header.appendChild(title); header.appendChild(badge);
 
       const body = document.createElement('div'); body.className = 'receipt-body';
@@ -2161,7 +2264,7 @@
         if (url) { v.href = url; v.target = '_blank'; v.rel = 'noopener noreferrer'; }
         kv.appendChild(k); kv.appendChild(v); grid.appendChild(kv);
       }
-      fields.forEach(({k, v}) => {
+      fields.forEach(({ k, v }) => {
         const kv = document.createElement('div'); kv.className = 'kv';
         const kk = document.createElement('div'); kk.className = 'k'; kk.textContent = k;
         const vv = document.createElement('div'); vv.className = 'v'; vv.textContent = v;
@@ -2176,10 +2279,10 @@
       body.appendChild(grid);
 
       const footer = document.createElement('div'); footer.className = 'receipt-footer';
-      const btnPrint = document.createElement('button'); btnPrint.className = 'btn btn-secondary'; btnPrint.textContent = 'Print'; btnPrint.setAttribute('aria-label','Print receipt');
-      const btnDl = document.createElement('button'); btnDl.className = 'btn btn-primary'; btnDl.textContent = 'Download as Image'; btnDl.setAttribute('aria-label','Download receipt as image');
+      const btnPrint = document.createElement('button'); btnPrint.className = 'btn btn-secondary'; btnPrint.textContent = 'Print'; btnPrint.setAttribute('aria-label', 'Print receipt');
+      const btnDl = document.createElement('button'); btnDl.className = 'btn btn-primary'; btnDl.textContent = 'Download as Image'; btnDl.setAttribute('aria-label', 'Download receipt as image');
       btnPrint.onclick = () => { printReceipt(card); };
-      btnDl.onclick = () => { exportReceiptAsImage(card).catch(() => notify('error','Export failed')); };
+      btnDl.onclick = () => { exportReceiptAsImage(card).catch(() => notify('error', 'Export failed')); };
       footer.appendChild(btnPrint); footer.appendChild(btnDl);
 
       card.appendChild(header); card.appendChild(body); card.appendChild(footer);
@@ -2191,7 +2294,7 @@
       try { window.focus(); window.print(); return true; } catch (_) { return false; }
     }
 
-    async function exportReceiptAsImage(node, type='png') {
+    async function exportReceiptAsImage(node, type = 'png') {
       const rect = node.getBoundingClientRect();
       const w = Math.ceil(rect.width);
       const h = Math.ceil(rect.height);
@@ -2211,7 +2314,7 @@
       const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
       const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0);
       const mime = type === 'jpeg' ? 'image/jpeg' : 'image/png';
-      const dl = document.createElement('a'); dl.href = canvas.toDataURL(mime, 0.92); dl.download = `transaction_${Date.now()}.${type==='jpeg'?'jpg':'png'}`; dl.click();
+      const dl = document.createElement('a'); dl.href = canvas.toDataURL(mime, 0.92); dl.download = `transaction_${Date.now()}.${type === 'jpeg' ? 'jpg' : 'png'}`; dl.click();
     }
 
     // Set up calculation buttons
@@ -2272,9 +2375,9 @@
 
     function getErc20Contract(address, signer) {
       const abi = [
-      'function transfer(address to, uint256 amount) returns (bool)',
-      'function balanceOf(address owner) view returns (uint256)'
-    ];
+        'function transfer(address to, uint256 amount) returns (bool)',
+        'function balanceOf(address owner) view returns (uint256)'
+      ];
       return new ethers.Contract(address, abi, signer);
     }
 
@@ -2493,8 +2596,8 @@
             timestamp: Date.now(),
             hash: null,
             from: window.currentAddress || '',
-            to: (service==='airtime'?$('#airtime-target').value:$('#data-target').value) || '',
-            amountWei: (service==='airtime'?$('#airtime-nano').value:$('#data-nano').value) || '0',
+            to: (service === 'airtime' ? $('#airtime-target').value : $('#data-target').value) || '',
+            amountWei: (service === 'airtime' ? $('#airtime-nano').value : $('#data-nano').value) || '0',
             decimals: 6,
             symbol: 'CNGN',
             gasFee: '—',
@@ -2539,7 +2642,7 @@
     });
 
     // Inline unit tests (run with ?test=1)
-    (function runInlineTests(){
+    (function runInlineTests() {
       try {
         const params = new URLSearchParams(window.location.search);
         if (!params.get('test')) return;
@@ -2548,13 +2651,13 @@
         assert('isHexTx valid', isHexTx('0x' + 'a'.repeat(64)));
         assert('isHexTx invalid', !isHexTx('0x123'));
         assert('isHexAddress valid', isHexAddress('0x' + 'b'.repeat(40)));
-        assert('buildExplorerUrl tx', !!buildExplorerUrl('tx','0xA5B4','0x'+'a'.repeat(64)));
-        assert('formatTokenAmount basic', formatTokenAmount('1000000',6,'CNGN').includes('1'));
+        assert('buildExplorerUrl tx', !!buildExplorerUrl('tx', '0xA5B4', '0x' + 'a'.repeat(64)));
+        assert('formatTokenAmount basic', formatTokenAmount('1000000', 6, 'CNGN').includes('1'));
         const dummyReceipt = { gasUsed: ethers.BigNumber.from('21000'), effectiveGasPrice: ethers.BigNumber.from('1000000000') };
         assert('computeGasFee', computeGasFee(dummyReceipt).includes('ASET'));
-        const node = document.createElement('div'); node.className='receipt-card'; node.textContent='test'; document.body.appendChild(node);
-        exportReceiptAsImage(node).then(()=>{ assert('exportReceiptAsImage resolves', true); finish(); }).catch(()=>{ assert('exportReceiptAsImage resolves', false); finish(); });
-        function finish(){ console.group('Inline Tests'); tests.forEach(t=>console[t.pass?'log':'error'](`${t.pass?'PASS':'FAIL'}: ${t.name}`)); console.groupEnd(); }
+        const node = document.createElement('div'); node.className = 'receipt-card'; node.textContent = 'test'; document.body.appendChild(node);
+        exportReceiptAsImage(node).then(() => { assert('exportReceiptAsImage resolves', true); finish(); }).catch(() => { assert('exportReceiptAsImage resolves', false); finish(); });
+        function finish() { console.group('Inline Tests'); tests.forEach(t => console[t.pass ? 'log' : 'error'](`${t.pass ? 'PASS' : 'FAIL'}: ${t.name}`)); console.groupEnd(); }
       } catch (e) { console.error('Tests failed to run', e); }
     })();
   </script>
