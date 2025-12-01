@@ -2551,8 +2551,8 @@
       return ethers.BigNumber.from(v);
     }
 
-    async function sendCngnTransfer(signer, toAddress, amountWeiBN) {
-      const erc20 = getErc20Contract(CNGN_CONTRACT, signer);
+    async function sendTokenTransfer(signer, tokenAddress, toAddress, amountWeiBN) {
+      const erc20 = getErc20Contract(tokenAddress, signer);
       const tx = await erc20.transfer(toAddress, amountWeiBN);
       const receipt = await tx.wait();
       return receipt;
@@ -2661,7 +2661,7 @@
           return;
         }
         showStatus(statusEl, 'Sending transaction...', true);
-        const receipt = await sendCngnTransfer(signer, target, amountWeiBN);
+        const receipt = await sendTokenTransfer(signer, tokenContract, target, amountWeiBN);
         showStatus(statusEl, 'Transaction sent. Verifying on-chain...', true);
 
         const network = await signer.provider.getNetwork();
@@ -2674,8 +2674,8 @@
           from: userAddress,
           to: target,
           amountWei: amountWeiBN.toString(),
-          decimals: 6,
-          symbol: 'CNGN',
+          decimals: tokenDecimals,
+          symbol: (tokenSel?.selectedOptions[0]?.text || '').toUpperCase(),
           gasFee: computeGasFee(receipt),
           networkName: 'Assetchain Mainnet',
           chainId: chainIdHex,
