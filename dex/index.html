@@ -1056,6 +1056,21 @@
 
           <div id="airtime-status"></div>
         </div>
+        <div id="history-card" class="card" style="display:none;" aria-live="polite" aria-label="Transaction history">
+          <div class="card-header">
+            <div class="card-icon" style="background: linear-gradient(135deg, var(--secondary), var(--accent));">
+              <i class="fas fa-list"></i>
+            </div>
+            <h2 class="card-title">Your Transaction History</h2>
+          </div>
+          <div id="history-status" class="mono" aria-live="polite"></div>
+          <div id="history-list" class="history-list"></div>
+          <div class="history-pagination" role="navigation" aria-label="Pagination controls">
+            <button id="history-prev" class="btn btn-secondary" disabled aria-label="Previous page"><i class="fas fa-chevron-left"></i> Prev</button>
+            <span id="history-page" class="mono" aria-live="polite"></span>
+            <button id="history-next" class="btn btn-secondary" disabled aria-label="Next page">Next <i class="fas fa-chevron-right"></i></button>
+          </div>
+        </div>
       </div>
 
       <!-- Data Tab Content -->
@@ -1341,6 +1356,7 @@
         wallet: walletName
       };
       updateAuthIndicators();
+      loadHistoryIfEligible();
     }
 
     function setDisconnectedUI() {
@@ -1455,6 +1471,7 @@
         window.authState = { ...(window.authState || {}), signedIn: true };
         updateAuthIndicators();
         notify('success', 'Signed in successfully. Features unlocked.');
+        loadHistoryIfEligible();
         return true;
       } catch (e) {
         notify('error', e?.message || 'Sign-in failed.');
@@ -1742,6 +1759,7 @@
             updateAuthIndicators();
             window.authGranted = true;
             notify('success', 'Reconnected to wallet and restored session.');
+            loadHistoryIfEligible();
           } else {
             notify('info', 'Wallet reconnected. Please sign in to unlock features.');
           }
@@ -1835,6 +1853,111 @@
       }
     }
 
+    // History styles (inline minimal)
+    const styleHist = document.createElement('style');
+    styleHist.textContent = `
+      .history-list { display: grid; grid-template-columns: 1fr; gap: 8px; }
+      .history-item { border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; display: grid; gap: 6px; }
+      .history-row { display: flex; justify-content: space-between; align-items: center; }
+      .history-hash a { font-family: monospace; font-size: 12px; }
+      .history-meta { color: var(--gray); font-size: 12px; }
+      .history-amount { font-weight: 600; }
+      .history-type { font-size: 12px; }
+      .history-status { font-size: 12px; font-weight: 600; }
+      .history-status.success { color: #00D897; }
+      .history-status.failed { color: #FF4757; }
+      .history-status.pending { color: #FFB547; }
+      .history-pagination { display:flex; align-items:center; gap:10px; justify-content:flex-end; margin-top:12px; }
+      @media (min-width: 768px) { .history-item { grid-template-columns: 1.4fr 1fr 1fr; } }
+    `;
+    document.head.appendChild(styleHist);
+
+    function statusLabel(s) {
+      const n = Number(s);
+      if (n === 0 || n === 9) return { text: 'confirmed', cls: 'success' };
+      if (n === 1) return { text: 'failed', cls: 'failed' };
+      return { text: 'pending', cls: 'pending' };
+    }
+    function inferTxType(item, userAddr) {
+      const from = (item.senderaddress || '').toLowerCase();
+      const to = (item.targetaddress || '').toLowerCase();
+      const u = (userAddr || '').toLowerCase();
+      if (from === u && to !== u) return 'deposit';
+      if (to === u && from !== u) return 'withdrawal';
+      return 'other';
+    }
+    function renderHistoryItems(items, userAddr, chainIdHex) {
+      const list = document.getElementById('history-list');
+      if (!list) return;
+      list.innerHTML = '';
+      if (!items || items.length === 0) {
+        list.innerHTML = '<div class="history-item">No transactions found for this address.</div>';
+        return;
+      }
+      items.forEach(item => {
+        const row = document.createElement('div'); row.className = 'history-item';
+        const top = document.createElement('div'); top.className = 'history-row';
+        const hashEl = document.createElement('div'); hashEl.className = 'history-hash';
+        const h = item.txhash || '';
+        const url = h ? buildExplorerUrl('tx', chainIdHex || ASSETCHAIN_ID_HEX, h) : null;
+        if (url) { const a = document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener noreferrer'; a.textContent=h; hashEl.appendChild(a); }
+        else { const span = document.createElement('span'); span.textContent=h||'—'; hashEl.appendChild(span); }
+        const meta = document.createElement('div'); meta.className = 'history-meta'; meta.textContent = (item.date || '').replace('T',' ');
+        top.appendChild(hashEl); top.appendChild(meta);
+
+        const mid = document.createElement('div'); mid.className = 'history-row';
+        const type = document.createElement('div'); type.className = 'history-type'; type.textContent = inferTxType(item, userAddr);
+        const pair = document.createElement('div'); pair.className = 'history-meta'; pair.textContent = item.token_name || '—';
+        mid.appendChild(type); mid.appendChild(pair);
+
+        const bot = document.createElement('div'); bot.className = 'history-row';
+        const amount = document.createElement('div'); amount.className = 'history-amount'; amount.textContent = `N${item.amount || '0.00'}`;
+        const st = statusLabel(item.status);
+        const statusEl = document.createElement('div'); statusEl.className = 'history-status ' + st.cls; statusEl.textContent = st.text;
+        bot.appendChild(amount); bot.appendChild(statusEl);
+
+        row.appendChild(top); row.appendChild(mid); row.appendChild(bot);
+        list.appendChild(row);
+      });
+    }
+    async function fetchWalletHistory(address, page=0, perPage=10) {
+      const url = `${apiBase}/access.php?action=getWalletTransactions&address=${encodeURIComponent(address)}&page=${page}&limit=${perPage}`;
+      const res = await fetch(url);
+      return res.json();
+    }
+    async function loadHistoryIfEligible() {
+      try {
+        const state = window.authState || {};
+        if (!(state.connected && state.networkOk && state.signedIn)) { return; }
+        const address = window.currentAddress;
+        const card = document.getElementById('history-card');
+        const status = document.getElementById('history-status');
+        const pageEl = document.getElementById('history-page');
+        const prev = document.getElementById('history-prev');
+        const next = document.getElementById('history-next');
+        if (!address || !card) return;
+        card.style.display = 'block';
+        status.textContent = 'Loading history...';
+        const network = window.ethereum ? await window.ethereum.request({ method: 'eth_chainId' }) : ASSETCHAIN_ID_HEX;
+        let page = 0; const perPage = 10;
+        const update = async () => {
+          status.textContent = 'Loading history...';
+          const data = await fetchWalletHistory(address, page, perPage);
+          if (data.status !== 'success') { status.textContent = data.msg || 'Failed to load history'; return; }
+          status.textContent = '';
+          renderHistoryItems(data.items || [], address, network);
+          const pages = Number(data.pages || 0);
+          pageEl.textContent = pages ? `Page ${Number(data.page || 0)+1} of ${pages}` : '';
+          prev.disabled = page <= 0; next.disabled = !pages || (page+1) >= pages;
+        };
+        prev.onclick = async () => { if (page > 0) { page--; await update(); } };
+        next.onclick = async () => { page++; await update(); };
+        await update();
+      } catch (e) {
+        const status = document.getElementById('history-status');
+        if (status) status.textContent = e?.message || 'Error loading history';
+      }
+    }
     // Explorer mapping and utilities
     const ExplorerMap = {
       '0xA5B4': { base: 'https://scan.assetchain.org', paths: { tx: (h) => `/tx/${h}`, address: (a) => `/address/${a}` } }

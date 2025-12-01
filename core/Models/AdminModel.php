@@ -1494,6 +1494,32 @@ class AdminModel extends Model
 		return $results;
 	}
 
+	// Fetch transactions by EVM wallet address with pagination
+	public function getTransactionsByAddress($address, $page = 0, $perPage = 10)
+	{
+		$dbh = self::connect();
+		$addr = strtolower(trim((string)$address));
+		$page = max(0, (int)$page);
+		$perPage = max(1, (int)$perPage);
+		$offset = $page * $perPage;
+
+		// Count total
+		$sqlC = "SELECT COUNT(*) AS cnt FROM transactions b WHERE (LOWER(b.senderaddress)=LOWER(:addr) OR LOWER(b.targetaddress)=LOWER(:addr))";
+		$qC = $dbh->prepare($sqlC);
+		$qC->bindParam(':addr', $addr, PDO::PARAM_STR);
+		$qC->execute();
+		$total = (int)($qC->fetch(PDO::FETCH_ASSOC)['cnt'] ?? 0);
+
+		// Fetch items (use LEFT JOIN to expose optional subscriber info if needed)
+		$sql = "SELECT a.sEmail,a.sPhone,a.sType,b.* FROM transactions b LEFT JOIN subscribers a ON a.sId=b.sId WHERE (LOWER(b.senderaddress)=LOWER(:addr) OR LOWER(b.targetaddress)=LOWER(:addr)) ORDER BY b.date DESC LIMIT $offset, $perPage";
+		$q = $dbh->prepare($sql);
+		$q->bindParam(':addr', $addr, PDO::PARAM_STR);
+		$q->execute();
+		$items = $q->fetchAll(PDO::FETCH_OBJ);
+
+		return [ 'total' => $total, 'page' => $page, 'perPage' => $perPage, 'items' => $items ];
+	}
+
 
 	//Get Transaction Details
 	public function getTransactionDetails($ref)

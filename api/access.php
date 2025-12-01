@@ -146,6 +146,44 @@ try {
             ];
             break;
 
+        case 'getWalletTransactions':
+            $address = isset($_GET['address']) ? trim($_GET['address']) : '';
+            $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
+            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+            // Basic EVM address validation
+            $isHex = preg_match('/^0x[a-fA-F0-9]{40}$/', $address) === 1;
+            if (!$isHex) {
+                http_response_code(400);
+                $out = [ 'status' => 'fail', 'msg' => 'Invalid address' ];
+                break;
+            }
+            $page = max(0, $page); $limit = max(1, min(50, $limit));
+            $result = $admin->getTransactionsByAddress($address, $page, $limit);
+            $pages = $result['perPage'] > 0 ? (int)ceil($result['total'] / $result['perPage']) : 0;
+            $out = [
+                'status' => 'success',
+                'total' => $result['total'],
+                'page' => $result['page'],
+                'perPage' => $result['perPage'],
+                'pages' => $pages,
+                'items' => array_map(function($r){
+                    return [
+                        'txhash' => $r->txhash ?? null,
+                        'date' => $r->date ?? null,
+                        'servicename' => $r->servicename ?? null,
+                        'servicedesc' => $r->servicedesc ?? null,
+                        'amount' => $r->amount ?? null,
+                        'status' => isset($r->status) ? (int)$r->status : null,
+                        'senderaddress' => $r->senderaddress ?? null,
+                        'targetaddress' => $r->targetaddress ?? null,
+                        'transaction_type' => $r->transaction_type ?? null,
+                        'token_name' => $r->token_name ?? null,
+                        'token_contract' => $r->token_contract ?? null,
+                    ];
+                }, $result['items'] ?? [])
+            ];
+            break;
+
         default:
             http_response_code(400);
             $out = [ 'status' => 'fail', 'msg' => 'Unknown action' ];
