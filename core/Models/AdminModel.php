@@ -1478,7 +1478,7 @@ class AdminModel extends Model
 			}
 		}
 
-        $sql = "SELECT a.sFname,a.sPhone,a.sEmail,a.sType,b.* FROM subscribers a, transactions b WHERE a.sId=b.sId ";
+        $sql = "SELECT a.sFname,a.sPhone,a.sEmail,a.sType,b.* FROM transactions b LEFT JOIN subscribers a ON a.sId=b.sId WHERE 1=1 ";
         // Optional transaction_type filter
         $txType = isset($_GET['tx_type']) ? strtolower(trim($_GET['tx_type'])) : '';
         $allowedTxType = ($txType === 'dex' || $txType === 'app');
@@ -1499,7 +1499,7 @@ class AdminModel extends Model
 	public function getTransactionDetails($ref)
 	{
 		$dbh = self::connect();
-		$sql = "SELECT a.sFname,a.sPhone,a.sEmail,a.sType,b.* FROM subscribers a, transactions b WHERE a.sId=b.sId AND transref=:ref";
+        $sql = "SELECT a.sFname,a.sPhone,a.sEmail,a.sType,b.* FROM transactions b LEFT JOIN subscribers a ON a.sId=b.sId WHERE transref=:ref";
 		$query = $dbh->prepare($sql);
 		$query->bindParam(':ref', $ref, PDO::PARAM_STR);
 		$query->execute();
