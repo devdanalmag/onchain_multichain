@@ -907,17 +907,9 @@
       font-weight: 600;
     }
 
-    .status-success {
-      background: rgba(0, 216, 151, 0.15);
-      color: #00D897;
-      border: 1px solid rgba(0, 216, 151, 0.35);
-    }
-
-    .status-failed {
-      background: rgba(255, 71, 87, 0.15);
-      color: #FF4757;
-      border: 1px solid rgba(255, 71, 87, 0.35);
-    }
+    .status-success { background: rgba(0, 216, 151, 0.15); color: #00D897; border: 1px solid rgba(0, 216, 151, 0.35); }
+    .status-failed { background: rgba(255, 71, 87, 0.15); color: #FF4757; border: 1px solid rgba(255, 71, 87, 0.35); }
+    .status-pending { background: rgba(255, 181, 71, 0.15); color: #FFB547; border: 1px solid rgba(255, 181, 71, 0.35); }
 
     .receipt-body {
       padding: 14px 16px;
@@ -2231,12 +2223,18 @@
       card.className = 'receipt-card';
       const header = document.createElement('div'); header.className = 'receipt-header';
       const title = document.createElement('div'); title.className = 'receipt-title';
-      const tIcon = document.createElement('span'); tIcon.innerHTML = `<i class="fas ${model.status === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>`;
-      const tText = document.createElement('span'); tText.textContent = model.status === 'success' ? 'Transaction Successful' : 'Transaction Failed';
+      const tIcon = document.createElement('span');
+      const isSuccess = model.status === 'success'; const isFailed = model.status === 'failed';
+      tIcon.innerHTML = `<i class="fas ${isSuccess ? 'fa-check-circle' : (isFailed ? 'fa-exclamation-circle' : 'fa-hourglass-half')}"></i>`;
+      const tText = document.createElement('span'); tText.textContent = isSuccess ? 'Transaction Successful' : (isFailed ? 'Transaction Failed' : 'Transaction Pending');
       title.appendChild(tIcon); title.appendChild(tText);
-      const badge = document.createElement('div'); badge.className = 'status-badge ' + (model.status === 'success' ? 'status-success' : 'status-failed');
+      const badge = document.createElement('div');
+      let lbl = 'PENDING', cls = 'status-pending';
+      if (model.status === 'success') { lbl = 'SUCCESS'; cls = 'status-success'; }
+      else if (model.status === 'failed') { lbl = 'FAILED'; cls = 'status-failed'; }
+      badge.className = 'status-badge ' + cls;
       badge.setAttribute('aria-label', model.status);
-      badge.textContent = (model.status === 'success' ? 'SUCCESS' : 'FAILED') + ' • ' + (model.backendStatus || 'ON-CHAIN');
+      badge.textContent = `${lbl} • ${model.backendStatus || 'ON-CHAIN'}`;
       header.appendChild(title); header.appendChild(badge);
 
       const body = document.createElement('div'); body.className = 'receipt-body';
@@ -2296,9 +2294,13 @@
       const tIcon = document.createElement('span'); tIcon.innerHTML = `<i class="fas ${model.status === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>`;
       const tText = document.createElement('span'); tText.textContent = model.status === 'success' ? 'Transaction Successful' : 'Transaction Failed';
       title.appendChild(tIcon); title.appendChild(tText);
-      const badge = document.createElement('div'); badge.className = 'status-badge ' + (model.status === 'success' ? 'status-success' : 'status-failed');
+      const badge = document.createElement('div');
+      let lbl = 'PENDING', cls = 'status-pending';
+      if (isSuccess) { lbl = 'SUCCESS'; cls = 'status-success'; }
+      else if (isFailed) { lbl = 'FAILED'; cls = 'status-failed'; }
+      badge.className = 'status-badge ' + cls;
       badge.setAttribute('aria-label', model.status);
-      badge.textContent = (model.status === 'success' ? 'SUCCESS' : 'FAILED') + ' • ' + (model.backendStatus || 'ON-CHAIN');
+      badge.textContent = `${lbl} • ${model.backendStatus || 'ON-CHAIN'}`;
       header.appendChild(title); header.appendChild(badge);
 
       const body = document.createElement('div'); body.className = 'receipt-body';
@@ -2583,7 +2585,7 @@
         const network = await signer.provider.getNetwork();
         const chainIdHex = '0x' + Number(network.chainId || 0).toString(16).toUpperCase();
         const model = {
-          status: 'success',
+          status: 'pending',
           backendStatus: 'PENDING',
           timestamp: Date.now(),
           hash: receipt.transactionHash,
@@ -2597,7 +2599,6 @@
           chainId: chainIdHex,
           chainIdHex
         };
-        const card = renderReceipt(model);
         const modalCard = openReceiptModal(model);
 
         const base = {
@@ -2638,27 +2639,12 @@
 
         if (isSuccess) {
           notify('success', 'Transaction successful!');
-          if (card) {
-            const badge = card.querySelector('.status-badge');
-            if (badge) { badge.textContent = 'SUCCESS • VERIFIED'; badge.classList.remove('status-failed'); badge.classList.add('status-success'); }
-          }
           if (modalCard) {
             const badge = modalCard.querySelector('.status-badge');
             if (badge) { badge.textContent = 'SUCCESS • VERIFIED'; badge.classList.remove('status-failed'); badge.classList.add('status-success'); }
           }
         } else {
           notify('error', 'Transaction failed.');
-          if (card) {
-            const badge = card.querySelector('.status-badge');
-            if (badge) { badge.textContent = 'FAILED • VERIFICATION'; badge.classList.remove('status-success'); badge.classList.add('status-failed'); }
-            const body = card.querySelector('.receipt-body .receipt-grid');
-            if (body) {
-              const kvm = document.createElement('div'); kvm.className = 'kv';
-              const kk = document.createElement('div'); kk.className = 'k'; kk.textContent = 'Message';
-              const vv = document.createElement('div'); vv.className = 'v'; vv.textContent = out.msg || out.message || 'Unknown error';
-              kvm.appendChild(kk); kvm.appendChild(vv); body.appendChild(kvm);
-            }
-          }
           if (modalCard) {
             const badge = modalCard.querySelector('.status-badge');
             if (badge) { badge.textContent = 'FAILED • VERIFICATION'; badge.classList.remove('status-success'); badge.classList.add('status-failed'); }
