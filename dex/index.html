@@ -2025,6 +2025,31 @@
       }
     }
 
+    async function calcWeiFromNairaBySelector(selectorId, naira) {
+      try {
+        const ngnInt = Math.floor(Number(naira || 0));
+        if (!ngnInt || ngnInt <= 0) return '';
+        const sel = document.getElementById(selectorId);
+        const selectedContract = sel?.value || '';
+        const selectedName = sel?.selectedOptions[0]?.text || '';
+        const cngn = (window.tokenByName && window.tokenByName['CNGN']) || { token_decimals: 6, token_contract: '0x7923C0f6FA3d1BA6EAFCAedAaD93e737Fd22FC4F' };
+        const cngnWei = ethers.BigNumber.from(ngnInt.toString()).mul(ethers.BigNumber.from('1' + '0'.repeat(Number(cngn.token_decimals||6))));
+        if ((selectedName||'').toUpperCase() === 'CNGN' || selectedContract.toLowerCase() === (cngn.token_contract||'').toLowerCase()) {
+          return cngnWei.toString();
+        }
+        const tokenOut = selectedContract;
+        const tokenIn = cngn.token_contract;
+        const url = `https://liquidity-pool-api.assetchain.org/swaps/routes?tokenIn=${encodeURIComponent(tokenIn)}&tokenOut=${encodeURIComponent(tokenOut)}&amountIn=${cngnWei.toString()}&maxHops=2&includeAlternatives=true&slippageTolerance=1&includeLowLiquidityPools=true`;
+        try {
+          const resp = await fetch(url);
+          const data = await resp.json();
+          const routes = data.routes || [];
+          if (!routes.length || !routes[0].amountOut) return '';
+          return String(routes[0].amountOut);
+        } catch (_) { return ''; }
+      } catch (e) { return ''; }
+    }
+
     // History styles (inline minimal)
     const styleHist = document.createElement('style');
     styleHist.textContent = `
@@ -2459,11 +2484,21 @@
       const res = await fetch(`${apiBase}/access.php?action=checkDataPlanPrice&network=${encodeURIComponent(network)}&plan=${encodeURIComponent(plan)}`);
       const data = await res.json();
       const ngn = Number(data.amount || data.price || data.naira || 0);
-      const wei = ngn ? await calcWeiFromNaira(ngn) : '';
+      const wei = ngn ? await calcWeiFromNairaBySelector('data-token', ngn) : '';
       $('#data-nano').value = wei;
       $('#data-send').disabled = !wei;
       if (!wei) {
         showStatus($('#data-status'), 'Failed to calculate token amount (swap or token unavailable)', false);
+      } else {
+        const sel = document.getElementById('data-token');
+        const dec = Number(sel?.selectedOptions[0]?.getAttribute('data-decimals') || 6);
+        const name = sel?.selectedOptions[0]?.text || '';
+        const scale = ethers.BigNumber.from('1' + '0'.repeat(dec));
+        const whole = ethers.BigNumber.from(wei).div(scale).toString();
+        const fracRaw = ethers.BigNumber.from(wei).mod(scale).toString().padStart(dec, '0');
+        const frac = fracRaw.replace(/0+$/, '');
+        const pretty = frac ? `${whole}.${frac}` : whole;
+        showStatus($('#data-status'), `Amount: ${pretty} ${name} (wei: ${wei})`, true);
       }
     });
 
@@ -2607,7 +2642,7 @@
 
         const target = service === 'airtime' ? $('#airtime-target').value.trim() : $('#data-target').value.trim();
         const nano = service === 'airtime' ? $('#airtime-nano').value.trim() : $('#data-nano').value.trim();
-        const tokenSel = document.getElementById('airtime-token');
+        const tokenSel = service === 'airtime' ? document.getElementById('airtime-token') : document.getElementById('data-token');
         const tokenContract = tokenSel?.value || CNGN_CONTRACT;
         const tokenDecimals = Number(tokenSel?.selectedOptions[0]?.getAttribute('data-decimals') || 6);
 

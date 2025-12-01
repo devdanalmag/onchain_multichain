@@ -41,7 +41,7 @@ SELECT 'CNGN', LOWER('0x7923c0f6fa3d1ba6eafcaedaad93e737fd22fc4f'), 6, 1
 WHERE NOT EXISTS (SELECT 1 FROM tokens WHERE token_name='CNGN');
 
 INSERT INTO tokens (token_name, token_contract, token_decimals, is_active)
-SELECT 'USDT', LOWER('0x26E490d30e73c36800788DC6d7415946C4BbEa24'), 18, 1
+SELECT 'USDT', LOWER('0x26E490d30e73c36800788DC6d6315946C4BbEa24'), 18, 1
 WHERE NOT EXISTS (SELECT 1 FROM tokens WHERE token_name='USDT');
 
 COMMIT;
