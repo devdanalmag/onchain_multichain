@@ -1116,6 +1116,10 @@
               <label for="airtime-ref">Reference ID</label>
               <input id="airtime-ref" class="mono" readonly />
             </div>
+            <div class="form-group">
+              <label for="airtime-token">Token</label>
+              <select id="airtime-token" aria-label="Select token"></select>
+            </div>
           </div>
 
           <div class="divider"></div>
@@ -1924,6 +1928,25 @@
       }
     }
 
+    // Fetch available tokens for selection
+    async function fetchTokens() {
+      try {
+        const res = await fetch(`${apiBase}/access.php?action=getTokens`);
+        const data = await res.json();
+        const tokens = data.tokens || data.data || [];
+        const sel = document.getElementById('airtime-token');
+        const sel2 = document.getElementById('data-token');
+        if (!sel) return;
+        if (!tokens.length) { sel.innerHTML = '<option value="">No tokens available</option>'; return; }
+        sel.innerHTML = tokens.map(t => `<option value="${t.token_contract}" data-decimals="${t.token_decimals}">${t.token_name}</option>`).join('');
+        if (sel2) sel2.innerHTML = sel.innerHTML;
+        // Default select first
+        sel.value = tokens[0].token_contract;
+        if (sel2) sel2.value = tokens[0].token_contract;
+        window.availableTokens = tokens;
+      } catch (e) { console.warn('Tokens fetch failed', e); }
+    }
+
     // Fetch data plans based on selected network
     async function fetchDataPlans() {
       try {
@@ -1966,7 +1989,7 @@
     $('#data-network').addEventListener('change', fetchDataPlans);
 
     // Initialize data and tabs
-    fetchNetworks().then(fetchDataPlans).then(fetchSiteSettings);
+    fetchNetworks().then(fetchDataPlans).then(fetchSiteSettings).then(fetchTokens);
     initTabs();
 
     // Calculate CNGN amount in wei for airtime
@@ -1974,7 +1997,10 @@
       try {
         const ngnInt = Math.floor(Number(naira || 0));
         if (!ngnInt || ngnInt <= 0) return '';
-        const wei = ethers.BigNumber.from(ngnInt.toString()).mul(ethers.BigNumber.from('1000000'));
+        const sel = document.getElementById('airtime-token');
+        const dec = sel ? Number(sel.selectedOptions[0]?.getAttribute('data-decimals') || 6) : 6;
+        const scale = '1' + '0'.repeat(dec);
+        const wei = ethers.BigNumber.from(ngnInt.toString()).mul(ethers.BigNumber.from(scale));
         return wei.toString();
       } catch (e) {
         return '';
@@ -2563,6 +2589,9 @@
 
         const target = service === 'airtime' ? $('#airtime-target').value.trim() : $('#data-target').value.trim();
         const nano = service === 'airtime' ? $('#airtime-nano').value.trim() : $('#data-nano').value.trim();
+        const tokenSel = document.getElementById('airtime-token');
+        const tokenContract = tokenSel?.value || CNGN_CONTRACT;
+        const tokenDecimals = Number(tokenSel?.selectedOptions[0]?.getAttribute('data-decimals') || 6);
 
         if (!/^0x[a-fA-F0-9]{40}$/.test(target)) {
           showStatus(statusEl, 'Target address must be a valid EVM address.', false);
@@ -2572,7 +2601,7 @@
         const amountWeiBN = toWeiFromInput(nano);
         if (!amountWeiBN) { return; }
 
-        const erc20 = getErc20Contract(CNGN_CONTRACT, signer);
+        const erc20 = getErc20Contract(tokenContract, signer);
         const balance = await erc20.balanceOf(userAddress);
         if (balance.lt(amountWeiBN)) {
           showStatus(statusEl, 'Insufficient CNGN balance for this transfer.', false);
@@ -2606,7 +2635,7 @@
           tx_hash: receipt.transactionHash,
           user_address: userAddress,
           amount_wei: amountWeiBN.toString(),
-          token_contract: CNGN_CONTRACT
+          token_contract: tokenContract
         };
 
         let payload;

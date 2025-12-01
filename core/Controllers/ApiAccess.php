@@ -680,7 +680,7 @@ class ApiAccess extends Controller
     // 1) Check base transaction details at /transactions/<hash> for status ok
     // 2) Read token transfers at /transactions/<hash>/token-transfers?type=ERC-20%2CERC-721%2CERC-1155
     // 3) Match ERC-20 transfer with from==user_address, to==target_address, token.address==token_contract, total.value==amount_wei
-    public function verifyAssetTransaction($target_address, $tx_hash, $user_address, $amount_wei, $token_contract = '0x7923C0f6FA3d1BA6EAFCAedAaD93e737Fd22FC4F')
+    public function verifyAssetTransaction($target_address, $tx_hash, $user_address, $amount_wei, $token_contract = null)
     {
         $resp = [
             'status' => 'fail',
@@ -694,6 +694,11 @@ class ApiAccess extends Controller
             $hash = trim((string)$tx_hash);
             if (!$hash) {
                 $resp['msg'] = 'missing_tx_hash';
+                return $resp;
+            }
+            $wantToken = $this->normalizeEvmAddress($token_contract);
+            if (!$wantToken || !preg_match('/^0x[a-fA-F0-9]{40}$/', $wantToken)) {
+                $resp['msg'] = 'invalid_token_contract';
                 return $resp;
             }
 
@@ -769,7 +774,7 @@ class ApiAccess extends Controller
 
             $wantFrom = $this->normalizeEvmAddress($user_address);
             $wantTo = $this->normalizeEvmAddress($target_address);
-            $wantToken = $this->normalizeEvmAddress($token_contract);
+            // $wantToken already validated above
 
             $matched = false;
             $transferValue = null;

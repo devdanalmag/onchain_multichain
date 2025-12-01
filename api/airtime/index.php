@@ -130,7 +130,7 @@ $tx_hash = (isset($body->tx_hash)) ? $body->tx_hash : "";
 $user_address = (isset($body->user_address)) ? $body->user_address : "";
 // Assetchain migration: use amount_wei and optional token_contract (CNGN by default)
 $amount_wei = (isset($body->amount_wei)) ? $body->amount_wei : "";
-$token_contract = (isset($body->token_contract)) ? $body->token_contract : "0x7923C0f6FA3d1BA6EAFCAedAaD93e737Fd22FC4F";
+$token_contract = (isset($body->token_contract)) ? $body->token_contract : "";
 
 // -------------------------------------------------------------------
 //  Check Inputs Parameters
@@ -201,7 +201,21 @@ if ($chainresult["status"] == "fail") {
 $ftarget_address = $controller->normalizeEvmAddress($target_address);
 // Check Target Adress
 $fuser_address = $controller->normalizeEvmAddress($user_address);
-$tokenamount = $controller->convertWeiToToken($amount_wei, 6);
+// Resolve token decimals from DB
+$dbh = AdminModel::connect();
+$decQ = $dbh->prepare("SELECT token_decimals, token_name, token_contract FROM tokens WHERE LOWER(token_contract)=LOWER(:c) AND is_active=1 LIMIT 1");
+$decQ->bindParam(':c', $token_contract, PDO::PARAM_STR);
+$decQ->execute();
+$trow = $decQ->fetch(PDO::FETCH_ASSOC);
+if (!$trow) {
+    header('HTTP/1.0 400 Invalid Token');
+    $response['status'] = "fail";
+    $response['msg'] = "Token Not Found or Disabled";
+    echo json_encode($response);
+    exit();
+}
+$token_decimals = (int)($trow['token_decimals'] ?? 6);
+$tokenamount = $controller->convertWeiToToken($amount_wei, $token_decimals);
 $from = "Api :: Airtime Index";
 
 // -------------------------------------------------------------------
@@ -471,7 +485,7 @@ if (file_exists(__DIR__ . '/../../config/assetchain.json')) {
         $cngnContractCfg = $controller->normalizeEvmAddress($cfg['cngn_contract']);
     }
 }
-$token_name = ($normTokenContract && $normTokenContract === $cngnContractCfg) ? 'cNGN' : (($normTokenContract) ? 'ERC20' : 'ASET');
+$token_name = $trow['token_name'] ?? (($normTokenContract && $normTokenContract === $cngnContractCfg) ? 'cNGN' : (($normTokenContract) ? 'ERC20' : 'ASET'));
 
 
 $result = $controller->checkTransactionDuplicate($servicename, $servicedesc);

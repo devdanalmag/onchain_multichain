@@ -1520,6 +1520,47 @@ class AdminModel extends Model
 		return [ 'total' => $total, 'page' => $page, 'perPage' => $perPage, 'items' => $items ];
 	}
 
+	// Tokens CRUD
+	public function getActiveTokens()
+	{
+		$dbh = self::connect();
+		$sql = "SELECT token_id, token_name, token_contract, token_decimals, is_active, created_at, updated_at FROM tokens WHERE is_active=1 ORDER BY token_name ASC";
+		$q = $dbh->prepare($sql);
+		$q->execute();
+		return $q->fetchAll(PDO::FETCH_OBJ);
+	}
+
+	public function getAllTokens()
+	{
+		$dbh = self::connect();
+		$sql = "SELECT token_id, token_name, token_contract, token_decimals, is_active, created_at, updated_at FROM tokens ORDER BY token_name ASC";
+		$q = $dbh->prepare($sql);
+		$q->execute();
+		return $q->fetchAll(PDO::FETCH_OBJ);
+	}
+
+	public function upsertToken($tokenId, $name, $contract, $decimals, $active)
+	{
+		$dbh = self::connect();
+		$name = trim($name); $contract = strtolower(trim($contract)); $dec = (int)$decimals; $active = (int)$active;
+		if (!preg_match('/^0x[a-fA-F0-9]{40}$/', $contract)) { return ['status'=>'fail','msg'=>'Invalid contract address']; }
+		if ($dec <= 0 || $dec > 36) { return ['status'=>'fail','msg'=>'Invalid decimals']; }
+		if ($tokenId) {
+			$sql = "UPDATE tokens SET token_name=:n, token_contract=:c, token_decimals=:d, is_active=:a WHERE token_id=:id";
+			$q = $dbh->prepare($sql);
+			$q->bindParam(':id', $tokenId, PDO::PARAM_INT);
+		} else {
+			$sql = "INSERT INTO tokens (token_name, token_contract, token_decimals, is_active) VALUES (:n,:c,:d,:a)";
+			$q = $dbh->prepare($sql);
+		}
+		$q->bindParam(':n', $name, PDO::PARAM_STR);
+		$q->bindParam(':c', $contract, PDO::PARAM_STR);
+		$q->bindParam(':d', $dec, PDO::PARAM_INT);
+		$q->bindParam(':a', $active, PDO::PARAM_INT);
+		if ($q->execute()) { return ['status'=>'success']; }
+		return ['status'=>'fail','msg'=>'DB error'];
+	}
+
 
 	//Get Transaction Details
 	public function getTransactionDetails($ref)

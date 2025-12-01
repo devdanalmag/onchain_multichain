@@ -1,0 +1,41 @@
+Tokens Table Schema
+-------------------
+token_id INT AUTO_INCREMENT PRIMARY KEY
+token_name VARCHAR(64) NOT NULL
+token_contract VARCHAR(66) NOT NULL
+token_decimals INT NOT NULL
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+is_active TINYINT(1) NOT NULL DEFAULT 1
+
+Indexes
+-------
+idx_token_name (token_name)
+idx_token_contract (token_contract)
+
+Seed Tokens
+-----------
+CNGN: decimals=6, contract from config (normalized lowercase)
+USDT: decimals=18, contract 0x26E490d30e73c36800788DC6d7415946C4BbEa24
+
+API
+---
+GET /api/access.php?action=getTokens
+Response: { status: "success", tokens: [ { token_name, token_contract, token_decimals } ] }
+
+Frontend Usage
+--------------
+- Fetch tokens on load, populate dropdown.
+- Use selected token_decimals for Naira→wei conversion.
+- Use selected token_contract for ERC-20 transfer and backend verification.
+
+Backend
+-------
+- verifyAssetTransaction requires explicit token_contract.
+- airtime/data endpoints validate token existence and is_active; resolve decimals from DB.
+
+Errors
+------
+- 400 Invalid Token (not found or disabled)
+- 400 Invalid Contract Address
+- 500 Server Error for DB/network failures

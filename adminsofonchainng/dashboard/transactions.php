@@ -41,6 +41,7 @@
               <div class="btn-group" role="group" aria-label="tx-type-tabs">
                 <a class="btn btn-outline-primary btn-sm<?php echo (!isset($_GET['tx_type'])||$_GET['tx_type']=='app')?' active':''; ?>" href="transactions?tx_type=app<?php if(isset($_GET['search'])): echo '&search='.$_GET['search'].'&searchfor='.$_GET['searchfor']; endif; ?>">App</a>
                 <a class="btn btn-outline-primary btn-sm<?php echo (isset($_GET['tx_type'])&&$_GET['tx_type']=='dex')?' active':''; ?>" href="transactions?tx_type=dex<?php if(isset($_GET['search'])): echo '&search='.$_GET['search'].'&searchfor='.$_GET['searchfor']; endif; ?>">DEX</a>
+                <a class="btn btn-outline-secondary btn-sm" href="tokens">Tokens</a>
               </div>
               <a class="btn btn-info btn-sm" href="transactions?page=<?php echo $pageCount; if(isset($_GET["search"])): echo "&search=".$_GET["search"]."&searchfor=".$_GET["searchfor"]; endif; if(isset($_GET['tx_type'])): echo "&tx_type=".$_GET['tx_type']; endif; ?>">Next 1000</a>
             </div>

@@ -146,6 +146,15 @@ try {
             ];
             break;
 
+        case 'getTokens':
+            $dbh = AdminModel::connect();
+            $sql = "SELECT token_name, token_contract, token_decimals FROM tokens WHERE is_active=1 ORDER BY token_name ASC";
+            $q = $dbh->prepare($sql);
+            $q->execute();
+            $rows = $q->fetchAll(PDO::FETCH_ASSOC);
+            $out = [ 'status' => 'success', 'tokens' => $rows, 'data' => $rows ];
+            break;
+
         case 'getWalletTransactions':
             $address = isset($_GET['address']) ? trim($_GET['address']) : '';
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
