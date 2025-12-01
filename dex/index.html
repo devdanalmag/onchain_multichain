@@ -2360,8 +2360,10 @@
       card.className = 'receipt-card';
       const header = document.createElement('div'); header.className = 'receipt-header';
       const title = document.createElement('div'); title.className = 'receipt-title';
-      const tIcon = document.createElement('span'); tIcon.innerHTML = `<i class="fas ${model.status === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>`;
-      const tText = document.createElement('span'); tText.textContent = model.status === 'success' ? 'Transaction Successful' : 'Transaction Failed';
+      const isSuccess = String(model.status).toLowerCase() === 'success';
+      const isFailed = String(model.status).toLowerCase() === 'failed';
+      const tIcon = document.createElement('span'); tIcon.innerHTML = `<i class="fas ${isSuccess ? 'fa-check-circle' : (isFailed ? 'fa-exclamation-circle' : 'fa-hourglass-half')}"></i>`;
+      const tText = document.createElement('span'); tText.textContent = isSuccess ? 'Transaction Successful' : (isFailed ? 'Transaction Failed' : 'Transaction Pending');
       title.appendChild(tIcon); title.appendChild(tText);
       const badge = document.createElement('div');
       let lbl = 'PENDING', cls = 'status-pending';
