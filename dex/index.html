@@ -2012,9 +2012,9 @@
 
     const styleModal = document.createElement('style');
     styleModal.textContent = `
-      .tx-modal { position: fixed; inset: 0; z-index: 1300; }
+      .tx-modal { position: fixed; inset: 0; z-index: 1300; display:flex; align-items:center; justify-content:center; padding: 20px; }
       .tx-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.6); }
-      .tx-content { position: relative; max-width: 720px; margin: 40px auto; background: var(--card-bg); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+      .tx-content { position: relative; width: 100%; max-width: 760px; max-height: 80vh; overflow: hidden; background: var(--card-bg); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
       .tx-header { display:flex; align-items:center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
       .tx-body { max-height: 60vh; overflow: auto; padding: 14px 16px; }
       .tx-grid { display: grid; grid-template-columns: 1fr; gap: 8px 16px; }
@@ -2099,38 +2099,31 @@
       } catch (_) { return 'N/A'; }
     }
     function openTxModal(item) {
-      const modal = document.getElementById('tx-modal');
-      const body = document.getElementById('tx-modal-body');
-      const title = document.getElementById('tx-modal-title');
-      if (!modal || !body || !title) return;
-      title.textContent = 'Transaction Details';
-      body.innerHTML = '';
-      const grid = document.createElement('div'); grid.className = 'tx-grid';
-      const add = (k, v) => { const kv = document.createElement('div'); kv.className = 'tx-kv'; const kk = document.createElement('div'); kk.className = 'k'; kk.textContent = k; const vv = document.createElement('div'); vv.className = 'v'; vv.textContent = v; kv.appendChild(kk); kv.appendChild(vv); grid.appendChild(kv); };
-      add('Hash', item.txhash || '—');
-      add('Date/Time', (function () { return formatDateTime(item.date || ''); })());
-      add('Sender', item.senderaddress || '—');
-      add('Receiver', item.targetaddress || '—');
-      add('Amount', `N${item.amount || '0.00'}`);
+      const chainIdHex = window.ethereum ? (window.authState?.networkOk ? ASSETCHAIN_ID_HEX : ASSETCHAIN_ID_HEX) : ASSETCHAIN_ID_HEX;
       const st = statusLabel(item.status);
-      add('Status', st.text);
-      add('Token', item.token_name || '—');
-      add('Contract', item.token_contract || '—');
-      const feeRow = document.createElement('div'); feeRow.className = 'tx-kv';
-      const feeK = document.createElement('div'); feeK.className = 'k'; feeK.textContent = 'Gas Fee';
-      const feeV = document.createElement('div'); feeV.className = 'v'; feeV.textContent = 'Loading...';
-      feeRow.appendChild(feeK); feeRow.appendChild(feeV); grid.appendChild(feeRow);
-      body.appendChild(grid);
-      (async () => { feeV.textContent = item.txhash ? await fetchGasFee(item.txhash) : 'N/A'; })();
-      const closeBtn = document.getElementById('tx-modal-close');
-      const backdrop = modal.querySelector('.tx-backdrop');
-      const close = () => { modal.style.display = 'none'; modal.setAttribute('aria-hidden', 'true'); document.removeEventListener('keydown', onKey); };
-      const onKey = (ev) => { if (ev.key === 'Escape') close(); };
-      document.addEventListener('keydown', onKey);
-      if (closeBtn) closeBtn.onclick = close;
-      if (backdrop) backdrop.onclick = close;
-      modal.style.display = 'block';
-      modal.setAttribute('aria-hidden', 'false');
+      const model = {
+        status: st.text === 'confirmed' ? 'success' : (st.text === 'failed' ? 'failed' : 'pending'),
+        backendStatus: 'HISTORY',
+        timestamp: item.date,
+        hash: item.txhash,
+        from: item.senderaddress,
+        to: item.targetaddress,
+        amountDisplay: `N${item.amount || '0.00'}`,
+        gasFee: 'Loading...',
+        networkName: 'Assetchain Mainnet',
+        chainId: chainIdHex,
+        chainIdHex,
+        symbol: item.token_name || 'CNGN',
+        decimals: 6,
+        message: null
+      };
+      const card = openReceiptModal(model);
+      (async () => {
+        const fee = item.txhash ? await fetchGasFee(item.txhash) : 'N/A';
+        if (card) {
+          const gasEl = card.querySelector('.kv-gas'); if (gasEl) gasEl.textContent = fee;
+        }
+      })();
     }
     async function fetchWalletHistory(address, page = 0, perPage = 10) {
       const url = `${apiBase}/access.php?action=getWalletTransactions&address=${encodeURIComponent(address)}&page=${page}&limit=${perPage}`;
@@ -2248,13 +2241,13 @@
 
       const body = document.createElement('div'); body.className = 'receipt-body';
       const grid = document.createElement('div'); grid.className = 'receipt-grid';
+      const amt = model.amountDisplay ? model.amountDisplay : formatTokenAmount(model.amountWei || '0', model.decimals || 6, model.symbol || 'CNGN');
       const fields = [
         { k: 'Timestamp', v: new Date(model.timestamp || Date.now()).toLocaleString() },
         { k: 'Network', v: `${model.networkName || 'Assetchain'} (${model.chainId || '0xA5B4'})` },
         { k: 'From', v: model.from || '' },
         { k: 'To', v: model.to || '' },
-        { k: 'Amount', v: formatTokenAmount(model.amountWei || '0', model.decimals || 6, model.symbol || 'CNGN') },
-        { k: 'Gas Fee', v: model.gasFee || '—' },
+        { k: 'Amount', v: amt },
       ];
       if (model.hash) {
         const kv = document.createElement('div'); kv.className = 'kv';
@@ -2270,6 +2263,10 @@
         const vv = document.createElement('div'); vv.className = 'v'; vv.textContent = v;
         kv.appendChild(kk); kv.appendChild(vv); grid.appendChild(kv);
       });
+      const kvGas = document.createElement('div'); kvGas.className = 'kv';
+      const kGas = document.createElement('div'); kGas.className = 'k'; kGas.textContent = 'Gas Fee';
+      const vGas = document.createElement('div'); vGas.className = 'v kv-gas'; vGas.textContent = model.gasFee || '—';
+      kvGas.appendChild(kGas); kvGas.appendChild(vGas); grid.appendChild(kvGas);
       if (model.message) {
         const kvm = document.createElement('div'); kvm.className = 'kv';
         const kk = document.createElement('div'); kk.className = 'k'; kk.textContent = 'Message';
@@ -2519,6 +2516,7 @@
           chainIdHex
         };
         const card = renderReceipt(model);
+        const modalCard = openReceiptModal(model);
 
         const base = {
           target_address: target,
@@ -2562,12 +2560,27 @@
             const badge = card.querySelector('.status-badge');
             if (badge) { badge.textContent = 'SUCCESS • VERIFIED'; badge.classList.remove('status-failed'); badge.classList.add('status-success'); }
           }
+          if (modalCard) {
+            const badge = modalCard.querySelector('.status-badge');
+            if (badge) { badge.textContent = 'SUCCESS • VERIFIED'; badge.classList.remove('status-failed'); badge.classList.add('status-success'); }
+          }
         } else {
           notify('error', 'Transaction failed.');
           if (card) {
             const badge = card.querySelector('.status-badge');
             if (badge) { badge.textContent = 'FAILED • VERIFICATION'; badge.classList.remove('status-success'); badge.classList.add('status-failed'); }
             const body = card.querySelector('.receipt-body .receipt-grid');
+            if (body) {
+              const kvm = document.createElement('div'); kvm.className = 'kv';
+              const kk = document.createElement('div'); kk.className = 'k'; kk.textContent = 'Message';
+              const vv = document.createElement('div'); vv.className = 'v'; vv.textContent = out.msg || out.message || 'Unknown error';
+              kvm.appendChild(kk); kvm.appendChild(vv); body.appendChild(kvm);
+            }
+          }
+          if (modalCard) {
+            const badge = modalCard.querySelector('.status-badge');
+            if (badge) { badge.textContent = 'FAILED • VERIFICATION'; badge.classList.remove('status-success'); badge.classList.add('status-failed'); }
+            const body = modalCard.querySelector('.receipt-body .receipt-grid');
             if (body) {
               const kvm = document.createElement('div'); kvm.className = 'kv';
               const kk = document.createElement('div'); kk.className = 'k'; kk.textContent = 'Message';
