@@ -2287,6 +2287,88 @@
       return card;
     }
 
+    // Create a receipt card element (shared between inline and modal)
+    function createReceiptCard(model) {
+      const card = document.createElement('div');
+      card.className = 'receipt-card';
+      const header = document.createElement('div'); header.className = 'receipt-header';
+      const title = document.createElement('div'); title.className = 'receipt-title';
+      const tIcon = document.createElement('span'); tIcon.innerHTML = `<i class="fas ${model.status === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>`;
+      const tText = document.createElement('span'); tText.textContent = model.status === 'success' ? 'Transaction Successful' : 'Transaction Failed';
+      title.appendChild(tIcon); title.appendChild(tText);
+      const badge = document.createElement('div'); badge.className = 'status-badge ' + (model.status === 'success' ? 'status-success' : 'status-failed');
+      badge.setAttribute('aria-label', model.status);
+      badge.textContent = (model.status === 'success' ? 'SUCCESS' : 'FAILED') + ' • ' + (model.backendStatus || 'ON-CHAIN');
+      header.appendChild(title); header.appendChild(badge);
+
+      const body = document.createElement('div'); body.className = 'receipt-body';
+      const grid = document.createElement('div'); grid.className = 'receipt-grid';
+      const amt = model.amountDisplay ? model.amountDisplay : formatTokenAmount(model.amountWei || '0', model.decimals || 6, model.symbol || 'CNGN');
+      const fields = [
+        { k: 'Timestamp', v: new Date(model.timestamp || Date.now()).toLocaleString() },
+        { k: 'Network', v: `${model.networkName || 'Assetchain'} (${model.chainId || '0xA5B4'})` },
+        { k: 'From', v: model.from || '' },
+        { k: 'To', v: model.to || '' },
+        { k: 'Amount', v: amt },
+      ];
+      if (model.hash) {
+        const kv = document.createElement('div'); kv.className = 'kv';
+        const k = document.createElement('div'); k.className = 'k'; k.textContent = 'Transaction Hash';
+        const v = document.createElement('a'); v.className = 'v'; v.textContent = model.hash;
+        const url = buildExplorerUrl('tx', model.chainIdHex || '0xA5B4', model.hash);
+        if (url) { v.href = url; v.target = '_blank'; v.rel = 'noopener noreferrer'; }
+        kv.appendChild(k); kv.appendChild(v); grid.appendChild(kv);
+      }
+      fields.forEach(({ k, v }) => {
+        const kv = document.createElement('div'); kv.className = 'kv';
+        const kk = document.createElement('div'); kk.className = 'k'; kk.textContent = k;
+        const vv = document.createElement('div'); vv.className = 'v'; vv.textContent = v;
+        kv.appendChild(kk); kv.appendChild(vv); grid.appendChild(kv);
+      });
+      const kvGas = document.createElement('div'); kvGas.className = 'kv';
+      const kGas = document.createElement('div'); kGas.className = 'k'; kGas.textContent = 'Gas Fee';
+      const vGas = document.createElement('div'); vGas.className = 'v kv-gas'; vGas.textContent = model.gasFee || '—';
+      kvGas.appendChild(kGas); kvGas.appendChild(vGas); grid.appendChild(kvGas);
+      if (model.message) {
+        const kvm = document.createElement('div'); kvm.className = 'kv';
+        const kk = document.createElement('div'); kk.className = 'k'; kk.textContent = 'Message';
+        const vv = document.createElement('div'); vv.className = 'v'; vv.textContent = model.message;
+        kvm.appendChild(kk); kvm.appendChild(vv); grid.appendChild(kvm);
+      }
+      body.appendChild(grid);
+
+      const footer = document.createElement('div'); footer.className = 'receipt-footer';
+      const btnPrint = document.createElement('button'); btnPrint.className = 'btn btn-secondary'; btnPrint.textContent = 'Print'; btnPrint.setAttribute('aria-label', 'Print receipt');
+      const btnDl = document.createElement('button'); btnDl.className = 'btn btn-primary'; btnDl.textContent = 'Download as Image'; btnDl.setAttribute('aria-label', 'Download receipt as image');
+      btnPrint.onclick = () => { printReceipt(card); };
+      btnDl.onclick = () => { exportReceiptAsImage(card).catch(() => notify('error', 'Export failed')); };
+      footer.appendChild(btnPrint); footer.appendChild(btnDl);
+
+      card.appendChild(header); card.appendChild(body); card.appendChild(footer);
+      return card;
+    }
+
+    function openReceiptModal(model) {
+      const modal = document.getElementById('tx-modal');
+      const body = document.getElementById('tx-modal-body');
+      const title = document.getElementById('tx-modal-title');
+      if (!modal || !body || !title) return null;
+      title.textContent = 'Transaction Receipt';
+      body.innerHTML = '';
+      const card = createReceiptCard(model);
+      body.appendChild(card);
+      const closeBtn = document.getElementById('tx-modal-close');
+      const backdrop = modal.querySelector('.tx-backdrop');
+      const close = () => { modal.style.display = 'none'; modal.setAttribute('aria-hidden', 'true'); document.removeEventListener('keydown', onKey); };
+      const onKey = (ev) => { if (ev.key === 'Escape') close(); };
+      document.addEventListener('keydown', onKey);
+      if (closeBtn) closeBtn.onclick = close;
+      if (backdrop) backdrop.onclick = close;
+      modal.style.display = 'block';
+      modal.setAttribute('aria-hidden', 'false');
+      return card;
+    }
+
     function printReceipt(node) {
       try { window.focus(); window.print(); return true; } catch (_) { return false; }
     }
