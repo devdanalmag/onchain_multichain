@@ -65,30 +65,27 @@
             animation: fadeOut 0.3s ease-in forwards;
         }
     </style>
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/dom-to-image-more@3.5.0/dist/dom-to-image-more.min.js"></script>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
 
     <!-- Main Container -->
-    <div class="w-full max-w-md bg-white shadow-2xl rounded-3xl overflow-hidden relative border border-gray-100">
+    <div id="receipt-card" class="w-full max-w-md bg-white shadow-2xl rounded-3xl overflow-hidden relative border border-gray-100">
         
         <!-- Status Header -->
-        <div class="bg-green-50 p-8 text-center border-b border-dashed border-gray-200 relative overflow-hidden">
-            <!-- Decorative circle -->
-            <div class="absolute top-[-50px] left-[-50px] w-32 h-32 bg-green-100 rounded-full opacity-50 blur-2xl"></div>
-            
-            <div class="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-4 shadow-sm ring-4 ring-white relative z-10">
-                <i class="fas fa-check text-3xl text-green-500"></i>
+        <div id="status-header" class="p-8 text-center border-b border-dashed border-gray-200 relative overflow-hidden">
+            <div id="status-decor" class="absolute top-[-50px] left-[-50px] w-32 h-32 rounded-full opacity-50 blur-2xl"></div>
+            <div id="status-avatar" class="mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-4 shadow-sm ring-4 ring-white relative z-10">
+                <i id="status-icon" class="fas text-3xl"></i>
             </div>
-            <h1 class="text-2xl font-bold text-gray-800 tracking-tight">Payment Successful</h1>
-            <p class="text-sm text-gray-500 mt-1 font-medium">Dec 01, 2025 • 17:42:09</p>
-            
+            <h1 id="status-title" class="text-2xl font-bold text-gray-800 tracking-tight"></h1>
+            <p id="status-time" class="text-sm text-gray-500 mt-1 font-medium"></p>
             <div class="mt-6">
-                <span class="text-4xl font-extrabold text-gray-900 tracking-tighter">0.067897</span>
-                <span class="text-lg font-bold text-gray-500">USDT</span>
+                <span id="amount-display" class="text-4xl font-extrabold text-gray-900 tracking-tighter"></span>
+                <span id="symbol-label" class="text-lg font-bold text-gray-500"></span>
             </div>
-            <div class="inline-block mt-2 px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-semibold text-gray-600 shadow-sm">
-                <i class="fas fa-exchange-alt mr-1 text-blue-500"></i> DEX Transaction
-            </div>
+            <div id="status-badge" class="inline-block mt-2 px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-semibold text-gray-600 shadow-sm"></div>
         </div>
 
         <!-- Ticket Body -->
@@ -106,25 +103,25 @@
                 <div class="space-y-3 text-sm">
                     <div class="flex justify-between items-start">
                         <span class="text-gray-500">Service</span>
-                        <span class="font-semibold text-gray-900 text-right">Airtime Purchase</span>
+                        <span id="svc-name" class="font-semibold text-gray-900 text-right"></span>
                     </div>
                     <div class="flex justify-between items-start">
                         <span class="text-gray-500">Provider</span>
-                        <span class="font-semibold text-gray-900 text-right">AIRTEL</span>
+                        <span id="svc-provider" class="font-semibold text-gray-900 text-right"></span>
                     </div>
                     <div class="flex justify-between items-start">
                         <span class="text-gray-500">Recipient</span>
-                        <span class="font-semibold text-gray-900 text-right">09127406311</span>
+                        <span id="svc-recipient" class="font-semibold text-gray-900 text-right"></span>
                     </div>
                     <div class="flex justify-between items-start">
                         <span class="text-gray-500">Value Received</span>
-                        <span class="font-bold text-green-600 text-right">₦99.50</span>
+                        <span id="svc-value" class="font-bold text-green-600 text-right"></span>
                     </div>
                     <div class="flex justify-between items-start pt-2 border-t border-gray-200 border-dashed">
                         <span class="text-gray-500">Reference</span>
                         <div class="flex items-center space-x-2">
-                            <span class="font-mono text-gray-700 text-xs">REF-VU5FET7M</span>
-                            <button onclick="copyToClipboard('REF-VU5FET7M', 'Reference')" class="text-gray-400 hover:text-blue-500 transition-colors">
+                            <span id="svc-ref" class="font-mono text-gray-700 text-xs"></span>
+                            <button id="copy-ref" class="text-gray-400 hover:text-blue-500 transition-colors">
                                 <i class="far fa-copy"></i>
                             </button>
                         </div>
@@ -147,11 +144,11 @@
                             </div>
                             <div class="flex flex-col">
                                 <span class="text-xs text-gray-500">Token</span>
-                                <span class="text-sm font-medium text-gray-900">USDT</span>
+                                <span id="token-name" class="text-sm font-medium text-gray-900"></span>
                             </div>
                         </div>
                         <div class="text-right">
-                             <span class="text-xs text-gray-400 font-mono block w-24 truncate">0x26e4...be24</span>
+                             <span id="token-address" class="text-xs text-gray-400 font-mono block w-24 truncate"></span>
                         </div>
                     </div>
 
@@ -163,10 +160,10 @@
                             </div>
                             <div class="flex flex-col">
                                 <span class="text-xs text-gray-500">Sender</span>
-                                <span class="text-sm font-medium text-gray-900">0x7ca4...0f53</span>
+                                <span id="sender-short" class="text-sm font-medium text-gray-900"></span>
                             </div>
                         </div>
-                        <button onclick="copyToClipboard('0x7ca40709d82c4df573c4eb0dc88cc9d16bbe0f53', 'Sender Address')" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 transition-colors">
+                        <button id="copy-sender" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 transition-colors">
                             <i class="far fa-copy text-sm"></i>
                         </button>
                     </div>
@@ -179,10 +176,10 @@
                             </div>
                             <div class="flex flex-col">
                                 <span class="text-xs text-gray-500">Target</span>
-                                <span class="text-sm font-medium text-gray-900">0x89e6...cd2e6</span>
+                                <span id="target-short" class="text-sm font-medium text-gray-900"></span>
                             </div>
                         </div>
-                        <button onclick="copyToClipboard('0x89e6dfc44c1a31ded30fb16500409eaeca7cd2e6', 'Target Address')" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 transition-colors">
+                        <button id="copy-target" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 transition-colors">
                             <i class="far fa-copy text-sm"></i>
                         </button>
                     </div>
@@ -192,13 +189,13 @@
                         <div class="flex justify-between items-center mb-1">
                             <span class="text-xs text-gray-400">Transaction Hash</span>
                             <div class="flex items-center space-x-2">
-                                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                                <span class="text-xs text-green-400 font-medium">Confirmed</span>
+                                <span id="chain-dot" class="w-2 h-2 rounded-full"></span>
+                                <span id="chain-status-text" class="text-xs font-medium"></span>
                             </div>
                         </div>
                         <div class="flex items-center justify-between">
-                            <code class="text-xs text-gray-300 font-mono truncate w-56">0xbad6dd54867c9c5d23d3c312b754f2be133a61c0fd2333623df67af41976ce2f</code>
-                            <button onclick="copyToClipboard('0xbad6dd54867c9c5d23d3c312b754f2be133a61c0fd2333623df67af41976ce2f', 'Tx Hash')" class="text-gray-400 hover:text-white transition-colors text-xs bg-gray-800 px-2 py-1 rounded">
+                            <code id="tx-hash" class="text-xs text-gray-300 font-mono truncate w-56"></code>
+                            <button id="copy-hash" class="text-gray-400 hover:text-white transition-colors text-xs bg-gray-800 px-2 py-1 rounded">
                                 Copy
                             </button>
                         </div>
@@ -210,11 +207,14 @@
 
         <!-- Footer -->
         <div class="p-4 bg-gray-50 border-t border-gray-100 flex space-x-3">
-            <button class="flex-1 py-3 rounded-xl bg-white border border-gray-200 text-gray-700 font-semibold shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
+            <button id="btn-share" class="flex-1 py-3 rounded-xl bg-white border border-gray-200 text-gray-700 font-semibold shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
                 <i class="fas fa-share-alt"></i> Share
             </button>
-            <button class="flex-1 py-3 rounded-xl bg-gray-900 text-white font-semibold shadow-lg hover:bg-gray-800 transition-all flex items-center justify-center gap-2">
-                Download PDF
+            <button id="btn-save" class="flex-1 py-3 rounded-xl bg-gray-900 text-white font-semibold shadow-lg hover:bg-gray-800 transition-all flex items-center justify-center gap-2">
+                Save Image
+            </button>
+            <button id="btn-print" class="flex-1 py-3 rounded-xl bg-indigo-600 text-white font-semibold shadow-lg hover:bg-indigo-500 transition-all flex items-center justify-center gap-2">
+                Print
             </button>
         </div>
     </div>
@@ -224,43 +224,100 @@
 
     <script>
         function copyToClipboard(text, label) {
-            // Create a temporary input element
             const el = document.createElement('textarea');
             el.value = text;
             document.body.appendChild(el);
             el.select();
-            document.execCommand('copy'); // Fallback for iframe environments
+            document.execCommand('copy');
             document.body.removeChild(el);
-
             showToast(label);
         }
-
         function showToast(label) {
             const container = document.getElementById('toast-container');
-            
-            // Create toast element
             const toast = document.createElement('div');
             toast.className = 'toast flex items-center bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg min-w-[200px]';
-            toast.innerHTML = `
-                <i class="fas fa-check-circle text-green-400 mr-2"></i>
-                <div>
-                    <h4 class="text-sm font-semibold">Copied!</h4>
-                    <p class="text-xs text-gray-400">${label} copied to clipboard.</p>
-                </div>
-            `;
-
+            toast.innerHTML = '<i class="fas fa-check-circle text-green-400 mr-2"></i><div><h4 class="text-sm font-semibold">Copied!</h4><p class="text-xs text-gray-400">' + label + ' copied to clipboard.</p></div>';
             container.appendChild(toast);
-
-            // Remove after 3 seconds
-            setTimeout(() => {
-                toast.classList.add('hiding');
-                toast.addEventListener('animationend', () => {
-                    if (toast.parentNode) {
-                        toast.parentNode.removeChild(toast);
-                    }
-                });
-            }, 3000);
+            setTimeout(function(){ toast.classList.add('hiding'); toast.addEventListener('animationend', function(){ if(toast.parentNode){ toast.parentNode.removeChild(toast); } }); }, 3000);
         }
+        function shortify(addr){ if(!addr) return ''; var a=String(addr); if(a.length<=10) return a; return a.substring(0,6)+'...'+a.substring(a.length-4); }
+        function setStatus(status){
+            var hdr=document.getElementById('status-header');
+            var decor=document.getElementById('status-decor');
+            var avatar=document.getElementById('status-avatar');
+            var icon=document.getElementById('status-icon');
+            var dot=document.getElementById('chain-dot');
+            var chainText=document.getElementById('chain-status-text');
+            var badge=document.getElementById('status-badge');
+            var s=(String(status||'pending')).toLowerCase();
+            if(s==='success'){
+                hdr.className = 'bg-green-50 p-8 text-center border-b border-dashed border-gray-200 relative overflow-hidden';
+                decor.className = 'absolute top-[-50px] left-[-50px] w-32 h-32 bg-green-100 rounded-full opacity-50 blur-2xl';
+                avatar.className = 'mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-4 shadow-sm ring-4 ring-white relative z-10';
+                icon.className = 'fas fa-check text-3xl text-green-500';
+                dot.className = 'w-2 h-2 rounded-full bg-green-500 animate-pulse';
+                chainText.className = 'text-xs text-green-400 font-medium';
+                chainText.textContent = 'Confirmed';
+                badge.textContent = 'DEX Transaction';
+            } else if(s==='failed'){
+                hdr.className = 'bg-red-50 p-8 text-center border-b border-dashed border-gray-200 relative overflow-hidden';
+                decor.className = 'absolute top-[-50px] left-[-50px] w-32 h-32 bg-red-100 rounded-full opacity-50 blur-2xl';
+                avatar.className = 'mx-auto w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-4 shadow-sm ring-4 ring-white relative z-10';
+                icon.className = 'fas fa-exclamation-circle text-3xl text-red-500';
+                dot.className = 'w-2 h-2 rounded-full bg-red-500';
+                chainText.className = 'text-xs text-red-500 font-medium';
+                chainText.textContent = 'Failed';
+                badge.textContent = 'DEX Transaction';
+            } else {
+                hdr.className = 'bg-yellow-50 p-8 text-center border-b border-dashed border-gray-200 relative overflow-hidden';
+                decor.className = 'absolute top-[-50px] left-[-50px] w-32 h-32 bg-yellow-100 rounded-full opacity-50 blur-2xl';
+                avatar.className = 'mx-auto w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mb-4 shadow-sm ring-4 ring-white relative z-10';
+                icon.className = 'fas fa-hourglass-half text-3xl text-yellow-500';
+                dot.className = 'w-2 h-2 rounded-full bg-yellow-500';
+                chainText.className = 'text-xs text-yellow-500 font-medium';
+                chainText.textContent = 'Pending';
+                badge.textContent = 'DEX Transaction';
+            }
+        }
+        function init(){
+            var p=new URLSearchParams(window.location.search);
+            var status=p.get('status')||'success';
+            var amount=p.get('amount')||'';
+            var symbol=p.get('symbol')||'';
+            var ts=p.get('timestamp')||'';
+            var token=p.get('token')||'';
+            var sender=p.get('sender')||'';
+            var target=p.get('target')||'';
+            var hash=p.get('hash')||'';
+            var service=p.get('service')||'';
+            var provider=p.get('provider')||'';
+            var recipient=p.get('recipient')||'';
+            var value=p.get('value')||'';
+            var ref=p.get('ref')||'';
+            setStatus(status);
+            document.getElementById('status-title').textContent = status==='success'?'Transaction Successful':(status==='failed'?'Transaction Failed':'Transaction Pending');
+            document.getElementById('status-time').textContent = ts ? new Date(Number(ts)).toLocaleString() : new Date().toLocaleString();
+            document.getElementById('amount-display').textContent = amount || '';
+            document.getElementById('symbol-label').textContent = symbol || '';
+            document.getElementById('token-name').textContent = symbol || '';
+            document.getElementById('token-address').textContent = token ? shortify(token) : '';
+            document.getElementById('sender-short').textContent = shortify(sender);
+            document.getElementById('target-short').textContent = shortify(target);
+            document.getElementById('tx-hash').textContent = hash || '';
+            document.getElementById('svc-name').textContent = service || '';
+            document.getElementById('svc-provider').textContent = provider || '';
+            document.getElementById('svc-recipient').textContent = recipient || '';
+            document.getElementById('svc-value').textContent = value || '';
+            document.getElementById('svc-ref').textContent = ref || '';
+            var copyRef=document.getElementById('copy-ref'); if(copyRef){ copyRef.onclick=function(){ copyToClipboard(ref||'', 'Reference'); }; }
+            var copySender=document.getElementById('copy-sender'); if(copySender){ copySender.onclick=function(){ copyToClipboard(sender||'', 'Sender Address'); }; }
+            var copyTarget=document.getElementById('copy-target'); if(copyTarget){ copyTarget.onclick=function(){ copyToClipboard(target||'', 'Target Address'); }; }
+            var copyHash=document.getElementById('copy-hash'); if(copyHash){ copyHash.onclick=function(){ copyToClipboard(hash||'', 'Tx Hash'); }; }
+            var btnShare=document.getElementById('btn-share'); if(btnShare){ btnShare.onclick=function(){ var url=window.location.href; copyToClipboard(url,'Receipt Link'); }; }
+            var btnSave=document.getElementById('btn-save'); if(btnSave){ btnSave.onclick=function(){ var card=document.getElementById('receipt-card'); domtoimage.toPng(card).then(function(dataUrl){ var a=document.createElement('a'); a.href=dataUrl; a.download='receipt_'+Date.now()+'.png'; a.click(); }).catch(function(){}); }; }
+            var btnPrint=document.getElementById('btn-print'); if(btnPrint){ btnPrint.onclick=function(){ var w=window.open('', 'print', 'width=420,height=800'); w.document.open(); w.document.write(document.documentElement.outerHTML); w.document.close(); setTimeout(function(){ w.focus(); w.print(); }, 250); }; }
+        }
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
