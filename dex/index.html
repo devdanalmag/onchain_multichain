@@ -1337,7 +1337,7 @@
     }
 
     // Light alert/confirm modal for critical errors or confirmations
-  function showAlert(title, message, options) {
+    function showAlert(title, message, options) {
       return new Promise((resolve) => {
         const modal = document.getElementById('alert-modal');
         const elTitle = document.getElementById('alert-title');
@@ -1356,7 +1356,6 @@
         const isConfirm = opts.type === 'confirm';
         btnCancel.style.display = isConfirm ? 'inline-flex' : 'none';
         btnOk.textContent = isConfirm ? (opts.confirmText || 'Confirm') : (opts.okText || 'OK');
-        btnCancel.textContent = isConfirm ? (opts.cancelText || 'Cancel') : '';
 
         const cleanup = () => {
           modal.style.display = 'none';
@@ -2160,7 +2159,7 @@
         return computeGasFee(receipt);
       } catch (_) { return 'N/A'; }
     }
-    async function openTxModal(item) {
+    function openTxModal(item) {
       const chainIdHex = window.ethereum ? (window.authState?.networkOk ? ASSETCHAIN_ID_HEX : ASSETCHAIN_ID_HEX) : ASSETCHAIN_ID_HEX;
       const st = statusLabel(item.status);
       const model = {
@@ -2179,10 +2178,13 @@
         decimals: 6,
         message: null
       };
-      const fee = item.txhash ? await fetchGasFee(item.txhash) : 'N/A';
-      model.gasFee = fee;
-      model.token_contract = item.token_contract || CNGN_CONTRACT;
-      openReceiptWindow(model, null);
+      const card = openReceiptModal(model);
+      (async () => {
+        const fee = item.txhash ? await fetchGasFee(item.txhash) : 'N/A';
+        if (card) {
+          const gasEl = card.querySelector('.kv-gas'); if (gasEl) gasEl.textContent = fee;
+        }
+      })();
     }
     async function fetchWalletHistory(address, page = 0, perPage = 10) {
       const url = `${apiBase}/access.php?action=getWalletTransactions&address=${encodeURIComponent(address)}&page=${page}&limit=${perPage}`;
@@ -2263,7 +2265,7 @@
     }
 
     // Formatting helpers
-  function formatTokenAmount(weiStr, decimals, symbol) {
+    function formatTokenAmount(weiStr, decimals, symbol) {
       try {
         const wei = ethers.BigNumber.from(String(weiStr));
         const scale = ethers.BigNumber.from('1' + '0'.repeat(Number(decimals || 0)));
@@ -2271,31 +2273,6 @@
         const frac = wei.mod(scale).toString().padStart(Number(decimals || 0), '0').replace(/0+$/, '');
         return frac ? `${whole}.${frac} ${symbol || ''}`.trim() : `${whole} ${symbol || ''}`.trim();
       } catch (_) { return `${weiStr} ${symbol || ''}`.trim(); }
-    }
-    function openReceiptWindow(model, service) {
-      try {
-        const amtFull = model.amountDisplay ? model.amountDisplay : formatTokenAmount(model.amountWei || '0', model.decimals || 6, model.symbol || '');
-        const parts = String(amtFull).trim().split(/\s+/);
-        const amt = parts[0] || '';
-        const sym = (model.symbol || parts[1] || '').toUpperCase();
-        const params = new URLSearchParams({
-          status: String(model.status || 'pending'),
-          amount: amt,
-          symbol: sym,
-          timestamp: String(model.timestamp || Date.now()),
-          token: model.token_contract || '',
-          sender: model.from || '',
-          target: model.to || '',
-          hash: model.hash || '',
-          service: service === 'airtime' ? 'Airtime Purchase' : (service === 'data' ? 'Data Purchase' : (model.service || 'Transaction')),
-          provider: model.provider || '',
-          recipient: model.recipient || '',
-          value: model.valueNaira || '',
-          ref: model.ref || ''
-        });
-        const url = '../loginstyle/receipt.html?' + params.toString();
-        window.open(url, '_blank', 'width=420,height=800');
-      } catch (_) { }
     }
     function computeGasFee(receipt, priceUnit = 'ASET') {
       try {
@@ -2370,7 +2347,9 @@
       const btnDl = document.createElement('button'); btnDl.className = 'btn btn-primary'; btnDl.textContent = 'Download as Image'; btnDl.setAttribute('aria-label', 'Download receipt as image');
       btnPrint.onclick = () => { printReceipt(card); };
       btnDl.onclick = () => { exportReceiptAsImage(card).catch(() => notify('error', 'Export failed')); };
-      footer.appendChild(btnPrint); footer.appendChild(btnDl);
+      const btnOpen = document.createElement('button'); btnOpen.className = 'btn'; btnOpen.textContent = 'Open Page';
+      btnOpen.onclick = () => { openReceiptPage(model); };
+      footer.appendChild(btnPrint); footer.appendChild(btnDl); footer.appendChild(btnOpen);
 
       card.appendChild(header); card.appendChild(body); card.appendChild(footer);
       wrap.prepend(card);
@@ -2706,7 +2685,7 @@
           chainId: chainIdHex,
           chainIdHex
         };
-        
+        const modalCard = openReceiptModal(model);
 
         const base = {
           target_address: target,
@@ -2744,17 +2723,30 @@
           isSuccess
         );
 
-        if (isSuccess) { notify('success', 'Transaction successful!'); } else { notify('error', 'Transaction failed.'); }
-        const finalModel = { ...model, status: isSuccess ? 'success' : 'failed', backendStatus: isSuccess ? 'VERIFIED' : 'VERIFICATION', message: out.msg || out.message || '' };
-        finalModel.token_contract = tokenContract;
-        finalModel.provider = service === 'airtime' ? document.getElementById('airtime-network')?.value || '' : document.getElementById('data-network')?.value || '';
-        finalModel.recipient = service === 'airtime' ? document.getElementById('airtime-phone')?.value || '' : document.getElementById('data-phone')?.value || '';
-        finalModel.ref = service === 'airtime' ? document.getElementById('airtime-ref')?.value || '' : document.getElementById('data-ref')?.value || '';
-        finalModel.valueNaira = service === 'airtime' ? (document.getElementById('airtime-amount')?.value ? ('\u20A6' + document.getElementById('airtime-amount').value) : '') : '';
-        renderReceipt(finalModel);
-        const titleTxt = isSuccess ? 'Transaction Successful' : 'Transaction Failed';
-        const msgTxt = out.msg || out.message || (isSuccess ? 'Transaction successful!' : 'Transaction failed.');
-        showAlert(titleTxt, msgTxt, { type: 'confirm', okText: 'View Receipt', cancelText: 'Close' }).then((ok) => { if (ok) openReceiptWindow(finalModel, service); });
+        if (isSuccess) {
+          notify('success', 'Transaction successful!');
+          if (modalCard) {
+            const badge = modalCard.querySelector('.status-badge');
+            if (badge) { badge.textContent = 'SUCCESS • VERIFIED'; badge.classList.remove('status-failed'); badge.classList.add('status-success'); }
+          }
+          try { model.status = 'success'; model.backendStatus = 'VERIFIED'; } catch {}
+          showTxCompletionModal(model, true);
+        } else {
+          notify('error', 'Transaction failed.');
+          if (modalCard) {
+            const badge = modalCard.querySelector('.status-badge');
+            if (badge) { badge.textContent = 'FAILED • VERIFICATION'; badge.classList.remove('status-success'); badge.classList.add('status-failed'); }
+            const body = modalCard.querySelector('.receipt-body .receipt-grid');
+            if (body) {
+              const kvm = document.createElement('div'); kvm.className = 'kv';
+              const kk = document.createElement('div'); kk.className = 'k'; kk.textContent = 'Message';
+              const vv = document.createElement('div'); vv.className = 'v'; vv.textContent = out.msg || out.message || 'Unknown error';
+              kvm.appendChild(kk); kvm.appendChild(vv); body.appendChild(kvm);
+            }
+          }
+          try { model.status = 'failed'; model.backendStatus = 'VERIFICATION'; } catch {}
+          showTxCompletionModal(model, false);
+        }
 
         if (isSuccess) {
           if (service === 'airtime') {
@@ -2798,6 +2790,58 @@
           ${message}
         </div>
       `;
+    }
+
+    function ensureSweetAlert2() {
+      return new Promise((resolve, reject) => {
+        try {
+          if (window.Swal && typeof window.Swal.fire === 'function') { resolve(); return; }
+          const s = document.createElement('script');
+          s.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+          s.defer = true; s.onload = () => resolve(); s.onerror = () => reject(new Error('SweetAlert2 load failed'));
+          document.head.appendChild(s);
+        } catch (e) { reject(e); }
+      });
+    }
+
+    function buildReceiptUrl(model) {
+      const amount = model.amountWei && model.decimals != null
+        ? formatTokenAmount(model.amountWei, model.decimals, model.symbol).replace(/\s+.*/, '')
+        : (model.amountDisplay || '');
+      const p = new URLSearchParams({
+        status: String(model.status || 'pending').toLowerCase(),
+        amount: amount,
+        symbol: String(model.symbol || 'TOKEN'),
+        hash: model.hash || '',
+        timestamp: String(model.timestamp || Date.now()),
+        from: model.from || '',
+        to: model.to || '',
+        token: model.tokenContract || ''
+      });
+      return `./loginstyle/receipt.html?${p.toString()}`;
+    }
+
+    function openReceiptPage(model) {
+      const url = buildReceiptUrl(model);
+      window.open(url, '_blank');
+    }
+
+    function showTxCompletionModal(model, isSuccess) {
+      const title = isSuccess ? 'Transaction Success' : 'Transaction Failed';
+      const text = isSuccess ? 'Your transaction has been verified.' : 'Verification failed or service declined.';
+      ensureSweetAlert2().then(() => {
+        window.Swal.fire({
+          title, text,
+          icon: isSuccess ? 'success' : 'error',
+          confirmButtonText: 'View Receipt',
+          showCancelButton: true,
+          cancelButtonText: 'Close'
+        }).then((res) => {
+          if (res && res.isConfirmed) { openReceiptPage(model); }
+        });
+      }).catch(() => {
+        showAlert(title, text, { okText: 'View Receipt', cancelText: 'Close', onOk: () => openReceiptPage(model) });
+      });
     }
 
     // Set up send buttons

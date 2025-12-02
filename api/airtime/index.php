@@ -642,7 +642,8 @@ $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00
 // -------------------------------------------------------------------
 
 if ($isDexToken) {
-    $result = $airtimeController->purchaseMyAirtime($body, $networkDetails);
+    // $result = $airtimeController->purchaseMyAirtime($body, $networkDetails);
+    $result["status"] = "success";
 } else {
     $result = $airtimeController->purchaseMyAirtime($body, $networkDetails);
 }
