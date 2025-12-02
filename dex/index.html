@@ -2347,9 +2347,7 @@
       const btnDl = document.createElement('button'); btnDl.className = 'btn btn-primary'; btnDl.textContent = 'Download as Image'; btnDl.setAttribute('aria-label', 'Download receipt as image');
       btnPrint.onclick = () => { printReceipt(card); };
       btnDl.onclick = () => { exportReceiptAsImage(card).catch(() => notify('error', 'Export failed')); };
-      const btnOpen = document.createElement('button'); btnOpen.className = 'btn'; btnOpen.textContent = 'Open Page';
-      btnOpen.onclick = () => { openReceiptPage(model); };
-      footer.appendChild(btnPrint); footer.appendChild(btnDl); footer.appendChild(btnOpen);
+      footer.appendChild(btnPrint); footer.appendChild(btnDl);
 
       card.appendChild(header); card.appendChild(body); card.appendChild(footer);
       wrap.prepend(card);
@@ -2729,8 +2727,6 @@
             const badge = modalCard.querySelector('.status-badge');
             if (badge) { badge.textContent = 'SUCCESS • VERIFIED'; badge.classList.remove('status-failed'); badge.classList.add('status-success'); }
           }
-          try { model.status = 'success'; model.backendStatus = 'VERIFIED'; } catch {}
-          showTxCompletionModal(model, true);
         } else {
           notify('error', 'Transaction failed.');
           if (modalCard) {
@@ -2744,8 +2740,6 @@
               kvm.appendChild(kk); kvm.appendChild(vv); body.appendChild(kvm);
             }
           }
-          try { model.status = 'failed'; model.backendStatus = 'VERIFICATION'; } catch {}
-          showTxCompletionModal(model, false);
         }
 
         if (isSuccess) {
@@ -2790,58 +2784,6 @@
           ${message}
         </div>
       `;
-    }
-
-    function ensureSweetAlert2() {
-      return new Promise((resolve, reject) => {
-        try {
-          if (window.Swal && typeof window.Swal.fire === 'function') { resolve(); return; }
-          const s = document.createElement('script');
-          s.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
-          s.defer = true; s.onload = () => resolve(); s.onerror = () => reject(new Error('SweetAlert2 load failed'));
-          document.head.appendChild(s);
-        } catch (e) { reject(e); }
-      });
-    }
-
-    function buildReceiptUrl(model) {
-      const amount = model.amountWei && model.decimals != null
-        ? formatTokenAmount(model.amountWei, model.decimals, model.symbol).replace(/\s+.*/, '')
-        : (model.amountDisplay || '');
-      const p = new URLSearchParams({
-        status: String(model.status || 'pending').toLowerCase(),
-        amount: amount,
-        symbol: String(model.symbol || 'TOKEN'),
-        hash: model.hash || '',
-        timestamp: String(model.timestamp || Date.now()),
-        from: model.from || '',
-        to: model.to || '',
-        token: model.tokenContract || ''
-      });
-      return `./loginstyle/receipt.html?${p.toString()}`;
-    }
-
-    function openReceiptPage(model) {
-      const url = buildReceiptUrl(model);
-      window.open(url, '_blank');
-    }
-
-    function showTxCompletionModal(model, isSuccess) {
-      const title = isSuccess ? 'Transaction Success' : 'Transaction Failed';
-      const text = isSuccess ? 'Your transaction has been verified.' : 'Verification failed or service declined.';
-      ensureSweetAlert2().then(() => {
-        window.Swal.fire({
-          title, text,
-          icon: isSuccess ? 'success' : 'error',
-          confirmButtonText: 'View Receipt',
-          showCancelButton: true,
-          cancelButtonText: 'Close'
-        }).then((res) => {
-          if (res && res.isConfirmed) { openReceiptPage(model); }
-        });
-      }).catch(() => {
-        showAlert(title, text, { okText: 'View Receipt', cancelText: 'Close', onOk: () => openReceiptPage(model) });
-      });
     }
 
     // Set up send buttons

@@ -12,16 +12,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        :root {
-            --status-color: #10b981;
-            --status-bg: #ecfdf5;
-            --status-bg-strong: #d1fae5;
-        }
-
-        .status-success { --status-color: #10b981; --status-bg: #ecfdf5; --status-bg-strong: #d1fae5; }
-        .status-failed { --status-color: #ef4444; --status-bg: #fef2f2; --status-bg-strong: #fee2e2; }
-        .status-pending { --status-color: #f59e0b; --status-bg: #fffbeb; --status-bg-strong: #fde68a; }
-
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
@@ -29,12 +19,16 @@
             background-size: 20px 20px;
         }
         
-        .receipt-cutout { position: relative; }
+        .receipt-cutout {
+            position: relative;
+        }
+        
         .receipt-cutout::after {
             content: "";
             position: absolute;
             bottom: -10px;
-            left: 0; right: 0;
+            left: 0;
+            right: 0;
             height: 20px;
             background-image: linear-gradient(135deg, transparent 50%, #ffffff 50%), linear-gradient(45deg, #ffffff 50%, transparent 50%);
             background-position: top;
@@ -43,26 +37,32 @@
             transform: rotate(180deg);
         }
 
-        .status-header { background-color: var(--status-bg); }
-        .status-circle { background-color: var(--status-bg-strong); }
-        .status-icon { color: var(--status-color); }
-        .status-dot { background-color: var(--status-color); }
-        .status-badge { color: var(--status-color); }
-
         /* Custom Scrollbar for hash text */
-        .hash-scroll::-webkit-scrollbar { height: 4px; }
-        .hash-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
-        .hash-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+        .hash-scroll::-webkit-scrollbar {
+            height: 4px;
+        }
+        .hash-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        .hash-scroll::-webkit-scrollbar-thumb {
+            background: #d1d5db; 
+            border-radius: 4px;
+        }
 
         /* Toast Animation */
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-        .toast { animation: slideIn 0.3s ease-out forwards; }
-        .toast.hiding { animation: fadeOut 0.3s ease-in forwards; }
-
-        @media print {
-            body { background: #fff; }
-            #toast-container { display: none !important; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        .toast {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+        .toast.hiding {
+            animation: fadeOut 0.3s ease-in forwards;
         }
     </style>
 </head>
@@ -72,19 +72,19 @@
     <div class="w-full max-w-md bg-white shadow-2xl rounded-3xl overflow-hidden relative border border-gray-100">
         
         <!-- Status Header -->
-        <div id="statusHeader" class="status-header status-success p-8 text-center border-b border-dashed border-gray-200 relative overflow-hidden">
+        <div class="bg-green-50 p-8 text-center border-b border-dashed border-gray-200 relative overflow-hidden">
             <!-- Decorative circle -->
-            <div id="statusDecor" class="absolute top-[-50px] left-[-50px] w-32 h-32 status-circle rounded-full opacity-50 blur-2xl"></div>
+            <div class="absolute top-[-50px] left-[-50px] w-32 h-32 bg-green-100 rounded-full opacity-50 blur-2xl"></div>
             
-            <div class="mx-auto w-20 h-20 status-circle rounded-full flex items-center justify-center mb-4 shadow-sm ring-4 ring-white relative z-10">
-                <i id="statusIcon" class="fas fa-check text-3xl status-icon"></i>
+            <div class="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-4 shadow-sm ring-4 ring-white relative z-10">
+                <i class="fas fa-check text-3xl text-green-500"></i>
             </div>
-            <h1 id="statusTitle" class="text-2xl font-bold text-gray-800 tracking-tight">Payment Successful</h1>
-            <p id="statusTime" class="text-sm text-gray-500 mt-1 font-medium">Dec 01, 2025 • 17:42:09</p>
+            <h1 class="text-2xl font-bold text-gray-800 tracking-tight">Payment Successful</h1>
+            <p class="text-sm text-gray-500 mt-1 font-medium">Dec 01, 2025 • 17:42:09</p>
             
             <div class="mt-6">
-                <span id="amountText" class="text-4xl font-extrabold text-gray-900 tracking-tighter">0.067897</span>
-                <span id="symbolText" class="text-lg font-bold text-gray-500">USDT</span>
+                <span class="text-4xl font-extrabold text-gray-900 tracking-tighter">0.067897</span>
+                <span class="text-lg font-bold text-gray-500">USDT</span>
             </div>
             <div class="inline-block mt-2 px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-semibold text-gray-600 shadow-sm">
                 <i class="fas fa-exchange-alt mr-1 text-blue-500"></i> DEX Transaction
@@ -191,30 +191,30 @@
                     <div class="bg-gray-900 rounded-xl p-3 shadow-md">
                         <div class="flex justify-between items-center mb-1">
                             <span class="text-xs text-gray-400">Transaction Hash</span>
-                        <div class="flex items-center space-x-2">
-                            <span class="status-dot w-2 h-2 rounded-full animate-pulse"></span>
-                            <span id="hashStatusText" class="text-xs font-medium" style="color: var(--status-color)">Confirmed</span>
+                            <div class="flex items-center space-x-2">
+                                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                <span class="text-xs text-green-400 font-medium">Confirmed</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <code class="text-xs text-gray-300 font-mono truncate w-56">0xbad6dd54867c9c5d23d3c312b754f2be133a61c0fd2333623df67af41976ce2f</code>
+                            <button onclick="copyToClipboard('0xbad6dd54867c9c5d23d3c312b754f2be133a61c0fd2333623df67af41976ce2f', 'Tx Hash')" class="text-gray-400 hover:text-white transition-colors text-xs bg-gray-800 px-2 py-1 rounded">
+                                Copy
+                            </button>
                         </div>
                     </div>
-                    <div class="flex items-center justify-between">
-                        <code id="hashFull" class="text-xs text-gray-300 font-mono truncate w-56">0xbad6dd54867c9c5d23d3c312b754f2be133a61c0fd2333623df67af41976ce2f</code>
-                        <button id="btnCopyHash" class="text-gray-400 hover:text-white transition-colors text-xs bg-gray-800 px-2 py-1 rounded">
-                            Copy
-                        </button>
-                    </div>
                 </div>
-            </div>
             </div>
 
         </div>
 
         <!-- Footer -->
         <div class="p-4 bg-gray-50 border-t border-gray-100 flex space-x-3">
-            <button id="btnSaveImage" class="flex-1 py-3 rounded-xl bg-white border border-gray-200 text-gray-700 font-semibold shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
-                <i class="fas fa-image"></i> Save Image
+            <button class="flex-1 py-3 rounded-xl bg-white border border-gray-200 text-gray-700 font-semibold shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
+                <i class="fas fa-share-alt"></i> Share
             </button>
-            <button id="btnPrint" class="flex-1 py-3 rounded-xl bg-gray-900 text-white font-semibold shadow-lg hover:bg-gray-800 transition-all flex items-center justify-center gap-2">
-                <i class="fas fa-print"></i> Print
+            <button class="flex-1 py-3 rounded-xl bg-gray-900 text-white font-semibold shadow-lg hover:bg-gray-800 transition-all flex items-center justify-center gap-2">
+                Download PDF
             </button>
         </div>
     </div>
@@ -223,95 +223,6 @@
     <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2"></div>
 
     <script>
-        function qs(name) {
-            const p = new URLSearchParams(window.location.search);
-            return p.get(name);
-        }
-
-        function formatTimestamp(ts) {
-            try {
-                const d = ts ? new Date(Number(ts) || ts) : new Date();
-                const opts = { year: 'numeric', month: 'short', day: '2-digit' };
-                const date = d.toLocaleDateString(undefined, opts);
-                const time = d.toLocaleTimeString(undefined, { hour12: false });
-                return `${date} • ${time}`;
-            } catch { return String(ts || ''); }
-        }
-
-        function applyStatusTheme(status) {
-            const header = document.getElementById('statusHeader');
-            const icon = document.getElementById('statusIcon');
-            const title = document.getElementById('statusTitle');
-            const hashText = document.getElementById('hashStatusText');
-            const map = {
-                success: { cls: 'status-success', icon: ['fa-check'], title: 'Payment Successful', hash: 'Confirmed' },
-                failed:  { cls: 'status-failed',  icon: ['fa-times'], title: 'Payment Failed',     hash: 'Failed' },
-                pending: { cls: 'status-pending', icon: ['fa-spinner','fa-spin'], title: 'Payment Pending', hash: 'Pending' }
-            };
-            const m = map[status] || map.success;
-            header.classList.remove('status-success','status-failed','status-pending');
-            header.classList.add(m.cls);
-            icon.className = `fas text-3xl status-icon ${m.icon.join(' ')}`;
-            title.textContent = m.title;
-            if (hashText) hashText.textContent = m.hash;
-        }
-
-        function bindReceiptData() {
-            const amount = qs('amount');
-            const symbol = qs('symbol');
-            const hash = qs('hash');
-            const ts = qs('timestamp');
-            const from = qs('from');
-            const to = qs('to');
-            const token = qs('token');
-
-            if (amount) document.getElementById('amountText').textContent = amount;
-            if (symbol) document.getElementById('symbolText').textContent = symbol;
-            if (ts) document.getElementById('statusTime').textContent = formatTimestamp(ts);
-            if (hash) {
-                const el = document.getElementById('hashFull');
-                el.textContent = hash;
-                const btn = document.getElementById('btnCopyHash');
-                btn.onclick = () => copyToClipboard(hash, 'Tx Hash');
-            }
-            if (from) {
-                const short = `${from.slice(0,4)}...${from.slice(-4)}`;
-                const nodes = document.querySelectorAll('span.text-sm.font-medium.text-gray-900');
-                if (nodes[1]) nodes[1].textContent = short;
-                const btn = document.querySelector('button[onclick^="copyToClipboard"][onclick*="Sender Address"]');
-                if (btn) btn.setAttribute('onclick', `copyToClipboard('${from}','Sender Address')`);
-            }
-            if (to) {
-                const short = `${to.slice(0,4)}...${to.slice(-4)}`;
-                const nodes = document.querySelectorAll('span.text-sm.font-medium.text-gray-900');
-                if (nodes[2]) nodes[2].textContent = short;
-                const btns = document.querySelectorAll('button[onclick^="copyToClipboard"][onclick*="Target Address"]');
-                if (btns[0]) btns[0].setAttribute('onclick', `copyToClipboard('${to}','Target Address')`);
-            }
-            if (token) {
-                const short = `${token.slice(0,4)}...${token.slice(-4)}`;
-                const el = document.querySelector('span.text-sm.font-medium.text-gray-900');
-                if (el) el.textContent = symbol || 'TOKEN';
-                const addr = document.querySelector('span.text-xs.text-gray-400.font-mono.block.w-24.truncate');
-                if (addr) addr.textContent = short;
-            }
-        }
-
-        function initReceipt() {
-            const status = (qs('status') || 'success').toLowerCase();
-            applyStatusTheme(status);
-            bindReceiptData();
-            try {
-                const hash = qs('hash');
-                if (hash) {
-                    const card = document.querySelector('.w-full.max-w-md.bg-white.shadow-2xl.rounded-3xl.overflow-hidden.relative.border.border-gray-100');
-                    const key = `receipt:${hash}`;
-                    localStorage.setItem(key, card.outerHTML);
-                }
-            } catch {}
-        }
-
-        document.addEventListener('DOMContentLoaded', initReceipt);
         function copyToClipboard(text, label) {
             // Create a temporary input element
             const el = document.createElement('textarea');
@@ -350,98 +261,6 @@
                 });
             }, 3000);
         }
-
-        async function exportReceiptAsImage(node, type = 'png') {
-            const scale = window.devicePixelRatio || 1;
-            const rect = node.getBoundingClientRect();
-            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-            svg.setAttribute('width', String(rect.width));
-            svg.setAttribute('height', String(rect.height));
-            svg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
-            const fo = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
-            fo.setAttribute('x', '0'); fo.setAttribute('y', '0');
-            fo.setAttribute('width', String(rect.width));
-            fo.setAttribute('height', String(rect.height));
-            const cloned = node.cloneNode(true);
-            cloned.style.margin = '0';
-            fo.appendChild(cloned);
-            svg.appendChild(fo);
-            const data = new XMLSerializer().serializeToString(svg);
-            const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(data)}`;
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-            await new Promise((resolve, reject) => {
-                img.onload = resolve; img.onerror = reject; img.src = url;
-            });
-            const canvas = document.createElement('canvas');
-            canvas.width = Math.floor(rect.width * scale);
-            canvas.height = Math.floor(rect.height * scale);
-            const ctx = canvas.getContext('2d');
-            ctx.scale(scale, scale);
-            ctx.drawImage(img, 0, 0);
-            const mime = type === 'jpeg' ? 'image/jpeg' : 'image/png';
-            const blob = await new Promise(res => canvas.toBlob(res, mime, 0.92));
-            if (!blob) throw new Error('Export failed');
-            const a = document.createElement('a');
-            const hash = qs('hash') || 'receipt';
-            a.download = `${hash}.${type}`;
-            a.href = URL.createObjectURL(blob);
-            document.body.appendChild(a); a.click();
-            setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const container = document.querySelector('.w-full.max-w-md.bg-white.shadow-2xl.rounded-3xl.overflow-hidden.relative.border.border-gray-100');
-            const btnDl = document.getElementById('btnSaveImage');
-            if (btnDl && container) {
-                btnDl.onclick = async () => {
-                    try { await exportReceiptAsImage(container, 'png'); showToast('Receipt Image'); }
-                    catch (e) { showToast('Export Error'); }
-                };
-            }
-            const btnPrint = document.getElementById('btnPrint');
-            if (btnPrint && container) {
-                btnPrint.onclick = () => {
-                    try { printReceiptNewTab(container); }
-                    catch (e) { showToast('Print Error'); }
-                };
-            }
-        });
-
-        function printReceiptNewTab(node) {
-            const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-            <style>
-            :root { --status-color:${getComputedStyle(document.documentElement).getPropertyValue('--status-color')}; --status-bg:${getComputedStyle(document.documentElement).getPropertyValue('--status-bg')}; --status-bg-strong:${getComputedStyle(document.documentElement).getPropertyValue('--status-bg-strong')}; }
-            body{font-family:Inter,system-ui,-apple-system; margin:24px;}
-            .status-header{background-color:var(--status-bg)} .status-circle{background-color:var(--status-bg-strong)} .status-icon{color:var(--status-color)} .status-dot{background-color:var(--status-color)}
-            @page{margin:16mm} @media print{button{display:none}}
-            </style></head><body>${node.outerHTML}<script>window.addEventListener('load',()=>{setTimeout(()=>window.print(),100);});</script></body></html>`;
-            const w = window.open('', '_blank');
-            if (!w) throw new Error('Popup blocked');
-            w.document.open(); w.document.write(html); w.document.close();
-        }
-        (function lazyLoadAssets(){
-            const doLazy = () => {
-                try {
-                    const fa = document.querySelector('link[href*="font-awesome"]');
-                    const gf = document.querySelector('link[href*="fonts.googleapis.com"]');
-                    [fa,gf].forEach(link => {
-                        if (link && !link._lazyApplied) {
-                            link.media = 'print';
-                            link.onload = () => { link.media = 'all'; };
-                            link._lazyApplied = true;
-                        }
-                    });
-                } catch {}
-            };
-            if ('requestIdleCallback' in window) {
-                requestIdleCallback(doLazy, { timeout: 500 });
-            } else {
-                setTimeout(doLazy, 200);
-            }
-        })();
     </script>
 </body>
 </html>
