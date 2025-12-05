@@ -117,6 +117,13 @@ class AdminController extends Controller
 		}
 	}
 
+	//Get Current Admin Details
+	public function getAdminDetails()
+	{
+		$data = $this->model->getAccountById(self::$sysId);
+		return $data;
+	}
+
 	//----------------------------------------------------------------------------------------------------------------
 	// Subscribers
 	//----------------------------------------------------------------------------------------------------------------

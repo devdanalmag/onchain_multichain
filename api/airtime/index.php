@@ -304,6 +304,17 @@ if ($airtime_type == "Share And Sell") {
 }
 
 
+$blockchainConfig = $controller->getBlockchainConfig('AssetChain');
+$siteaddress = $blockchainConfig['site_address'] ?? '';
+$transaction_type = $isDexToken ? 'dex' : 'app';
+$normTokenContract = $controller->normalizeEvmAddress($token_contract);
+$tokenInfo = $controller->getTokenInfo('CNGN');
+$cngnContractCfg = '';
+if ($tokenInfo && !empty($tokenInfo['token_contract'])) {
+    $cngnContractCfg = $controller->normalizeEvmAddress($tokenInfo['token_contract']);
+}
+$token_name = $trow['token_name'] ?? (($normTokenContract && $normTokenContract === $cngnContractCfg) ? 'cNGN' : (($normTokenContract) ? 'ERC20' : 'ASET'));
+
 if ($airtime_type == "VTU") {
     if ($networkDetails["networkStatus"] <> "On" || $networkDetails["vtuStatus"] <> "On") {
         header('HTTP/1.0 400 Network Not Available');
@@ -487,15 +498,10 @@ if ($result["status"] == "fail") {
 $servicename = "Airtime";
 $servicedesc = "{$networkDetails["network"]} Airtime purchase of N{$amount} @ {$tokenamount} CNGN for phone number {$phone}";
 
-// Transaction classification and token metadata
-$transaction_type = $isDexToken ? 'dex' : 'app';
-$normTokenContract = $controller->normalizeEvmAddress($token_contract);
-$cngnContractCfg = '';
-$tokenInfo = $controller->getTokenInfo('CNGN');
-if ($tokenInfo && !empty($tokenInfo['token_contract'])) {
-    $cngnContractCfg = $controller->normalizeEvmAddress($tokenInfo['token_contract']);
-}
-$token_name = $trow['token_name'] ?? (($normTokenContract && $normTokenContract === $cngnContractCfg) ? 'cNGN' : (($normTokenContract) ? 'ERC20' : 'ASET'));
+// Transaction classification and token metadata (Already Initialized Above)
+// $transaction_type = $isDexToken ? 'dex' : 'app';
+// $normTokenContract = $controller->normalizeEvmAddress($token_contract);
+// ...
 
 
 $result = $controller->checkTransactionDuplicate($servicename, $servicedesc);
