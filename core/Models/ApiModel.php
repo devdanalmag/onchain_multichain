@@ -536,13 +536,18 @@ class ApiModel extends Model
     {
         $dbh = self::connect();
         try {
-            $checkSql = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='transactions' AND COLUMN_NAME IN ('transaction_type','token_name','token_contract')";
+            $checkSql = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='transactions' AND COLUMN_NAME IN ('transaction_type','token_name','token_contract','token_amount')";
             $q = $dbh->prepare($checkSql);
             $q->execute();
             $found = array_map(function ($r) { return $r['COLUMN_NAME']; }, $q->fetchAll(PDO::FETCH_ASSOC));
             $needType = !in_array('transaction_type', $found);
             $needName = !in_array('token_name', $found);
             $needContract = !in_array('token_contract', $found);
+            $needAmount = !in_array('token_amount', $found);
+
+            if ($needAmount) {
+                $dbh->exec("ALTER TABLE transactions ADD COLUMN token_amount VARCHAR(64) NULL");
+            }
             if ($needType) {
                 $dbh->exec("ALTER TABLE transactions ADD COLUMN transaction_type VARCHAR(10) NOT NULL DEFAULT 'app'");
             }

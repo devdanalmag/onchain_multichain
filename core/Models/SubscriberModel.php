@@ -1589,6 +1589,18 @@ class SubscriberModel extends Model
 
 	// Record Onchain transaction
 
+    private function ensureTokenAmountColumn() {
+        $dbh = self::connect();
+        try {
+            $checkSql = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='transactions' AND COLUMN_NAME='token_amount'";
+            $q = $dbh->prepare($checkSql);
+            $q->execute();
+            if ($q->rowCount() == 0) {
+                 $dbh->exec("ALTER TABLE transactions ADD COLUMN token_amount VARCHAR(64) NULL");
+            }
+        } catch (\Throwable $e) {}
+    }
+
 	public function recordchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status)
 	{
 		$dbh = self::connect();
@@ -1605,6 +1617,7 @@ class SubscriberModel extends Model
 		$date = date("Y-m-d H:i:s");
 		$oldbalance = '0';
 		$newbalance = '0';
+        $this->ensureTokenAmountColumn();
 		//Record Transaction
 		$sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, token_amount, date) 
         VALUES (:user, :ref, :sn, :sd, :a, :s, :ob, :nb, :txh, :taddy, :uaddy, :ton, :d)";
