@@ -1205,7 +1205,7 @@
 
             <div class="form-group">
               <label for="airtime-phone">Phone Number</label>
-              <input id="airtime-phone" type="tel" placeholder="e.g. 08012345678" />
+              <input id="airtime-phone" type="tel" placeholder="e.g. 08012345678" required  />
             </div>
             <div class="form-group checkbox-group" style="flex-direction: row; align-items: center; gap: 10px; margin-top: -10px; margin-bottom: 10px;">
               <input id="airtime-ported" type="checkbox" aria-label="Is this a ported number?" style="width: auto; margin: 0;" />
@@ -1214,12 +1214,12 @@
 
             <div class="form-group">
               <label for="airtime-amount">Amount (NGN)</label>
-              <input id="airtime-amount" type="number" min="50" step="10" placeholder="100" />
+              <input id="airtime-amount" type="number" min="50" step="10" placeholder="100" required />
             </div>
 
             <!-- <div class="form-group"> -->
               <!-- <label for="airtime-ref">Reference ID</label> -->
-              <input id="airtime-ref" class="mono" readonly hidden />
+              <input id="airtime-ref" class="mono" required readonly hidden />
             <!-- </div> -->
             <div class="form-group">
               <label for="airtime-token">Token</label>
@@ -1232,9 +1232,9 @@
           <div class="form-grid">
             <div class="form-group">
               <label for="airtime-target">Receiving EVM Address</label>
-              <input id="airtime-target" class="mono" placeholder="Site EVM receiving address" />
+              <input id="airtime-target" class="mono" placeholder="Site EVM receiving address" required />
             </div>
-              <input id="airtime-nano" class="mono" placeholder="Auto-calculated" readonly hidden/>
+              <input id="airtime-nano" class="mono" placeholder="Auto-calculated" required readonly hidden/>
 
             <div class="form-group">
               <label for="airtime-display">Amount (Selected Currency)</label>
@@ -2360,7 +2360,14 @@
         if (!address || !card) return;
         card.style.display = 'block';
         status.textContent = 'Loading history...';
-        const network = window.ethereum ? await window.ethereum.request({ method: 'eth_chainId' }) : ASSETCHAIN_ID_HEX;
+        let network = ASSETCHAIN_ID_HEX;
+        try {
+            if (window.ethereum && window.ethereum.request) {
+                network = await window.ethereum.request({ method: 'eth_chainId' });
+            }
+        } catch (e) {
+            console.warn('Failed to get chainId from provider, using default', e);
+        }
         let page = 0; const perPage = 10;
         let lastData = null;
         const sortSel = document.getElementById('history-sort');
