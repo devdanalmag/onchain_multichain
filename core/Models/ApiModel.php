@@ -829,6 +829,29 @@ class ApiModel extends Model
     // Check Refund Wallet Balance
     public function checkTonBalance($address)
     {
+        // EVM Address Check (Asset Chain)
+        if (preg_match('/^0x[a-fA-F0-9]{40}$/', $address)) {
+            $config = $this->getBlockchainConfig();
+            $response = $this->callJsonRpc('eth_getBalance', [$address, 'latest']);
+            
+            if (isset($response['result'])) {
+                // Convert Hex to Decimal
+                $wei = hexdec($response['result']);
+                $balance = $wei / 1e18; // Asset Chain uses 18 decimals
+                
+                return [
+                    "status" => "success",
+                    "balance" => $balance,
+                    "msg" => "Balance retrieved successfully"
+                ];
+            } else {
+                return [
+                    "status" => "fail",
+                    "msg" => "Failed to retrieve EVM balance"
+                ];
+            }
+        }
+
         $apikey = $this->getSiteSettings();
         $apikey = $apikey->toncentreapikey;
         $url = "https://toncenter.com/api/v2/getAddressBalance?address=" . urlencode($address) . "&api_key=" . $apikey;
@@ -914,6 +937,49 @@ class ApiModel extends Model
     // Verified Onchain Tranasaction in The Blockchain
     public function verifyonchainTransaction($target_address, $tx_hash, $tx_lt, $user_address, $nanoamount)
     {
+        // EVM Transaction Check (Asset Chain)
+        if (preg_match('/^0x[a-fA-F0-9]{64}$/', $tx_hash)) {
+            $response = $this->callJsonRpc('eth_getTransactionByHash', [$tx_hash]);
+            
+            if (isset($response['result'])) {
+                $tx = $response['result'];
+                
+                // Normalize for comparison
+                $txTo = strtolower($tx['to']);
+                $txFrom = strtolower($tx['from']);
+                $target = strtolower($target_address);
+                $user = strtolower($user_address);
+                $txValue = (string)hexdec($tx['value']); // Wei
+                $expectedAmount = (string)$nanoamount;
+
+                // Basic Verification
+                if ($txTo === $target && $txFrom === $user && $txValue === $expectedAmount) {
+                     return [
+                        "status" => "success",
+                        "msg" => "Transaction verified successfully.",
+                        "code" => "verified",
+                        "data" => $tx
+                    ];
+                } else {
+                    return [
+                        "status" => "fail",
+                        "msg" => "Transaction data does not match expected values.",
+                        "received" => [
+                            "to" => $txTo,
+                            "from" => $txFrom,
+                            "value" => $txValue
+                        ],
+                        "expected" => [
+                            "to" => $target,
+                            "from" => $user,
+                            "value" => $expectedAmount
+                        ]
+                    ];
+                }
+            }
+            return ["status" => "fail", "msg" => "Transaction not found on EVM chain"];
+        }
+
         // Input validation
         if (empty($target_address) || empty($tx_hash) || empty($tx_lt) || empty($user_address) || empty($nanoamount)) {
             return [
@@ -1055,6 +1121,38 @@ class ApiModel extends Model
     }
     public function checktransactionbyhash($tx_hash)
     {
+        // EVM Transaction Check (Asset Chain)
+        if (preg_match('/^0x[a-fA-F0-9]{64}$/', $tx_hash)) {
+            $response = $this->callJsonRpc('eth_getTransactionReceipt', [$tx_hash]);
+            
+            if (isset($response['result'])) {
+                $receipt = $response['result'];
+                if ($receipt['status'] == '0x1') { // 1 = Success
+                    return [
+                        'status' => "success",
+                        'msg' => "Transaction verified successfully.",
+                        'code' => "verified",
+                        'sender_address' => $receipt['from'],
+                        'target_address' => $receipt['to']
+                    ];
+                } else {
+                     return [
+                        'status' => "fail",
+                        'msg' => "Transaction failed on chain",
+                        'code' => "failed"
+                    ];
+                }
+            }
+            
+            // If receipt not found, check if it exists (pending)
+             $txResp = $this->callJsonRpc('eth_getTransactionByHash', [$tx_hash]);
+             if (isset($txResp['result']) && $txResp['result']) {
+                 return ['status' => 'fail', 'msg' => 'Transaction pending or not confirmed'];
+             }
+             
+            return ['status' => 'fail', 'msg' => 'Transaction not found on EVM chain'];
+        }
+
         // Input validation
         if (empty($tx_hash)) {
             return [
@@ -1157,6 +1255,103 @@ class ApiModel extends Model
         }
 
         return $response;
+    }
+
+    // Get Blockchain Config from DB
+    public function getBlockchainConfig($name = 'AssetChain') {
+        $dbh = self::connect();
+        $sql = "SELECT * FROM blockchain WHERE name = :name LIMIT 1";
+        $query = $dbh->prepare($sql);
+        $query->bindParam(':name', $name, PDO::PARAM_STR);
+        $query->execute();
+        $result = $query->fetch(PDO::FETCH_ASSOC);
+        
+        if ($result) {
+            return $result;
+        }
+        
+        // Fallback default
+        return [
+            "rpc_url" => "https://mainnet-rpc.assetchain.org/",
+            "chain_id" => 42420,
+            "site_address" => "", 
+            "refunding_address" => ""
+        ];
+    }
+
+    // Get Token Info from DB
+    public function getTokenInfo($name) {
+        $dbh = self::connect();
+        $sql = "SELECT * FROM tokens WHERE token_name = :name LIMIT 1";
+        $query = $dbh->prepare($sql);
+        $query->bindParam(':name', $name, PDO::PARAM_STR);
+        $query->execute();
+        return $query->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Check ERC20 Token Balance
+    public function checkERC20Balance($address, $tokenContract) {
+        // ABI for balanceOf: 0x70a08231 + address padded to 32 bytes
+        $methodId = '0x70a08231';
+        // Remove 0x if present
+        $cleanAddress = str_replace('0x', '', $address);
+        $paddedAddress = str_pad($cleanAddress, 64, '0', STR_PAD_LEFT);
+        $data = $methodId . $paddedAddress;
+        
+        $response = $this->callJsonRpc('eth_call', [
+            ['to' => $tokenContract, 'data' => $data],
+            'latest'
+        ]);
+        
+        if (isset($response['result'])) {
+            $hexBalance = $response['result'];
+            // Convert hex to decimal string using helper or built-in
+            // Since PHP hexdec can lose precision for uint256, we return hex or string
+            // But for comparison, we might need a BigInt library. 
+            // For now, we'll return the hex and let the controller/logic handle comparison or use a simple conversion if small enough.
+            // Or implementing a simple hexToDec string converter.
+            return [
+                'status' => 'success',
+                'balance_hex' => $hexBalance,
+                'msg' => 'Balance retrieved'
+            ];
+        }
+        
+        return [
+            'status' => 'fail', 
+            'msg' => isset($response['error']) ? $response['error']['message'] : 'RPC Error'
+        ];
+    }
+
+    // Helper for JSON-RPC
+    private function callJsonRpc($method, $params = [], $config = null) {
+        if (!$config) {
+            $config = $this->getBlockchainConfig();
+        }
+        $url = $config['rpc_url'];
+        
+        $data = [
+            'jsonrpc' => '2.0',
+            'method' => $method,
+            'params' => $params,
+            'id' => 1
+        ];
+
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        
+        $response = curl_exec($ch);
+        $err = curl_error($ch);
+        curl_close($ch);
+        
+        if ($err) {
+            return ['error' => ['message' => "cURL Error: $err"]];
+        }
+
+        return json_decode($response, true);
     }
 
     public function checkIfError()

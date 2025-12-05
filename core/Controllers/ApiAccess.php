@@ -877,4 +877,22 @@ class ApiAccess extends Controller
     {
         return $result = $this->model->sendAlphaNotification($amount, $servicedesc);
     }
+
+    // Get Blockchain Config
+    public function getBlockchainConfig($name = 'AssetChain')
+    {
+        return $this->model->getBlockchainConfig($name);
+    }
+
+    // Get Token Info
+    public function getTokenInfo($name)
+    {
+        return $this->model->getTokenInfo($name);
+    }
+
+    // Check ERC20 Balance
+    public function checkERC20Balance($address, $tokenContract)
+    {
+        return $this->model->checkERC20Balance($address, $tokenContract);
+    }
 }

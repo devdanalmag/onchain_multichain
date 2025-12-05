@@ -122,6 +122,29 @@ class Subscriber extends Controller
 	// Check Ton Balance in Wallet
 	public function checkTonBalance($address)
 	{
+		// EVM Address Check (Asset Chain)
+		if (preg_match('/^0x[a-fA-F0-9]{40}$/', $address)) {
+			$config = $this->getAssetChainConfig();
+			$response = $this->callJsonRpc('eth_getBalance', [$address, 'latest']);
+			
+			if (isset($response['result'])) {
+				// Convert Hex to Decimal
+				$wei = hexdec($response['result']);
+				$balance = $wei / 1e18; // Asset Chain uses 18 decimals
+				
+				return json_encode([
+					"balance" => $balance,
+					"status" => "success",
+					"msg" => "Balance retrieved successfully"
+				]);
+			} else {
+				return json_encode([
+					"error" => "Failed to retrieve EVM balance",
+					"status" => "fail"
+				]);
+			}
+		}
+
 		$apikey = $this->model->getSiteSettings();
 		$apikey = $apikey->toncentreapikey;
 		$url = "https://toncenter.com/api/v2/getAddressBalance?address=" . urlencode($address) . "&api_key=" . $apikey;
@@ -189,6 +212,49 @@ class Subscriber extends Controller
 
 	public function verifyonchainTransaction($target_address, $tx_hash, $tx_lt, $user_address, $nanoamount)
 	{
+		// EVM Transaction Check (Asset Chain)
+		if (preg_match('/^0x[a-fA-F0-9]{64}$/', $tx_hash)) {
+			$response = $this->callJsonRpc('eth_getTransactionByHash', [$tx_hash]);
+			
+			if (isset($response['result'])) {
+				$tx = $response['result'];
+				
+				// Normalize for comparison
+				$txTo = strtolower($tx['to']);
+				$txFrom = strtolower($tx['from']);
+				$target = strtolower($target_address);
+				$user = strtolower($user_address);
+				$txValue = (string)hexdec($tx['value']); // Wei
+				$expectedAmount = (string)$nanoamount;
+
+				// Basic Verification
+				if ($txTo === $target && $txFrom === $user && $txValue === $expectedAmount) {
+					 return [
+						"status" => "success",
+						"msg" => "Transaction verified successfully.",
+						"code" => "verified",
+						"data" => $tx
+					];
+				} else {
+					return [
+						"status" => "fail",
+						"msg" => "Transaction data does not match expected values.",
+						"received" => [
+							"to" => $txTo,
+							"from" => $txFrom,
+							"value" => $txValue
+						],
+						"expected" => [
+							"to" => $target,
+							"from" => $user,
+							"value" => $expectedAmount
+						]
+					];
+				}
+			}
+			return ["status" => "fail", "msg" => "Transaction not found on EVM chain"];
+		}
+
 		// Input validation
 		if (empty($target_address) || empty($tx_hash) || empty($tx_lt) || empty($user_address) || empty($nanoamount)) {
 			return [
@@ -444,8 +510,17 @@ public function getCoins()
 		$tx_lt = filter_var($_POST['tx_lt'], FILTER_SANITIZE_NUMBER_INT);
 		$user_address = htmlspecialchars(strip_tags($_POST['user_address'] ?? ''));
 		$nanoamount = filter_var($_POST['nanoamount'], FILTER_SANITIZE_NUMBER_INT);
-		$fuser_address = $this->toFriendlyAddress($user_address, false, false);
-		$ftarget_address = $this->toFriendlyAddress($target_address, false, false);
+		
+		// Handle EVM Address or TON Address
+		if (preg_match('/^0x[a-fA-F0-9]{40}$/', $user_address)) {
+			$fuser_address = $user_address;
+			$ftarget_address = $target_address;
+			$tonamount = $nanoamount / 1e18; // EVM uses 18 decimals
+		} else {
+			$fuser_address = $this->toFriendlyAddress($user_address, false, false);
+			$ftarget_address = $this->toFriendlyAddress($target_address, false, false);
+			$tonamount = $nanoamount / 1e9; // TON uses 9 decimals
+		}
 
 		// Verify transaction pin
 		$check = $this->model->verifyTransactionPin($this->userId, $transkey);
@@ -493,7 +568,7 @@ public function getCoins()
 		$error = curl_error($curl);
 		$httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 		curl_close($curl);
-		$tonamount = $nanoamount / 1e9;
+		// $tonamount = $nanoamount / 1e9; // Moved to earlier check
 		$refund_hash = "";
 
 		if ($error) {
@@ -632,6 +707,42 @@ public function getCoins()
 			}
 		}
 		return $crc;
+	}
+
+	// Helper to get Asset Chain Config
+	private function getAssetChainConfig() {
+		$path = __DIR__ . '/../../config/assetchain.json';
+		if (file_exists($path)) {
+			return json_decode(file_get_contents($path), true);
+		}
+		return [
+			"rpc_url" => "https://mainnet-rpc.assetchain.org/",
+			"chain_id" => 42420
+		];
+	}
+
+	// Helper for JSON-RPC
+	private function callJsonRpc($method, $params = []) {
+		$config = $this->getAssetChainConfig();
+		$url = $config['rpc_url'];
+		
+		$data = [
+			'jsonrpc' => '2.0',
+			'method' => $method,
+			'params' => $params,
+			'id' => 1
+		];
+
+		$ch = curl_init($url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_POST, true);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+		curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+		
+		$response = curl_exec($ch);
+		curl_close($ch);
+		
+		return json_decode($response, true);
 	}
 	//----------------------------------------------------------------------------------------------------------------
 	// Buy Recharge Card

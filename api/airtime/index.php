@@ -491,11 +491,9 @@ $servicedesc = "{$networkDetails["network"]} Airtime purchase of N{$amount} @ {$
 $transaction_type = $isDexToken ? 'dex' : 'app';
 $normTokenContract = $controller->normalizeEvmAddress($token_contract);
 $cngnContractCfg = '';
-if (file_exists(__DIR__ . '/../../config/assetchain.json')) {
-    $cfg = json_decode(file_get_contents(__DIR__ . '/../../config/assetchain.json'), true);
-    if (is_array($cfg) && !empty($cfg['cngn_contract'])) {
-        $cngnContractCfg = $controller->normalizeEvmAddress($cfg['cngn_contract']);
-    }
+$tokenInfo = $controller->getTokenInfo('CNGN');
+if ($tokenInfo && !empty($tokenInfo['token_contract'])) {
+    $cngnContractCfg = $controller->normalizeEvmAddress($tokenInfo['token_contract']);
 }
 $token_name = $trow['token_name'] ?? (($normTokenContract && $normTokenContract === $cngnContractCfg) ? 'cNGN' : (($normTokenContract) ? 'ERC20' : 'ASET'));
 
@@ -537,16 +535,21 @@ if ($isDexToken) {
 $systemadressresult = $controller->getSiteSettings();
 $siteaddress = $systemadressresult->walletaddress;
 // Override site address/token contract from Assetchain config if available
-$cfgPath = __DIR__ . '/../../config/assetchain.json';
-if (file_exists($cfgPath)) {
-    $cfg = json_decode(file_get_contents($cfgPath), true);
-    if (is_array($cfg)) {
-        if (!empty($cfg['site_address'])) {
-            $siteaddress = $cfg['site_address'];
-        }
-        if (!empty($cfg['cngn_contract'])) {
-            $token_contract = $token_contract ?: $cfg['cngn_contract'];
-        }
+// Override site address/token contract from Blockchain DB Config
+$blockchainConfig = $controller->getBlockchainConfig('AssetChain');
+$refundingAddress = null;
+
+if ($blockchainConfig) {
+    if (!empty($blockchainConfig['site_address'])) {
+        $siteaddress = $blockchainConfig['site_address'];
+    }
+    $refundingAddress = !empty($blockchainConfig['refunding_address']) ? $blockchainConfig['refunding_address'] : $siteaddress;
+}
+// Fallback token contract if not set
+if (empty($token_contract)) {
+    $tokenInfo = $controller->getTokenInfo('CNGN');
+    if ($tokenInfo) {
+        $token_contract = $tokenInfo['token_contract'];
     }
 }
 if ($siteaddress == "" || $siteaddress == null) {
@@ -555,6 +558,29 @@ if ($siteaddress == "" || $siteaddress == null) {
     $response['msg'] = "Site Address Is Empty, Please Contact Support";
     echo json_encode($response);
     exit();
+}
+
+// Refunding Address Balance Check
+if (!empty($refundingAddress) && !empty($token_contract) && !empty($amount_wei)) {
+    $balanceCheck = $controller->checkERC20Balance($refundingAddress, $token_contract);
+    if ($balanceCheck['status'] === 'success') {
+        $hexBal = $balanceCheck['balance_hex'];
+        $decBal = hexdec($hexBal); 
+        if ($decBal < (float)$amount_wei) {
+            header('HTTP/1.0 400 Low Balance');
+            $response['status'] = "fail";
+            $response['msg'] = "Low Balance: Refunding address has insufficient funds. Required: $amount_wei wei of $token_contract";
+            echo json_encode($response);
+            exit();
+        }
+    } else {
+        error_log("RPC Balance Check Failed: " . ($balanceCheck['msg'] ?? 'Unknown Error'));
+        header('HTTP/1.0 500 Blockchain Error');
+        $response['status'] = "fail";
+        $response['msg'] = "Blockchain RPC Error: Unable to verify system balance.";
+        echo json_encode($response);
+        exit();
+    }
 }
 $fsite_address = $controller->normalizeEvmAddress($siteaddress);
 $ftarget_address = $controller->normalizeEvmAddress($target_address);
