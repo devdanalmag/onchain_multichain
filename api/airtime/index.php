@@ -680,8 +680,8 @@ if ($checkprice['status'] == 'fail') {
 // -------------------------------------------------------------------
 
 if ($isDexToken) {
-    // $result = $airtimeController->purchaseMyAirtime($body, $networkDetails);
-    $result["status"] = "success";
+    $result = $airtimeController->purchaseMyAirtime($body, $networkDetails);
+    // $result["status"] = "success";
 } else {
     $result = $airtimeController->purchaseMyAirtime($body, $networkDetails);
 }

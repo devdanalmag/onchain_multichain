@@ -535,6 +535,14 @@ function getDataIfAny($page)
             return $controller->getPendingAlphaOrder();
             break;
 
+        case "error-logs":
+            return "";
+            break;
+
+        case "manage-account":
+            return $controller->getAdminDetails();
+            break;
+
         default:
             return "";
     }

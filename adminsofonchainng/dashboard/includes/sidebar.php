@@ -131,6 +131,15 @@
 
 
         <li>
+          <a href="<?php echo $urlAddon; ?>error-logs">
+            <i class="fa fa-exclamation-triangle"></i> <span>Error Logs</span>
+			      <span class="pull-right-container">
+              <i class="fa fa-angle-right pull-right"></i>
+            </span>
+          </a>			
+        </li>
+
+        <li>
           <a href="<?php echo $urlAddon; ?>manage-account">
             <i class="fa fa-user"></i> <span>Manage Account</span>
 			      <span class="pull-right-container">
