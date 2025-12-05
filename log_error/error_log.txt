@@ -12,3 +12,69 @@ IP Address: ::1
 Request Data: []
 User ID: Unknown
 --------------------------------------------------
+[2025-12-03 17:06:23] ERROR: Refund Wallet Balance is Low
+From: Api :: Airtime Index
+IP Address: 127.0.0.1
+Request Data: []
+User ID: Unknown
+--------------------------------------------------
+[2025-12-04 00:46:22] ERROR: Refund Wallet Balance is Low
+From: Api :: Airtime Index
+IP Address: 127.0.0.1
+Request Data: []
+User ID: Unknown
+--------------------------------------------------
+[2025-12-04 15:32:15] ERROR: Refund Wallet Balance is Low
+From: Api :: Airtime Index
+IP Address: 127.0.0.1
+Request Data: []
+User ID: Unknown
+--------------------------------------------------
+[2025-12-04 15:33:49] ERROR: Refund Wallet Balance is Low
+From: Api :: Airtime Index
+IP Address: 127.0.0.1
+Request Data: []
+User ID: Unknown
+--------------------------------------------------
+[2025-12-04 15:40:46] ERROR: Refund Wallet Balance is Low
+From: Api :: Airtime Index
+IP Address: 127.0.0.1
+Request Data: []
+User ID: Unknown
+--------------------------------------------------
+[2025-12-04 15:44:39] ERROR: Hash parameter is required
+From: Api :: Airtime Index
+IP Address: 127.0.0.1
+Request Data: []
+User ID: Unknown
+--------------------------------------------------
+[2025-12-04 16:36:09] ERROR: Refund Wallet Balance is Low
+From: Api :: Airtime Index
+IP Address: 127.0.0.1
+Request Data: []
+User ID: Unknown
+--------------------------------------------------
+[2025-12-04 16:37:00] ERROR: Hash parameter is required
+From: Api :: Airtime Index
+IP Address: 127.0.0.1
+Request Data: []
+User ID: Unknown
+--------------------------------------------------
+[2025-12-04 16:47:31] ERROR: Hash parameter is required
+From: Api :: Airtime Index
+IP Address: 127.0.0.1
+Request Data: []
+User ID: Unknown
+--------------------------------------------------
+[2025-12-04 23:49:34] ERROR: Refund Wallet Balance is Low
+From: Api :: Airtime Index
+IP Address: 127.0.0.1
+Request Data: []
+User ID: Unknown
+--------------------------------------------------
+[2025-12-05 01:04:48] ERROR: Hash parameter is required
+From: Api :: Airtime Index
+IP Address: 127.0.0.1
+Request Data: []
+User ID: Unknown
+--------------------------------------------------

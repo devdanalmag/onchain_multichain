@@ -178,6 +178,7 @@ try {
                 'items' => array_map(function($r){
                     return [
                         'txhash' => $r->txhash ?? null,
+                        'txref' => $r->transref ?? null,
                         'date' => $r->date ?? null,
                         'servicename' => $r->servicename ?? null,
                         'servicedesc' => $r->servicedesc ?? null,
@@ -188,6 +189,7 @@ try {
                         'transaction_type' => $r->transaction_type ?? null,
                         'token_name' => $r->token_name ?? null,
                         'token_contract' => $r->token_contract ?? null,
+                        'token_amount' => $r->token_amount ?? null,
                     ];
                 }, $result['items'] ?? [])
             ];

@@ -14,7 +14,7 @@ BEGIN
     WHERE TABLE_NAME = 'transactions' AND COLUMN_NAME = 'transaction_type'
   ) THEN
     ALTER TABLE transactions
-      ADD COLUMN transaction_type VARCHAR(10) NOT NULL DEFAULT 'app' AFTER nanoton;
+      ADD COLUMN transaction_type VARCHAR(10) NOT NULL DEFAULT 'app' AFTER token_amount;
   END IF;
 
   -- token_name

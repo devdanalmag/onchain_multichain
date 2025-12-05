@@ -568,7 +568,7 @@ class ApiModel extends Model
         $newbalance = '0';
         $this->ensureTransactionsTokenColumns();
         //Record Transaction
-        $sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, nanoton, date, transaction_type, token_name, token_contract) 
+        $sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, token_amount, date, transaction_type, token_name, token_contract) 
         VALUES (:user, :ref, :sn, :sd, :a, :s, :ob, :nb, :txh, :taddy, :uaddy, :ton, :d, :ttype, :tname, :tcontract)";
         $query = $dbh->prepare($sql);
         $query->bindParam(':user', $userid, PDO::PARAM_INT);
@@ -608,7 +608,7 @@ class ApiModel extends Model
         $newbalance = '0';
         $this->ensureTransactionsTokenColumns();
         //Record Transaction
-        $sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, nanoton, date, transaction_type, token_name, token_contract) 
+        $sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, token_amount, date, transaction_type, token_name, token_contract) 
     VALUES (:user, :ref, :sn, :sd, :a, :s, :ob, :nb, :txh, :taddy, :uaddy, :ton, :d, :ttype, :tname, :tcontract)";
         $query = $dbh->prepare($sql);
         $query->bindParam(':user', $userid, PDO::PARAM_INT);
@@ -851,7 +851,7 @@ class ApiModel extends Model
         $data = json_decode($response, true);
 
         if (isset($data['result'])) {
-            $balance = $data['result'] / 1e9; // convert from nanoTON to TON
+            $balance = $data['result'] / 1e9; // convert from token_amount to TON
             return [
                 "status" => "success",
                 "balance" => $balance,
@@ -1009,14 +1009,14 @@ class ApiModel extends Model
         $mytarget_address = $normalizeAddress($data['out_msgs'][0]['destination']['address'] ?? '');
         $myuserAddress = $normalizeAddress($data['account']['address'] ?? '');
         $mylt = (string)($data['lt'] ?? '');
-        $mynanoton = (string)($data['out_msgs'][0]['value'] ?? '');
+        $mytoken_amount = (string)($data['out_msgs'][0]['value'] ?? '');
 
         // Compare and validate
         if (
             $mytarget_address === $target_address &&
             $myuserAddress === $user_address &&
             $mylt === $tx_lt &&
-            $mynanoton === $nanoamount
+            $mytoken_amount === $nanoamount
         ) {
             $response = [
                 "status" => "success",
@@ -1040,7 +1040,7 @@ class ApiModel extends Model
                     "target_address" => $mytarget_address,
                     "user_address" => $myuserAddress,
                     "tx_lt" => $mylt,
-                    "nanoamount" => $mynanoton,
+                    "nanoamount" => $mytoken_amount,
                 ],
                 "raw" => $data,
                 "debug" => $response['debug'] // Preserve debug info

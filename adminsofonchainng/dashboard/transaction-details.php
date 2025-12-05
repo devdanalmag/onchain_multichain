@@ -49,7 +49,7 @@
                     </li>
                     <li class="list-group-item">
                         <b>Ton Amount:</b>
-                        <?php echo $data->nanoton; ?>
+                        <?php echo $data->token_amount; ?>
                     </li>
                     <!-- <li class="list-group-item">
                         <b>New Balance:</b>

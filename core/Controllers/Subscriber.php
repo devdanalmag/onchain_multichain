@@ -145,7 +145,7 @@ class Subscriber extends Controller
 		$data = json_decode($response, true);
 
 		if (isset($data['result'])) {
-			$balance = $data['result'] / 1e9; // convert from nanoTON to TON
+			$balance = $data['result'] / 1e9; // convert from token_amount to TON
 			return json_encode(["balance" => $balance]);
 		} else {
 			return json_encode(["error" => "Invalid response from TON API"]);
@@ -288,14 +288,14 @@ class Subscriber extends Controller
 		$mytarget_address = $normalizeAddress($data['out_msgs'][0]['destination']['address'] ?? '');
 		$myuserAddress = $normalizeAddress($data['account']['address'] ?? '');
 		$mylt = (string)($data['lt'] ?? '');
-		$mynanoton = (string)($data['out_msgs'][0]['value'] ?? '');
+		$mytoken_amount = (string)($data['out_msgs'][0]['value'] ?? '');
 
 		// Compare and validate
 		if (
 			$mytarget_address === $target_address &&
 			$myuserAddress === $user_address &&
 			$mylt === $tx_lt &&
-			$mynanoton === $nanoamount
+			$mytoken_amount === $nanoamount
 		) {
 			$response = [
 				"status" => "success",
@@ -319,7 +319,7 @@ class Subscriber extends Controller
 					"target_address" => $mytarget_address,
 					"user_address" => $myuserAddress,
 					"tx_lt" => $mylt,
-					"nanoamount" => $mynanoton,
+					"nanoamount" => $mytoken_amount,
 				],
 				"raw" => $data,
 				"debug" => $response['debug'] // Preserve debug info

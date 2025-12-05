@@ -52,7 +52,7 @@
                 </tr>
                 <tr>
                     <td><b>Amount in TON:</b></td>
-                    <td><?php echo $data->nanoton; ?>$TON</td>
+                    <td><?php echo $data->token_amount; ?>$TON</td>
                 </tr>
                 <tr>
                     <td><b>Received Wallet: </b></td>
@@ -112,4 +112,26 @@
             <b>Download Receipt</b>
         </button>
     <?php endif; ?>
+    <?php
+        $statusStr = ($data->status == 0) ? 'success' : (($data->status == 2 || $data->status == 5) ? 'pending' : 'failed');
+        $tsv = strtotime($data->date);
+        $params = [
+            'status' => $statusStr,
+            'amount' => $data->token_amount,
+            'symbol' => 'TON',
+            'sender' => $data->senderaddress,
+            'target' => $data->targetaddress,
+            'txHash' => $data->txhash,
+            'timestamp' => $tsv ? ($tsv * 1000) : (time() * 1000),
+            'service' => $data->servicename,
+            'provider' => 'DEX Transaction',
+            'recipient' => '',
+            'fiatValue' => '₦' . $data->amount,
+            'reference' => $_GET['ref'] ?? ''
+        ];
+        $url = '/loginstyle/receipt.html?' . http_build_query($params);
+    ?>
+    <a href="<?php echo $url; ?>" class="btn btn-dark btn-sm" style="margin-left:15px;">
+        <b>Open Modern Receipt</b>
+    </a>
 </div>

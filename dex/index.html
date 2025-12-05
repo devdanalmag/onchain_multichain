@@ -35,9 +35,9 @@
       --darker: #0A0E1A;
       --light: #F5F7FF;
       --gray: #8A94A6;
-      --success: #00D897;
+      --success: #4CAF50;
       --warning: #FFB547;
-      --error: #FF4757;
+      --error: #F44336;
       --card-bg: rgba(0, 0, 0, 0.72);
       --border-radius: 16px;
       --transition: all 0.3s ease;
@@ -62,7 +62,12 @@
       margin: 0 auto;
       padding: 0 20px;
     }
-
+    .kv a{
+      color: #7B7B7B;
+    }
+    .history-hash a{
+      color: #7B7B7B;
+    }
     /* Header Styles */
     header {
       padding: 20px 0;
@@ -700,46 +705,62 @@
 
     /* Alert modal */
     .alert-modal {
+      top:280%;
       position: fixed;
       inset: 0;
       z-index: 2000;
       display: none;
+      align-items: center;
+      justify-content: center;
     }
 
     .alert-backdrop {
       position: absolute;
       inset: 0;
       background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
     }
 
     .alert-content {
       position: relative;
-      margin: 60px auto;
+      width: 90%;
       max-width: 420px;
-      background: var(--dark);
+      background: #330C09;
       border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-      padding: 16px;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      padding: 24px;
       color: var(--text-color);
+      animation: alertPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes alertPop {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
     }
 
     .alert-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 8px;
+      margin-bottom: 16px;
+    }
+
+    .alert-header #alert-title {
+      font-size: 18px;
+      font-weight: 600;
     }
 
     .alert-message {
-      font-size: 14px;
+      font-size: 15px;
       color: var(--gray);
-      margin: 8px 0 16px;
+      margin: 0 0 24px;
+      line-height: 1.5;
     }
 
     .alert-actions {
       display: flex;
-      gap: 8px;
+      gap: 12px;
       justify-content: flex-end;
     }
 
@@ -860,6 +881,26 @@
       }
     }
 
+    /* Button Loading State */
+    .btn.loading {
+      position: relative;
+      pointer-events: none;
+      opacity: 0.8;
+      cursor: not-allowed;
+    }
+    .btn.loading .spinner {
+      display: inline-block;
+      width: 1em;
+      height: 1em;
+      border: 2px solid currentColor;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 1s linear infinite;
+      margin-right: 0.5em;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     /* Custom wallet dropdown and connect UI */
     /* Transaction Receipts */
     .receipts-container {
@@ -907,9 +948,23 @@
       font-weight: 600;
     }
 
-    .status-success { background: rgba(0, 216, 151, 0.15); color: #00D897; border: 1px solid rgba(0, 216, 151, 0.35); }
-    .status-failed { background: rgba(255, 71, 87, 0.15); color: #FF4757; border: 1px solid rgba(255, 71, 87, 0.35); }
-    .status-pending { background: rgba(255, 181, 71, 0.15); color: #FFB547; border: 1px solid rgba(255, 181, 71, 0.35); }
+    .status-success {
+      background: rgba(0, 216, 151, 0.15);
+      color: #00D897;
+      border: 1px solid rgba(0, 216, 151, 0.35);
+    }
+
+    .status-failed {
+      background: rgba(255, 71, 87, 0.15);
+      color: #FF4757;
+      border: 1px solid rgba(255, 71, 87, 0.35);
+    }
+
+    .status-pending {
+      background: rgba(255, 181, 71, 0.15);
+      color: #FFB547;
+      border: 1px solid rgba(255, 181, 71, 0.35);
+    }
 
     .receipt-body {
       padding: 14px 16px;
@@ -975,6 +1030,52 @@
     }
   </style>
   <!-- MetaMask / EVM only -->
+  <style>
+    /* Loading Overlay */
+    #global-loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    #global-loader.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .loader-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-left-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 16px;
+    }
+
+    .loader-text {
+      color: var(--light);
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 
 <body>
@@ -1014,7 +1115,7 @@
             <i class="fas fa-user-check"></i> Sign In
           </button>
           <div id="alert-modal" class="alert-modal" aria-hidden="true" role="dialog" aria-modal="true"
-            style="display:none;">
+            style="display:none; top:280%;">
             <div class="alert-backdrop"></div>
             <div class="alert-content" role="document">
               <div class="alert-header">
@@ -1106,16 +1207,20 @@
               <label for="airtime-phone">Phone Number</label>
               <input id="airtime-phone" type="tel" placeholder="e.g. 08012345678" />
             </div>
+            <div class="form-group checkbox-group" style="flex-direction: row; align-items: center; gap: 10px; margin-top: -10px; margin-bottom: 10px;">
+              <input id="airtime-ported" type="checkbox" aria-label="Is this a ported number?" style="width: auto; margin: 0;" />
+              <label for="airtime-ported" style="margin-bottom: 0; cursor: pointer;">Is Ported Number</label>
+            </div>
 
             <div class="form-group">
               <label for="airtime-amount">Amount (NGN)</label>
               <input id="airtime-amount" type="number" min="50" step="10" placeholder="100" />
             </div>
 
-            <div class="form-group">
-              <label for="airtime-ref">Reference ID</label>
-              <input id="airtime-ref" class="mono" readonly />
-            </div>
+            <!-- <div class="form-group"> -->
+              <!-- <label for="airtime-ref">Reference ID</label> -->
+              <input id="airtime-ref" class="mono" readonly hidden />
+            <!-- </div> -->
             <div class="form-group">
               <label for="airtime-token">Token</label>
               <select id="airtime-token" aria-label="Select token"></select>
@@ -1129,10 +1234,11 @@
               <label for="airtime-target">Receiving EVM Address</label>
               <input id="airtime-target" class="mono" placeholder="Site EVM receiving address" />
             </div>
+              <input id="airtime-nano" class="mono" placeholder="Auto-calculated" readonly hidden/>
 
             <div class="form-group">
-              <label for="airtime-nano">Amount (wei)</label>
-              <input id="airtime-nano" class="mono" placeholder="Auto-calculated" readonly />
+              <label for="airtime-display">Amount (Selected Currency)</label>
+              <input id="airtime-display" class="mono" placeholder="Auto-calculated" readonly />
             </div>
           </div>
 
@@ -1140,8 +1246,8 @@
             <button id="airtime-calc" class="btn btn-secondary">
               <i class="fas fa-calculator"></i> Calculate Amount
             </button>
-            <button id="airtime-send" class="btn btn-primary" disabled>
-              <i class="fas fa-paper-plane"></i> Send CNGN
+            <button id="airtime-send" class="btn btn-primary" style="display:none;" disabled>
+              <i class="fas fa-paper-plane"></i> Buy
             </button>
             <button id="airtime-reset" class="btn btn-secondary">
               <i class="fas fa-redo"></i> Reset
@@ -1227,6 +1333,10 @@
               <label for="data-phone">Phone Number</label>
               <input id="data-phone" type="tel" placeholder="e.g. 08012345678" />
             </div>
+            <div class="form-group checkbox-group" style="flex-direction: row; align-items: center; gap: 10px; margin-top: -10px; margin-bottom: 10px;">
+              <input id="data-ported" type="checkbox" aria-label="Is this a ported number?" style="width: auto; margin: 0;" />
+              <label for="data-ported" style="margin-bottom: 0; cursor: pointer;">Is Ported Number</label>
+            </div>
 
             <div class="form-group">
               <label for="data-ref">Reference ID</label>
@@ -1243,17 +1353,16 @@
             </div>
 
             <div class="form-group">
-              <label for="data-nano">Amount (wei)</label>
-              <input id="data-nano" class="mono" placeholder="Auto-calculated" readonly />
+              <label for="data-display">Amount (Selected Currency)</label>
+              <input id="data-display" class="mono" placeholder="Auto-calculated" readonly />
             </div>
-          </div>
 
           <div class="button-group">
             <button id="data-calc" class="btn btn-secondary">
               <i class="fas fa-calculator"></i> Calculate Amount
             </button>
-            <button id="data-send" class="btn btn-primary" disabled>
-              <i class="fas fa-paper-plane"></i> Send CNGN
+            <button id="data-send" class="btn btn-primary" style="display:none;" disabled>
+              <i class="fas fa-paper-plane"></i> Buy
             </button>
             <button id="data-reset" class="btn btn-secondary">
               <i class="fas fa-redo"></i> Reset
@@ -1284,7 +1393,7 @@
     // DOM utility functions
     const $ = (s) => document.querySelector(s);
     const $$ = (s) => document.querySelectorAll(s);
-    const apiBase = '/api';
+    const apiBase = '/onchain_multichain/api';
 
     // Web3Onboard removed; using custom wallet dropdown and EIP-1193 providers
 
@@ -1310,9 +1419,45 @@
 
     // Onboard initialization is triggered after libraries load above
 
+    // Helper to reduce technical error messages to their core meaning
+    function cleanErrorMessage(msg) {
+      if (!msg) return '';
+      const s = String(msg);
+      
+      // Priority 1: Human readable common errors
+      if (s.includes('user rejected transaction')) return 'User rejected transaction';
+      if (s.includes('User denied transaction')) return 'User denied transaction';
+      if (s.includes('insufficient funds')) return 'Insufficient funds';
+      if (s.includes('scanner_unreachable')) return 'Scanner unreachable';
+      
+      // Priority 2: EVM Reverts
+       if (s.includes('execution reverted')) {
+         const reason = s.match(/execution reverted:? (.*)/);
+         if (reason && reason[1]) {
+            let r = reason[1];
+            // Clean up if it looks like "reason", code=...
+            if (r.includes('",')) {
+                r = r.split('",')[0];
+                if (r.startsWith('"')) r = r.slice(1);
+            } else if (r.startsWith('"') && r.endsWith('"')) {
+                r = r.slice(1, -1);
+            }
+            return 'Execution reverted: ' + r;
+         }
+         return 'Execution reverted';
+       }
+
+      // Priority 3: Technical codes
+      const codeMatch = s.match(/code=([A-Z_]+)/);
+      if (codeMatch && codeMatch[1]) return codeMatch[1];
+
+      return s;
+    }
+
     // Manual connect button handler (programmatic connect; no Account Center UI)
     // Safe notification helper with responsive toast configuration
     function notify(type, message) {
+      const cleanMsg = cleanErrorMessage(message);
       try {
         if (window.toastr) {
           const isMobile = window.matchMedia('(max-width: 576px)').matches;
@@ -1326,18 +1471,19 @@
             preventDuplicates: true,
           };
           const fn = typeof toastr[type] === 'function' ? toastr[type] : toastr.info;
-          fn(message);
+          fn(cleanMsg);
         } else {
           const level = type === 'error' ? 'error' : 'log';
-          console[level](message);
+          console[level](cleanMsg);
         }
       } catch (_) {
-        console.log(message);
+        console.log(cleanMsg);
       }
     }
 
     // Light alert/confirm modal for critical errors or confirmations
     function showAlert(title, message, options) {
+      const cleanMsg = cleanErrorMessage(message);
       return new Promise((resolve) => {
         const modal = document.getElementById('alert-modal');
         const elTitle = document.getElementById('alert-title');
@@ -1346,13 +1492,13 @@
         const btnCancel = document.getElementById('alert-cancel');
         const btnClose = document.getElementById('alert-close');
         if (!modal || !elTitle || !elMsg || !btnOk || !btnCancel || !btnClose) {
-          alert(message || '');
+          alert(cleanMsg || '');
           resolve(true);
           return;
         }
         const opts = options || {};
         elTitle.textContent = title || 'Notice';
-        elMsg.textContent = message || '';
+        elMsg.textContent = cleanMsg || '';
         const isConfirm = opts.type === 'confirm';
         btnCancel.style.display = isConfirm ? 'inline-flex' : 'none';
         btnOk.textContent = isConfirm ? (opts.confirmText || 'Confirm') : (opts.okText || 'OK');
@@ -1371,7 +1517,7 @@
         const backdrop = modal.querySelector('.alert-backdrop');
         if (backdrop) backdrop.onclick = () => { cleanup(); resolve(false); };
 
-        modal.style.display = 'inline-flex';
+        modal.style.display = 'flex';
         modal.setAttribute('aria-hidden', 'false');
       });
     }
@@ -1945,7 +2091,7 @@
         if (sel2) sel2.value = tokens[0].token_contract;
         window.availableTokens = tokens;
         window.tokenByName = {}; window.tokenByContract = {};
-        tokens.forEach(t=>{ window.tokenByName[(t.token_name||'').toUpperCase()] = t; window.tokenByContract[(t.token_contract||'').toLowerCase()] = t; });
+        tokens.forEach(t => { window.tokenByName[(t.token_name || '').toUpperCase()] = t; window.tokenByContract[(t.token_contract || '').toLowerCase()] = t; });
       } catch (e) { console.warn('Tokens fetch failed', e); }
     }
 
@@ -2004,9 +2150,9 @@
         const selectedName = sel?.selectedOptions[0]?.text || '';
         const cngn = (window.tokenByName && window.tokenByName['CNGN']) || { token_decimals: 6, token_contract: '0x7923C0f6FA3d1BA6EAFCAedAaD93e737Fd22FC4F' };
         // Desired cNGN amount (wei)
-        const cngnWei = ethers.BigNumber.from(ngnInt.toString()).mul(ethers.BigNumber.from('1' + '0'.repeat(Number(cngn.token_decimals||6))));
+        const cngnWei = ethers.BigNumber.from(ngnInt.toString()).mul(ethers.BigNumber.from('1' + '0'.repeat(Number(cngn.token_decimals || 6))));
         // If selected token is CNGN, return cngnWei
-        if ((selectedName||'').toUpperCase() === 'CNGN' || selectedContract.toLowerCase() === (cngn.token_contract||'').toLowerCase()) {
+        if ((selectedName || '').toUpperCase() === 'CNGN' || selectedContract.toLowerCase() === (cngn.token_contract || '').toLowerCase()) {
           return cngnWei.toString();
         }
         // Otherwise, fetch swap routes to convert cNGN -> selected token for amountIn=cngnWei
@@ -2033,8 +2179,8 @@
         const selectedContract = sel?.value || '';
         const selectedName = sel?.selectedOptions[0]?.text || '';
         const cngn = (window.tokenByName && window.tokenByName['CNGN']) || { token_decimals: 6, token_contract: '0x7923C0f6FA3d1BA6EAFCAedAaD93e737Fd22FC4F' };
-        const cngnWei = ethers.BigNumber.from(ngnInt.toString()).mul(ethers.BigNumber.from('1' + '0'.repeat(Number(cngn.token_decimals||6))));
-        if ((selectedName||'').toUpperCase() === 'CNGN' || selectedContract.toLowerCase() === (cngn.token_contract||'').toLowerCase()) {
+        const cngnWei = ethers.BigNumber.from(ngnInt.toString()).mul(ethers.BigNumber.from('1' + '0'.repeat(Number(cngn.token_decimals || 6))));
+        if ((selectedName || '').toUpperCase() === 'CNGN' || selectedContract.toLowerCase() === (cngn.token_contract || '').toLowerCase()) {
           return cngnWei.toString();
         }
         const tokenOut = selectedContract;
@@ -2162,28 +2308,37 @@
     function openTxModal(item) {
       const chainIdHex = window.ethereum ? (window.authState?.networkOk ? ASSETCHAIN_ID_HEX : ASSETCHAIN_ID_HEX) : ASSETCHAIN_ID_HEX;
       const st = statusLabel(item.status);
+      const parsedProvider = parseProviderFromDescription(item.servicedesc || item.servicedescription || '');
+      const parsedPhone = parsePhoneFromDescription(item.servicedesc || item.servicedescription || '');
       const model = {
         status: st.text === 'confirmed' ? 'success' : (st.text === 'failed' ? 'failed' : 'pending'),
         backendStatus: 'HISTORY',
         timestamp: item.date,
         hash: item.txhash,
+        reference: item.txref || '',
         from: item.senderaddress,
         to: item.targetaddress,
-        amountDisplay: `N${item.amount || '0.00'}`,
+        amountDisplay: item.token_amount + ' ' + item.token_name || '0.00',
+        tokenAmount: item.token_amount,
         gasFee: 'Loading...',
         networkName: 'Assetchain Mainnet',
         chainId: chainIdHex,
         chainIdHex,
         symbol: item.token_name || 'CNGN',
         decimals: 6,
-        message: null
+        message: null,
+        service: (item.servicename || item.service || (item.data_plan ? 'Data Purchase' : 'Airtime Purchase')),
+        purchaseValue: (item.data_plan ? ((item.plan_label || item.plan_name || item.data_plan) + ' Data') : ((item.amount ? `${item.amount}N Airtime` : `N${item.amount || '0.00'} Airtime`))),
+        providerDisplay: parsedProvider || '—',
+        recipientPhone: parsedPhone || 'N/A'
       };
       const card = openReceiptModal(model);
       (async () => {
-        const fee = item.txhash ? await fetchGasFee(item.txhash) : 'N/A';
-        if (card) {
-          const gasEl = card.querySelector('.kv-gas'); if (gasEl) gasEl.textContent = fee;
-        }
+        try {
+          const verified = await verifyProviderName(parsedProvider);
+          const display = verified || 'Unknown';
+          const pv = card.querySelector('.kv-provider'); if (pv) pv.textContent = display;
+        } catch (_) { const pv = card.querySelector('.kv-provider'); if (pv) pv.textContent = parsedProvider || 'Unknown'; }
       })();
     }
     async function fetchWalletHistory(address, page = 0, perPage = 10) {
@@ -2252,21 +2407,98 @@
     }
     // Explorer mapping and utilities
     const ExplorerMap = {
-      '0xA5B4': { base: 'https://scan.assetchain.org', paths: { tx: (h) => `/tx/${h}`, address: (a) => `/address/${a}` } }
+      '0xa5b4': { base: 'https://scan.assetchain.org', paths: { tx: (h) => `/tx/${h}`, address: (a) => `/address/${a}` } }
     };
+    // Network provider numeric code → name mapping
+    // This maps database numeric codes to human-readable provider names
+    const ProviderCodeMap = { 1: 'MTN', 2: 'GLO', 3: '9MOBILE', 4: 'AIRTEL' };
     function isHexTx(hash) { return /^0x[a-fA-F0-9]{64}$/.test(String(hash || '')); }
     function isHexAddress(addr) { return /^0x[a-fA-F0-9]{40}$/.test(String(addr || '')); }
     function buildExplorerUrl(kind, chainIdHex, value) {
-      const map = ExplorerMap[(chainIdHex || '').toUpperCase()];
+      const map = ExplorerMap[(chainIdHex || '').toLowerCase()];
       if (!map) return null;
       if (kind === 'tx' && isHexTx(value)) return map.base + map.paths.tx(value);
       if (kind === 'address' && isHexAddress(value)) return map.base + map.paths.address(value);
       return null;
     }
 
+    // Validation helpers for provider code and phone number
+    function validateNetworkCode(code) {
+      const n = Number(code);
+      return Number.isInteger(n) && n >= 1 && n <= 4;
+    }
+    function validatePhoneNumber(phone) {
+      const s = String(phone || '').trim();
+      if (!s) return false;
+      // Accept Nigerian formats: 11 digits starting with 0, or +234 followed by 10 digits, or generic 10–14 digits
+      const ngLocal = /^0\d{10}$/;
+      const ngIntl = /^\+234\d{10}$/;
+      const generic = /^\+?\d{10,14}$/;
+      return ngLocal.test(s) || ngIntl.test(s) || generic.test(s);
+    }
+    // Resolve provider name and phone from database-backed selections
+    // Reads the selected network ID, fetches networks to resolve the numeric code → name, and validates the phone
+    async function resolveProviderDisplay(service) {
+      try {
+        const isAirtime = service === 'airtime';
+        const selId = isAirtime ? $('#airtime-network').value : $('#data-network').value;
+        const phone = isAirtime ? $('#airtime-phone').value : $('#data-phone').value;
+        let providerName = 'Unknown';
+        let codeResolved = null;
+        if (selId) {
+          const res = await fetch(`${apiBase}/access.php?action=getNetworks`);
+          const json = await res.json();
+          if (json && Array.isArray(json.items || json.data)) {
+            const items = json.items || json.data;
+            const found = items.find(n => String(n.id) === String(selId));
+            if (found) {
+              const numericCode = Number(found.code || found.nId || found.code_id);
+              codeResolved = numericCode;
+              if (validateNetworkCode(numericCode)) providerName = ProviderCodeMap[numericCode];
+            }
+          }
+        }
+        const validPhone = validatePhoneNumber(phone) ? phone : 'Invalid phone';
+        if (!validateNetworkCode(codeResolved)) providerName = 'Unknown';
+        return providerName;
+      } catch (_) {
+        const phone = (service === 'airtime' ? $('#airtime-phone').value : $('#data-phone').value) || '';
+        const validPhone = validatePhoneNumber(phone) ? phone : 'Invalid phone';
+        return 'Unknown';
+      }
+    }
+
     // Formatting helpers
     function formatTokenAmount(weiStr, decimals, symbol) {
       try {
+        // Special rounding for USDT: 3 decimal places, standard rounding
+        if (symbol && typeof symbol === 'string' && symbol.toUpperCase().includes('USDT')) {
+          const val = ethers.utils.formatUnits(weiStr, decimals);
+          const parts = val.split('.');
+          let whole = parts[0];
+          let frac = parts[1] || '';
+          
+          // Ensure we have enough digits to round
+          while (frac.length < 4) frac += '0';
+          
+          const first3 = frac.substring(0, 3);
+          const fourth = frac[3];
+          
+          let roundedFrac = parseInt(first3, 10);
+          if (parseInt(fourth, 10) >= 5) {
+            roundedFrac += 1;
+          }
+          
+          // Handle carry over (e.g. 0.999 -> 1.000)
+          if (roundedFrac >= 1000) {
+            whole = ethers.BigNumber.from(whole).add(1).toString();
+            roundedFrac = 0;
+          }
+          
+          const roundedFracStr = String(roundedFrac).padStart(3, '0');
+          return `${whole}.${roundedFracStr} ${symbol}`;
+        }
+
         const wei = ethers.BigNumber.from(String(weiStr));
         const scale = ethers.BigNumber.from('1' + '0'.repeat(Number(decimals || 0)));
         const whole = wei.div(scale).toString();
@@ -2282,6 +2514,43 @@
         const fee = ethers.utils.formatEther(feeWei);
         return `${fee} ${priceUnit}`;
       } catch (_) { return `0 ${priceUnit}`; }
+    }
+
+    // Provider parsing and verification
+    function parseProviderFromDescription(desc) {
+      const s = String(desc || '');
+      const m = /^\s*([A-Za-z0-9]+)\s+Airtime\b/i.exec(s);
+      if (m && m[1]) return String(m[1]).toUpperCase();
+      const m2 = /(MTN|GLO|9MOBILE|AIRTEL)/i.exec(s);
+      if (m2 && m2[1]) return String(m2[1]).toUpperCase();
+      return null;
+    }
+    function parsePhoneFromDescription(desc) {
+      const s = String(desc || '');
+      const m = /for\s+phone\s+number\s+(\d{11})/i.exec(s);
+      if (m && m[1]) {
+        const p = String(m[1]);
+        return /^0\d{10}$/.test(p) ? p : null;
+      }
+      return null;
+    }
+    let __networksCache = null;
+    async function fetchNetworksCached() {
+      if (__networksCache) return __networksCache;
+      try {
+        const res = await fetch(`${apiBase}/access.php?action=getNetworks`);
+        const json = await res.json();
+        const items = json.items || json.data || [];
+        __networksCache = items;
+        return items;
+      } catch (_) { __networksCache = []; return []; }
+    }
+    async function verifyProviderName(name) {
+      if (!name) return null;
+      const items = await fetchNetworksCached();
+      const up = String(name).toUpperCase();
+      const hit = items.find(n => String(n.network || n.name).toUpperCase() === up);
+      return hit ? up : null;
     }
 
     // Receipt rendering
@@ -2312,8 +2581,10 @@
       const fields = [
         { k: 'Timestamp', v: new Date(model.timestamp || Date.now()).toLocaleString() },
         { k: 'Network', v: `${model.networkName || 'Assetchain'} (${model.chainId || '0xA5B4'})` },
-        { k: 'From', v: model.from || '' },
-        { k: 'To', v: model.to || '' },
+        { k: 'Service', v: model.service || '—' },
+        { k: 'Value', v: model.purchaseValue || amt },
+        { k: 'Service Provider', v: model.providerDisplay || '—' },
+        { k: 'Recipient', v: model.recipientPhone || 'N/A' },
         { k: 'Amount', v: amt },
       ];
       if (model.hash) {
@@ -2328,12 +2599,10 @@
         const kv = document.createElement('div'); kv.className = 'kv';
         const kk = document.createElement('div'); kk.className = 'k'; kk.textContent = k;
         const vv = document.createElement('div'); vv.className = 'v'; vv.textContent = v;
+        if (k === 'Network Provider') vv.classList.add('kv-provider');
         kv.appendChild(kk); kv.appendChild(vv); grid.appendChild(kv);
       });
-      const kvGas = document.createElement('div'); kvGas.className = 'kv';
-      const kGas = document.createElement('div'); kGas.className = 'k'; kGas.textContent = 'Gas Fee';
-      const vGas = document.createElement('div'); vGas.className = 'v kv-gas'; vGas.textContent = model.gasFee || '—';
-      kvGas.appendChild(kGas); kvGas.appendChild(vGas); grid.appendChild(kvGas);
+
       if (model.message) {
         const kvm = document.createElement('div'); kvm.className = 'kv';
         const kk = document.createElement('div'); kk.className = 'k'; kk.textContent = 'Message';
@@ -2343,18 +2612,33 @@
       body.appendChild(grid);
 
       const footer = document.createElement('div'); footer.className = 'receipt-footer';
-      const btnPrint = document.createElement('button'); btnPrint.className = 'btn btn-secondary'; btnPrint.textContent = 'Print'; btnPrint.setAttribute('aria-label', 'Print receipt');
-      const btnDl = document.createElement('button'); btnDl.className = 'btn btn-primary'; btnDl.textContent = 'Download as Image'; btnDl.setAttribute('aria-label', 'Download receipt as image');
-      btnPrint.onclick = () => { printReceipt(card); };
-      btnDl.onclick = () => { exportReceiptAsImage(card).catch(() => notify('error', 'Export failed')); };
-      footer.appendChild(btnPrint); footer.appendChild(btnDl);
+      const btnView = document.createElement('button'); btnView.className = 'btn btn-primary'; btnView.textContent = 'View Receipt'; btnView.setAttribute('aria-label', 'Open full receipt');
+      const btnExp = document.createElement('button'); btnExp.className = 'btn btn-secondary'; btnExp.textContent = 'Check Explorer'; btnExp.setAttribute('aria-label', 'Open transaction in explorer');
+      btnView.onclick = () => {
+        try {
+          const params = new URLSearchParams({ status: model.status || 'pending', amount: String(model.tokenAmount || '0'), symbol: model.symbol || '', sender: model.from || '', target: model.to || '', txHash: model.hash || '', timestamp: String(model.timestamp || Date.now()), service: model.service || '', provider: model.providerDisplay || 'N/A', recipient: model.recipientPhone || 'N/A', fiatValue: model.amountDisplay || '', reference: model.reference  || '', tokenAmount: model.tokenAmount || '' });
+          const url = 'receipt.html?' + params.toString();
+          window.open(url, '_blank', 'noopener');
+        } catch (_) { }
+      };
+      btnExp.onclick = () => {
+        // Ensure chainIdHex is valid or fallback to default
+        const chainId = model.chainIdHex || window.ASSETCHAIN_ID_HEX || '0xA5B4';
+        const url = buildExplorerUrl('tx', chainId, model.hash);
+        if (url) {
+          window.open(url, '_blank', 'noopener');
+        } else {
+          console.warn('Could not build explorer URL', { chainId, hash: model.hash });
+        }
+      };
+      footer.appendChild(btnView); footer.appendChild(btnExp);
 
       card.appendChild(header); card.appendChild(body); card.appendChild(footer);
       wrap.prepend(card);
       return card;
     }
 
-    // Create a receipt card element (shared between inline and modal)
+    // Create a receipt card element After Sending Transaction (shared between inline and modal)
     function createReceiptCard(model) {
       const card = document.createElement('div');
       card.className = 'receipt-card';
@@ -2380,8 +2664,10 @@
       const fields = [
         { k: 'Timestamp', v: new Date(model.timestamp || Date.now()).toLocaleString() },
         { k: 'Network', v: `${model.networkName || 'Assetchain'} (${model.chainId || '0xA5B4'})` },
-        { k: 'From', v: model.from || '' },
-        { k: 'To', v: model.to || '' },
+        { k: 'Service', v: model.service || '—' },
+        { k: 'Value', v: model.purchaseValue || amt },
+        { k: 'Service Provider', v: model.providerDisplay || '—' },
+        { k: 'Recipient', v: model.recipientPhone || 'N/A' },
         { k: 'Amount', v: amt },
       ];
       if (model.hash) {
@@ -2396,12 +2682,10 @@
         const kv = document.createElement('div'); kv.className = 'kv';
         const kk = document.createElement('div'); kk.className = 'k'; kk.textContent = k;
         const vv = document.createElement('div'); vv.className = 'v'; vv.textContent = v;
+        if (k === 'Network Provider') vv.classList.add('kv-provider');
         kv.appendChild(kk); kv.appendChild(vv); grid.appendChild(kv);
       });
-      const kvGas = document.createElement('div'); kvGas.className = 'kv';
-      const kGas = document.createElement('div'); kGas.className = 'k'; kGas.textContent = 'Gas Fee';
-      const vGas = document.createElement('div'); vGas.className = 'v kv-gas'; vGas.textContent = model.gasFee || '—';
-      kvGas.appendChild(kGas); kvGas.appendChild(vGas); grid.appendChild(kvGas);
+
       if (model.message) {
         const kvm = document.createElement('div'); kvm.className = 'kv';
         const kk = document.createElement('div'); kk.className = 'k'; kk.textContent = 'Message';
@@ -2411,11 +2695,47 @@
       body.appendChild(grid);
 
       const footer = document.createElement('div'); footer.className = 'receipt-footer';
-      const btnPrint = document.createElement('button'); btnPrint.className = 'btn btn-secondary'; btnPrint.textContent = 'Print'; btnPrint.setAttribute('aria-label', 'Print receipt');
-      const btnDl = document.createElement('button'); btnDl.className = 'btn btn-primary'; btnDl.textContent = 'Download as Image'; btnDl.setAttribute('aria-label', 'Download receipt as image');
-      btnPrint.onclick = () => { printReceipt(card); };
-      btnDl.onclick = () => { exportReceiptAsImage(card).catch(() => notify('error', 'Export failed')); };
-      footer.appendChild(btnPrint); footer.appendChild(btnDl);
+      const btnView = document.createElement('button'); btnView.className = 'btn btn-primary'; btnView.textContent = 'View Receipt'; btnView.setAttribute('aria-label', 'Open full receipt');
+      const btnExp = document.createElement('button'); btnExp.className = 'btn btn-secondary'; btnExp.textContent = 'Check Explorer'; btnExp.setAttribute('aria-label', 'Open transaction in explorer');
+      btnView.onclick = () => {
+        try {
+          // Ensure we have valid values for the receipt, falling back to calculated values if needed
+           const amtDisplay = model.amountDisplay || formatTokenAmount(model.amountWei || '0', model.decimals || 6, model.symbol || 'CNGN');
+           const tAmount = model.tokenAmount || amtDisplay;
+           
+           // Strip symbol from amount/tokenAmount for URL params as receipt.html adds it separately
+           const numericAmount = String(tAmount).split(' ')[0];
+
+           const params = new URLSearchParams({
+             status: model.status || 'pending',
+             amount: numericAmount,
+             symbol: model.symbol || 'CNGN',
+             sender: model.from || '',
+             target: model.to || '',
+             txHash: model.hash || '',
+             timestamp: String(model.timestamp || Date.now()),
+             service: model.service || '',
+             provider: model.providerDisplay || 'N/A',
+             recipient: model.recipientPhone || 'N/A',
+             fiatValue: amtDisplay,
+             reference: model.reference || model.ref || 'N/A',
+             tokenAmount: numericAmount
+           });
+          const url = 'receipt.html?' + params.toString();
+          window.open(url, '_blank', 'noopener');
+        } catch (e) { console.error('Error opening receipt:', e); }
+      };
+      btnExp.onclick = () => {
+        // Ensure chainIdHex is valid or fallback to default
+        const chainId = model.chainIdHex || window.ASSETCHAIN_ID_HEX || '0xA5B4';
+        const url = buildExplorerUrl('tx', chainId, model.hash);
+        if (url) {
+          window.open(url, '_blank', 'noopener');
+        } else {
+          console.warn('Could not build explorer URL', { chainId, hash: model.hash });
+        }
+      };
+      footer.appendChild(btnView); footer.appendChild(btnExp);
 
       card.appendChild(header); card.appendChild(body); card.appendChild(footer);
       return card;
@@ -2426,7 +2746,7 @@
       const body = document.getElementById('tx-modal-body');
       const title = document.getElementById('tx-modal-title');
       if (!modal || !body || !title) return null;
-      title.textContent = 'Transaction Receipt';
+      title.textContent = 'Transaction Summary';
       body.innerHTML = '';
       const card = createReceiptCard(model);
       body.appendChild(card);
@@ -2471,36 +2791,111 @@
 
     // Set up calculation buttons
     $('#airtime-calc').addEventListener('click', async () => {
-      const ngn = parseFloat($('#airtime-amount').value || '0');
-      const wei = await calcWeiFromNaira(ngn);
-      $('#airtime-nano').value = wei;
-      $('#airtime-send').disabled = !wei;
-      if (!wei) {
-        showStatus($('#airtime-status'), 'Failed to calculate token amount (swap or token unavailable)', false);
+      const btn = $('#airtime-calc');
+      const btnBuy = $('#airtime-send');
+      const originalHtml = btn.innerHTML;
+
+      try {
+        // Loading State
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculating...';
+        $('#airtime-status').innerHTML = '';
+
+        const ngn = parseFloat($('#airtime-amount').value || '0');
+        if (!ngn) throw new Error('Please enter a valid amount');
+
+        const wei = await calcWeiFromNaira(ngn);
+        $('#airtime-nano').value = wei;
+
+        if (!wei) {
+          throw new Error('Failed to calculate token amount (swap or token unavailable)');
+        } else {
+          const sel = document.getElementById('airtime-token');
+          const dec = Number(sel?.selectedOptions[0]?.getAttribute('data-decimals') || 6);
+          const name = sel?.selectedOptions[0]?.text || '';
+          $('#airtime-display').value = formatTokenAmount(wei, dec, name);
+
+          // Success Transition
+          btn.style.display = 'none';
+          btn.innerHTML = originalHtml; // Restore text for when it reappears
+          btn.disabled = false;
+
+          btnBuy.style.display = 'inline-block';
+          btnBuy.disabled = false;
+
+          // 10s Timer
+          if (btnBuy.dataset.timer) clearTimeout(Number(btnBuy.dataset.timer));
+          btnBuy.dataset.timer = setTimeout(() => {
+            btnBuy.style.display = 'none';
+            btnBuy.disabled = true;
+            btn.style.display = 'inline-block';
+          }, 10000);
+        }
+      } catch (e) {
+        showStatus($('#airtime-status'), e.message, false);
+        $('#airtime-display').value = '';
+        $('#airtime-nano').value = '';
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
       }
     });
 
     $('#data-calc').addEventListener('click', async () => {
-      const network = $('#data-network').value;
-      const plan = $('#data-plan').value;
-      const res = await fetch(`${apiBase}/access.php?action=checkDataPlanPrice&network=${encodeURIComponent(network)}&plan=${encodeURIComponent(plan)}`);
-      const data = await res.json();
-      const ngn = Number(data.amount || data.price || data.naira || 0);
-      const wei = ngn ? await calcWeiFromNairaBySelector('data-token', ngn) : '';
-      $('#data-nano').value = wei;
-      $('#data-send').disabled = !wei;
-      if (!wei) {
-        showStatus($('#data-status'), 'Failed to calculate token amount (swap or token unavailable)', false);
-      } else {
-        const sel = document.getElementById('data-token');
-        const dec = Number(sel?.selectedOptions[0]?.getAttribute('data-decimals') || 6);
-        const name = sel?.selectedOptions[0]?.text || '';
-        const scale = ethers.BigNumber.from('1' + '0'.repeat(dec));
-        const whole = ethers.BigNumber.from(wei).div(scale).toString();
-        const fracRaw = ethers.BigNumber.from(wei).mod(scale).toString().padStart(dec, '0');
-        const frac = fracRaw.replace(/0+$/, '');
-        const pretty = frac ? `${whole}.${frac}` : whole;
-        showStatus($('#data-status'), `Amount: ${pretty} ${name} (wei: ${wei})`, true);
+      const btn = $('#data-calc');
+      const btnBuy = $('#data-send');
+      const originalHtml = btn.innerHTML;
+
+      try {
+        // Loading State
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculating...';
+        $('#data-status').innerHTML = '';
+
+        const network = $('#data-network').value;
+        const plan = $('#data-plan').value;
+        if (!network || !plan) throw new Error('Please select network and plan');
+
+        const res = await fetch(`${apiBase}/access.php?action=checkDataPlanPrice&network=${encodeURIComponent(network)}&plan=${encodeURIComponent(plan)}`);
+        const data = await res.json();
+        const ngn = Number(data.amount || data.price || data.naira || 0);
+        
+        if (!ngn) throw new Error('Failed to fetch plan price');
+
+        const wei = ngn ? await calcWeiFromNairaBySelector('data-token', ngn) : '';
+        $('#data-nano').value = wei;
+
+        if (!wei) {
+          throw new Error('Failed to calculate token amount (swap or token unavailable)');
+        } else {
+          const sel = document.getElementById('data-token');
+          const dec = Number(sel?.selectedOptions[0]?.getAttribute('data-decimals') || 6);
+          const name = sel?.selectedOptions[0]?.text || '';
+          const formatted = formatTokenAmount(wei, dec, name);
+          showStatus($('#data-status'), `Amount: ${formatted} (wei: ${wei})`, true);
+          $('#data-display').value = formatted;
+
+          // Success Transition
+          btn.style.display = 'none';
+          btn.innerHTML = originalHtml;
+          btn.disabled = false;
+
+          btnBuy.style.display = 'inline-block';
+          btnBuy.disabled = false;
+
+          // 10s Timer
+          if (btnBuy.dataset.timer) clearTimeout(Number(btnBuy.dataset.timer));
+          btnBuy.dataset.timer = setTimeout(() => {
+            btnBuy.style.display = 'none';
+            btnBuy.disabled = true;
+            btn.style.display = 'inline-block';
+          }, 10000);
+        }
+      } catch (e) {
+        showStatus($('#data-status'), e.message, false);
+        $('#data-display').value = '';
+        $('#data-nano').value = '';
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
       }
     });
 
@@ -2590,30 +2985,104 @@
       return res.json();
     }
 
+    function showGlobalLoader() {
+      const loader = document.getElementById('global-loader');
+      if (!loader) return;
+      
+      loader.classList.add('visible');
+      loader.setAttribute('aria-hidden', 'false');
+      loader.setAttribute('aria-busy', 'true');
+      
+      // Disable all interactive elements
+      document.body.style.overflow = 'hidden';
+    }
+
+    function hideGlobalLoader() {
+      const loader = document.getElementById('global-loader');
+      if (!loader) return;
+      
+      loader.classList.remove('visible');
+      loader.setAttribute('aria-hidden', 'true');
+      loader.setAttribute('aria-busy', 'false');
+      
+      // Restore interactivity
+      document.body.style.overflow = '';
+    }
+
+    // Button State Helper
+    function setButtonState(btnId, state, text) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      
+      if (state === 'loading') {
+        btn.disabled = true;
+        btn.classList.add('loading');
+        btn.setAttribute('aria-busy', 'true');
+        if (!btn.dataset.originalHtml) btn.dataset.originalHtml = btn.innerHTML;
+        btn.innerHTML = `<span class="spinner" aria-hidden="true"></span> <span class="btn-text">${text || 'Processing...'}</span>`;
+      } else if (state === 'disabled') {
+        btn.disabled = true;
+        btn.classList.remove('loading');
+        btn.setAttribute('aria-busy', 'false');
+      } else { // idle
+        btn.disabled = false;
+        btn.classList.remove('loading');
+        btn.setAttribute('aria-busy', 'false');
+        if (btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
+      }
+    }
+
+    // Persistent Transaction Storage
+    const PENDING_TX_KEY = 'dex_pending_tx';
+    function savePendingTx(data) {
+      try { localStorage.setItem(PENDING_TX_KEY, JSON.stringify(data)); } catch (_) {}
+    }
+    function getPendingTx() {
+      try { return JSON.parse(localStorage.getItem(PENDING_TX_KEY)); } catch (_) { return null; }
+    }
+    function clearPendingTx() {
+      try { localStorage.removeItem(PENDING_TX_KEY); } catch (_) {}
+    }
+
     // Handle sending CNGN via selected wallet provider on Assetchain
     async function handleSend(service) {
+      const btnId = service === 'airtime' ? 'airtime-send' : 'data-send';
+      const statusEl = service === 'airtime' ? $('#airtime-status') : $('#data-status');
+      
+      // 1. Immediate disable and visual state
+      setButtonState(btnId, 'loading', 'Preparing...');
+      showGlobalLoader();
+
       try {
-        const statusEl = service === 'airtime' ? $('#airtime-status') : $('#data-status');
         const authOk = await requireAuthSequence();
         if (!authOk) {
           showStatus(statusEl, 'Authentication required: connect wallet, switch to Assetchain, then sign in.', false);
+          hideGlobalLoader();
+          setButtonState(btnId, 'idle');
           return;
         }
+        
         const selected = document.getElementById('wallet-select')?.value || window.currentWalletName || 'MetaMask';
         const ethProvider = window.currentProvider || resolveProviderBySelection(selected);
         if (!ethProvider || typeof ethProvider.request !== 'function') {
           showStatus(statusEl, `${selected} wallet not installed or unavailable.`, false);
+          hideGlobalLoader();
+          setButtonState(btnId, 'idle');
           return;
         }
 
+        setButtonState(btnId, 'loading', 'Connecting...');
         try {
           await ethProvider.request({ method: 'eth_requestAccounts' });
         } catch (e) {
           showStatus(statusEl, e?.message || 'Wallet connection cancelled or failed.', false);
+          hideGlobalLoader();
+          setButtonState(btnId, 'idle');
           return;
         }
 
         // Ensure Assetchain
+        setButtonState(btnId, 'loading', 'Switching Network...');
         try {
           await ethProvider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: ASSETCHAIN_ID_HEX }] });
         } catch (switchErr) {
@@ -2633,6 +3102,8 @@
             } catch (_) { }
           } else {
             showStatus(statusEl, 'Please switch to Assetchain Mainnet.', false);
+            hideGlobalLoader();
+            setButtonState(btnId, 'idle');
             return;
           }
         }
@@ -2650,21 +3121,34 @@
 
         if (!/^0x[a-fA-F0-9]{40}$/.test(target)) {
           showStatus(statusEl, 'Target address must be a valid EVM address.', false);
+          hideGlobalLoader();
+          setButtonState(btnId, 'idle');
           return;
         }
 
         const amountWeiBN = toWeiFromInput(nano);
-        if (!amountWeiBN) { return; }
+        if (!amountWeiBN) { 
+            hideGlobalLoader(); 
+            setButtonState(btnId, 'idle');
+            return; 
+        }
 
         const erc20 = getErc20Contract(tokenContract, signer);
         const balance = await erc20.balanceOf(userAddress);
         if (balance.lt(amountWeiBN)) {
           showStatus(statusEl, 'Insufficient token balance for this transfer.', false);
+          hideGlobalLoader();
+          setButtonState(btnId, 'idle');
           return;
         }
+        
         showStatus(statusEl, 'Sending transaction...', true);
+        setButtonState(btnId, 'loading', 'Confirm in Wallet...');
+        
         const receipt = await sendTokenTransfer(signer, tokenContract, target, amountWeiBN);
+        
         showStatus(statusEl, 'Transaction sent. Verifying on-chain...', true);
+        setButtonState(btnId, 'loading', 'Verifying...');
 
         const network = await signer.provider.getNetwork();
         const chainIdHex = '0x' + Number(network.chainId || 0).toString(16).toUpperCase();
@@ -2678,10 +3162,13 @@
           amountWei: amountWeiBN.toString(),
           decimals: tokenDecimals,
           symbol: (tokenSel?.selectedOptions[0]?.text || '').toUpperCase(),
-          gasFee: computeGasFee(receipt),
           networkName: 'Assetchain Mainnet',
           chainId: chainIdHex,
-          chainIdHex
+          chainIdHex,
+          providerDisplay: await resolveProviderDisplay(service),
+          recipientPhone: (service === 'airtime' ? $('#airtime-phone').value : $('#data-phone').value) || 'N/A',
+          service: service === 'airtime' ? 'Airtime Purchase' : 'Data Purchase',
+          purchaseValue: service === 'airtime' ? `${$('#airtime-amount').value || ''}N Airtime` : `${($('#data-plan').selectedOptions[0]?.text || $('#data-plan').value || '').toString()} Data`
         };
         const modalCard = openReceiptModal(model);
 
@@ -2700,7 +3187,8 @@
             network: $('#airtime-network').value,
             phone: $('#airtime-phone').value,
             amount: $('#airtime-amount').value,
-            ref: $('#airtime-ref').value
+            ref: $('#airtime-ref').value,
+            ported_number: $('#airtime-ported').checked
           };
         } else {
           payload = {
@@ -2708,67 +3196,98 @@
             network: $('#data-network').value,
             data_plan: $('#data-plan').value,
             phone: $('#data-phone').value,
-            ref: $('#data-ref').value
+            ref: $('#data-ref').value,
+            ported_number: $('#data-ported').checked
           };
         }
 
-        const out = await verifyAndFulfil(service, payload);
-        const isSuccess = (out.status === 'success') || (out.status === true) || (out.success === true);
+        // Save pending state
+        savePendingTx({
+            hash: receipt.transactionHash,
+            service,
+            model,
+            payload,
+            timestamp: Date.now()
+        });
 
-        showStatus(
-          statusEl,
-          out.msg || out.message || (isSuccess ? 'Transaction successful!' : 'Transaction failed'),
-          isSuccess
+        // Timeout protection (60s)
+        const timeoutMs = 60000;
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Transaction verification timed out. Please check history.')), timeoutMs)
         );
+
+        const out = await Promise.race([
+            verifyAndFulfil(service, payload),
+            timeoutPromise
+        ]);
+        
+        const isSuccess = (out.status === 'success') || (out.status === true) || (out.success === true);
+        const msg = out.msg || out.message || (isSuccess ? 'Transaction successful!' : 'Transaction failed');
+
+        showStatus(statusEl, msg, isSuccess);
+
+        // Update model for final receipt state and re-render modal
+        // This ensures accurate status representation, correct badge colors, and updated receipt links
+        const finalModel = {
+          ...model,
+          status: isSuccess ? 'success' : 'failed',
+          backendStatus: 'HISTORY',
+          message: isSuccess ? null : msg, // Only show error message on failure
+          amountDisplay: service === 'airtime' ? $('#airtime-display').value : $('#data-display').value,
+          ref: service === 'airtime' ? $('#airtime-ref').value : $('#data-ref').value,
+          tokenAmount: formatTokenAmount(model.amountWei || '0', model.decimals || 6, model.symbol || 'CNGN')
+        };
+        
+        hideGlobalLoader();
+        setButtonState(btnId, 'idle');
+        openReceiptModal(finalModel);
+        
+        // Clear pending on final result
+        clearPendingTx();
 
         if (isSuccess) {
           notify('success', 'Transaction successful!');
-          if (modalCard) {
-            const badge = modalCard.querySelector('.status-badge');
-            if (badge) { badge.textContent = 'SUCCESS • VERIFIED'; badge.classList.remove('status-failed'); badge.classList.add('status-success'); }
-          }
-        } else {
-          notify('error', 'Transaction failed.');
-          if (modalCard) {
-            const badge = modalCard.querySelector('.status-badge');
-            if (badge) { badge.textContent = 'FAILED • VERIFICATION'; badge.classList.remove('status-success'); badge.classList.add('status-failed'); }
-            const body = modalCard.querySelector('.receipt-body .receipt-grid');
-            if (body) {
-              const kvm = document.createElement('div'); kvm.className = 'kv';
-              const kk = document.createElement('div'); kk.className = 'k'; kk.textContent = 'Message';
-              const vv = document.createElement('div'); vv.className = 'v'; vv.textContent = out.msg || out.message || 'Unknown error';
-              kvm.appendChild(kk); kvm.appendChild(vv); body.appendChild(kvm);
-            }
-          }
-        }
-
-        if (isSuccess) {
           if (service === 'airtime') {
             $('#airtime-ref').value = randRef();
           } else {
             $('#data-ref').value = randRef();
           }
+        } else {
+          notify('error', 'Transaction failed.');
         }
       } catch (e) {
+        hideGlobalLoader();
+        setButtonState(btnId, 'idle');
         const statusEl = service === 'airtime' ? $('#airtime-status') : $('#data-status');
         showStatus(statusEl, 'Error: ' + (e && e.message ? e.message : 'Unknown error'), false);
         try {
           const provider = window.currentProvider || window.ethereum;
           const chainIdHex = await getChainId(provider) || ASSETCHAIN_ID_HEX;
+          const NetworkName = await getNetworkName(provider) || 'Unknown';
+          const providerDisplay = await resolveProviderDisplay(service);
+          const descText = String('Error occurred');
+          const extractedPhone = (service === 'airtime' ? $('#airtime-phone').value : $('#data-phone').value) || 'N/A';
+          const netOk = /Assetchain/i.test(String(NetworkName));
+          
+          // If we have a pending tx, we might want to use its info
+          const pending = getPendingTx();
+          
           renderReceipt({
             status: 'failed',
             backendStatus: 'CLIENT',
             timestamp: Date.now(),
-            hash: null,
+            hash: pending ? pending.hash : null,
             from: window.currentAddress || '',
             to: (service === 'airtime' ? $('#airtime-target').value : $('#data-target').value) || '',
             amountWei: (service === 'airtime' ? $('#airtime-nano').value : $('#data-nano').value) || '0',
             decimals: 6,
             symbol: 'CNGN',
-            gasFee: '—',
-            networkName: 'Assetchain Mainnet',
+            networkName: netOk ? 'Assetchain Mainnet' : 'Unknown',
             chainId: chainIdHex,
             chainIdHex,
+            providerDisplay,
+            recipientPhone: extractedPhone,
+            service: service === 'airtime' ? 'Airtime Purchase' : 'Data Purchase',
             message: e && e.message ? e.message : 'Unknown error'
           });
         } catch (_) { }
@@ -2778,10 +3297,11 @@
 
     // Show status message
     function showStatus(element, message, isSuccess) {
+      const displayMsg = isSuccess ? message : cleanErrorMessage(message);
       element.innerHTML = `
         <div class="status-message ${isSuccess ? 'status-success' : 'status-error'}">
           <i class="fas ${isSuccess ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
-          ${message}
+          ${displayMsg}
         </div>
       `;
     }
@@ -2806,6 +3326,122 @@
       $('#data-status').innerHTML = '';
     });
 
+    // Initialize input listeners for button behavior logic
+    function initInputListeners() {
+      const sections = ['airtime', 'data'];
+      sections.forEach(section => {
+        // Select all relevant inputs and selects
+        const inputs = $$(`#${section}-tab input, #${section}-tab select`);
+        const btnCalc = $(`#${section}-calc`);
+        const btnBuy = $(`#${section}-send`);
+        
+        const resetState = () => {
+          // Hide Buy, Show Calc
+          if (btnBuy) {
+            btnBuy.style.display = 'none';
+            btnBuy.disabled = true;
+            // Clear timer
+            if (btnBuy.dataset.timer) {
+              clearTimeout(Number(btnBuy.dataset.timer));
+              btnBuy.dataset.timer = '';
+            }
+          }
+          
+          if (btnCalc) {
+            btnCalc.style.display = 'inline-block';
+            btnCalc.disabled = false;
+            // Reset text if it was stuck
+            if (btnCalc.innerHTML.includes('Calculating')) {
+               btnCalc.innerHTML = '<i class="fas fa-calculator"></i> Calculate Amount';
+            }
+          }
+          
+          // Reset calculations display
+          const nano = $(`#${section}-nano`);
+          const display = $(`#${section}-display`);
+          const status = $(`#${section}-status`);
+          
+          if (nano) nano.value = '';
+          if (display) display.value = '';
+          if (status) status.innerHTML = '';
+        };
+        
+        inputs.forEach(input => {
+          input.addEventListener('input', resetState);
+          input.addEventListener('change', resetState);
+        });
+        
+        // Also clear timer on Buy click so it doesn't revert while buying
+        if (btnBuy) {
+          btnBuy.addEventListener('click', () => {
+            if (btnBuy.dataset.timer) {
+              clearTimeout(Number(btnBuy.dataset.timer));
+              btnBuy.dataset.timer = '';
+            }
+          });
+        }
+      });
+    }
+    initInputListeners();
+    
+    // Check for pending transactions on load
+    async function checkPendingTxs() {
+      const pending = getPendingTx();
+      if (!pending || !pending.hash) return;
+      
+      // If it's too old (> 10 mins), clear it
+      if (Date.now() - (pending.timestamp || 0) > 600000) {
+          clearPendingTx();
+          return;
+      }
+
+      if (pending.service) {
+          const btnId = pending.service === 'airtime' ? 'airtime-send' : 'data-send';
+          const statusEl = pending.service === 'airtime' ? $('#airtime-status') : $('#data-status');
+
+          setButtonState(btnId, 'loading', 'Resuming...');
+          showGlobalLoader();
+          showStatus(statusEl, 'Resuming pending transaction...', true);
+          
+          if (pending.model) openReceiptModal(pending.model);
+
+          try {
+             const out = await verifyAndFulfil(pending.service, pending.payload);
+             const isSuccess = (out.status === 'success') || (out.status === true) || (out.success === true);
+             const msg = out.msg || out.message || (isSuccess ? 'Transaction successful!' : 'Transaction failed');
+             
+             showStatus(statusEl, msg, isSuccess);
+             
+             const finalModel = {
+               ...pending.model,
+               status: isSuccess ? 'success' : 'failed',
+               backendStatus: 'HISTORY',
+               message: isSuccess ? null : msg,
+               amountDisplay: pending.model.amountDisplay, 
+               ref: pending.model.ref,
+               tokenAmount: pending.model.tokenAmount
+             };
+
+             hideGlobalLoader();
+             setButtonState(btnId, 'idle');
+             openReceiptModal(finalModel);
+             clearPendingTx();
+             
+             if (isSuccess) {
+                 notify('success', 'Transaction restored and verified!');
+             } else {
+                 notify('error', 'Transaction verification failed.');
+             }
+
+          } catch (e) {
+             hideGlobalLoader();
+             setButtonState(btnId, 'idle');
+             showStatus(statusEl, 'Error resuming transaction: ' + e.message, false);
+          }
+      }
+    }
+    checkPendingTxs();
+
     // Inline unit tests (run with ?test=1)
     (function runInlineTests() {
       try {
@@ -2820,12 +3456,42 @@
         assert('formatTokenAmount basic', formatTokenAmount('1000000', 6, 'CNGN').includes('1'));
         const dummyReceipt = { gasUsed: ethers.BigNumber.from('21000'), effectiveGasPrice: ethers.BigNumber.from('1000000000') };
         assert('computeGasFee', computeGasFee(dummyReceipt).includes('ASET'));
+        
+        // Test Button State
+        const btn = document.createElement('button'); btn.id = 'test-btn'; document.body.appendChild(btn);
+        setButtonState('test-btn', 'loading', 'Wait');
+        assert('Button loading state', btn.disabled && btn.classList.contains('loading') && btn.innerHTML.includes('Wait'));
+        setButtonState('test-btn', 'idle');
+        assert('Button idle state', !btn.disabled && !btn.classList.contains('loading'));
+        btn.remove();
+
+        // Test renderReceipt status logic
+        try {
+          const testModel = { status: 'success', backendStatus: 'HISTORY', timestamp: Date.now() };
+          const card = renderReceipt(testModel);
+          const badge = card.querySelector('.status-badge');
+          assert('Badge has success class', badge.classList.contains('status-success'));
+          assert('Badge has correct text', badge.textContent.includes('SUCCESS • HISTORY'));
+          
+          const failModel = { status: 'failed', backendStatus: 'HISTORY', timestamp: Date.now() };
+          const failCard = renderReceipt(failModel);
+          const failBadge = failCard.querySelector('.status-badge');
+          assert('Badge has failed class', failBadge.classList.contains('status-failed'));
+          assert('Badge has correct text', failBadge.textContent.includes('FAILED • HISTORY'));
+        } catch (e) { assert('renderReceipt test error: ' + e.message, false); }
+
         const node = document.createElement('div'); node.className = 'receipt-card'; node.textContent = 'test'; document.body.appendChild(node);
         exportReceiptAsImage(node).then(() => { assert('exportReceiptAsImage resolves', true); finish(); }).catch(() => { assert('exportReceiptAsImage resolves', false); finish(); });
         function finish() { console.group('Inline Tests'); tests.forEach(t => console[t.pass ? 'log' : 'error'](`${t.pass ? 'PASS' : 'FAIL'}: ${t.name}`)); console.groupEnd(); }
       } catch (e) { console.error('Tests failed to run', e); }
     })();
   </script>
+  <!-- Loading Overlay -->
+  <div id="global-loader" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Transaction Processing">
+    <div class="loader-spinner"></div>
+    <div class="loader-text">Transaction Processing</div>
+  </div>
+
   <!-- Onboard initialization removed; using custom wallet dropdown and EIP-1193 providers -->
 </body>
 

@@ -578,9 +578,9 @@ class ApiAccess extends Controller
         }
         return $crc;
     }
-    public function convertNanoToTon($nanoTON)
+    public function convertNanoToTon($token_amount)
     {
-        return $nanoTON / 1e9;
+        return $token_amount / 1e9;
     }
     public function checkPriceImpact($price, $tonAmount)
     {
@@ -708,9 +708,30 @@ class ApiAccess extends Controller
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_TIMEOUT, 15);
             curl_setopt($ch, CURLOPT_HTTPHEADER, ['accept: application/json']);
-            $result = curl_exec($ch);
+            // Robustness: Disable SSL verify to avoid common cert issues in dev/local envs
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+            // Retry logic (up to 2 retries)
+            $maxRetries = 2;
+            $retryCount = 0;
+            $result = false;
+            $cErr = '';
+
+            while ($retryCount <= $maxRetries) {
+                $result = curl_exec($ch);
+                if ($result !== false) {
+                    break;
+                }
+                $cErr = curl_error($ch);
+                $retryCount++;
+                if ($retryCount <= $maxRetries) {
+                    sleep(1); 
+                }
+            }
+
             if ($result === false) {
-                $resp['msg'] = 'scanner_unreachable';
+                $resp['msg'] = 'scanner_unreachable: ' . $cErr;
+                curl_close($ch);
                 return $resp;
             }
             $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -754,7 +775,20 @@ class ApiAccess extends Controller
             curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch2, CURLOPT_TIMEOUT, 15);
             curl_setopt($ch2, CURLOPT_HTTPHEADER, ['accept: application/json']);
-            $ttRaw = curl_exec($ch2);
+            curl_setopt($ch2, CURLOPT_SSL_VERIFYPEER, false);
+
+            // Retry logic for token transfers
+            $retryCount = 0;
+            $ttRaw = false;
+            while ($retryCount <= $maxRetries) {
+                $ttRaw = curl_exec($ch2);
+                if ($ttRaw !== false) {
+                    break;
+                }
+                $retryCount++;
+                if ($retryCount <= $maxRetries) sleep(1);
+            }
+
             $items = [];
             if ($ttRaw !== false) {
                 $code2 = curl_getinfo($ch2, CURLINFO_HTTP_CODE);

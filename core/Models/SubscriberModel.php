@@ -1092,7 +1092,7 @@ class SubscriberModel extends Model
 		$data = json_decode($response, true);
 
 		if (isset($data['result'])) {
-			$balance = $data['result'] / 1e9; // convert from nanoTON to TON
+			$balance = $data['result'] / 1e9; // convert from token_amount to TON
 			return [
 				"status" => "success",
 				"balance" => $balance,
@@ -1602,7 +1602,7 @@ class SubscriberModel extends Model
 		$oldbalance = '0';
 		$newbalance = '0';
 		//Record Transaction
-		$sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, nanoton, date) 
+		$sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, token_amount, date) 
         VALUES (:user, :ref, :sn, :sd, :a, :s, :ob, :nb, :txh, :taddy, :uaddy, :ton, :d)";
 		$query = $dbh->prepare($sql);
 		$query->bindParam(':user', $userid, PDO::PARAM_INT);
