@@ -100,6 +100,10 @@ $tx_hash = (isset($body->tx_hash)) ? $body->tx_hash : "";
 $tx_lt = (isset($body->tx_lt)) ? $body->tx_lt : "";
 $user_address = (isset($body->user_address)) ? $body->user_address : "";
 $nanoamount = (isset($body->nanoamount)) ? $body->nanoamount : "";
+// Assetchain migration: use amount_wei and optional token_contract
+$amount_wei = (isset($body->amount_wei)) ? $body->amount_wei : "";
+$token_contract = (isset($body->token_contract)) ? $body->token_contract : "";
+
 // -------------------------------------------------------------------
 //  Check Inputs Parameters
 // -------------------------------------------------------------------
@@ -124,14 +128,14 @@ if ($target_address == "") {
 if ($tx_hash == "") {
     $requiredField = "Onchain Transaction Hash Is Required";
 }
-if ($tx_lt == "") {
-    $requiredField = "Logic Time Required";
-}
+// if ($tx_lt == "") {
+//    $requiredField = "Logic Time Required";
+// }
 if ($user_address == "") {
     $requiredField = "User Adress Required";
 }
-if ($nanoamount == "") {
-    $requiredField = "TON Amount Is Required";
+if ($amount_wei == "") {
+    $requiredField = "Token amount_wei Is Required";
 }
 
 if ($requiredField <> "") {
@@ -147,20 +151,16 @@ if ($requiredField <> "") {
 //  Verify Network Id
 // -------------------------------------------------------------------
 
-$chainresult = $controller->verifyTransaction($target_address, $tx_hash, $tx_lt, $user_address, $nanoamount);
+$erroresult = $controller->checkIfError();
+// Verify Assetchain transaction (CNGN ERC-20)
+$chainresult = $controller->verifyAssetTransaction($target_address, $tx_hash, $user_address, $amount_wei, $token_contract);
 if ($chainresult["status"] == "fail") {
     header('HTTP/1.0 400 Transaction Verification Failed');
     $response['status'] = "fail";
-    $erroresult = $controller->checkIfError();
     if ($erroresult) {
-        if (isset($chainresult['code']) == "verification_failed") {
-            $response['msg'] = $chainresult["msg"] . ". ";
-            $response['msg'] .= "Expected Target: " . $chainresult["expected"]["target_address"] . " But Got: " . $chainresult["received"]["target_address"] . ". ";
-            $response['msg'] .= "Expected Logic Time: " . $chainresult["expected"]["tx_lt"] . " But Got: " . $chainresult["received"]["tx_lt"] . ". ";
-            $response['msg'] .= "Expected User Address: " . $chainresult["expected"]["user_address"] . " But Got: " . $chainresult["received"]["user_address"] . ". ";
-            $response['msg'] .= "Expected TON Amount: " . $chainresult["expected"]["nanoamount"] . " But Got: " . $chainresult["received"]["nanoamount"];
-        } else {
-            $response['msg'] = $chainresult['msg'];
+        $response['msg'] = $chainresult['msg'] ?? 'verification_failed';
+        if (isset($chainresult['expected_value']) || isset($chainresult['transfer_value'])) {
+            $response['msg'] .= " | expected: " . ($chainresult['expected_value'] ?? 'N/A') . ", got: " . ($chainresult['transfer_value'] ?? 'N/A');
         }
         echo json_encode($response);
         exit();
@@ -171,10 +171,26 @@ if ($chainresult["status"] == "fail") {
     }
 }
 
-$ftarget_address = $controller->toFriendlyAddress($target_address, false, false);
+$ftarget_address = $controller->normalizeEvmAddress($target_address);
 // Check Target Adress
-$fuser_address = $controller->toFriendlyAddress($user_address, false, false);
-$tonamount = $controller->convertNanoToTon($nanoamount);
+$fuser_address = $controller->normalizeEvmAddress($user_address);
+
+// Resolve token decimals from DB
+$dbh = AdminModel::connect();
+$decQ = $dbh->prepare("SELECT token_decimals, token_name, token_contract FROM tokens WHERE LOWER(token_contract)=LOWER(:c) AND is_active=1 LIMIT 1");
+$decQ->bindParam(':c', $token_contract, PDO::PARAM_STR);
+$decQ->execute();
+$trow = $decQ->fetch(PDO::FETCH_ASSOC);
+if (!$trow) {
+    header('HTTP/1.0 400 Invalid Token');
+    $response['status'] = "fail";
+    $response['msg'] = "Token Not Found or Disabled";
+    echo json_encode($response);
+    exit();
+}
+$token_decimals = (int)($trow['token_decimals'] ?? 6);
+$token_name = $trow['token_name'] ?? 'Unknown';
+$tonamount = $controller->convertWeiToToken($amount_wei, $token_decimals);
 
 $from = "Api :: Data Index";
 
@@ -184,7 +200,7 @@ if ($result["status"] == "fail") {
     header('HTTP/1.0 400 Invalid Network Id');
     $response['status'] = "fail";
     $response['msg'] = "The Network id is invalid";
-    $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tonamount);
+    $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tonamount, $token_contract, $token_name, $token_decimals);
     if ($refund["status"] == "fail") {
         header('HTTP/1.0 400 Transaction Failed');
         $response['status'] = "fail";
@@ -219,7 +235,7 @@ if ($networkDetails["networkStatus"] <> "On") {
     header('HTTP/1.0 400 Network Not Available');
     $response['status'] = "fail";
     $response['msg'] = "Sorry, {$networkDetails["network"]} is not available at the moment";
-    $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tonamount);
+    $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tonamount, $token_contract, $token_name, $token_decimals);
     if ($refund["status"] == "fail") {
         $controller->logError($refund['msg'] ?? "Unknown", $from, $userid);
         if ($erroresult) {
@@ -250,7 +266,7 @@ if ($result["status"] == "fail") {
     header('HTTP/1.0 400 Invalid Data Plan Id');
     $response['status'] = "fail";
     $response['msg'] = "The Data Plan ID : $data_plan is invalid ";
-    $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tonamount);
+    $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tonamount, $token_contract, $token_name, $token_decimals);
     if ($refund["status"] == "fail") {
         $controller->logError($refund['msg'] ?? "Unknown", $from, $userid);
         if ($erroresult) {
@@ -294,7 +310,7 @@ if ($result["status"] == "fail") {
         header('HTTP/1.0 400 Data Not Available At The Moment');
         $response['status'] = "fail";
         $response['msg'] = $datagroupmessage;
-        $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tonamount);
+        $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tonamount, $token_contract, $token_name, $token_decimals);
         if ($refund["status"] == "fail") {
             $controller->logError($refund['msg'] ?? "Unknown", $from, $userid);
             if ($erroresult) {

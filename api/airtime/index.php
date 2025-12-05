@@ -217,6 +217,7 @@ if (!$trow) {
     exit();
 }
 $token_decimals = (int)($trow['token_decimals'] ?? 6);
+$token_name = $trow['token_name'] ?? 'Unknown';
 $tokenamount = $controller->convertWeiToToken($amount_wei, $token_decimals);
 $from = "Api :: Airtime Index";
 
@@ -231,7 +232,7 @@ if ($result["status"] == "fail") {
     $response['msg'] = "The Network id is invalid ";
     // Refund on-chain disabled for Assetchain path
     if (!$isDexToken) {
-        $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tokenamount);
+        $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tokenamount, $token_contract, $token_name, $token_decimals);
     } else {
         $refund = ["status" => "skip"];
     }
@@ -274,7 +275,7 @@ if ($airtime_type == "Share And Sell") {
             $response['msg'] = "Sorry, {$networkDetails["network"]} Share And Sell service is not available at the moment ";
         }
         if (!$isDexToken) {
-            $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tokenamount);
+            $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tokenamount, $token_contract, $token_name, $token_decimals);
         } else {
             $refund = ["status" => "skip"];
         }
@@ -312,7 +313,7 @@ if ($airtime_type == "VTU") {
             $response['msg'] = "Sorry, {$networkDetails["network"]} VTU service is not available at the moment ";
         }
         if (!$isDexToken) {
-            $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tokenamount);
+            $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tokenamount, $token_contract, $token_name, $token_decimals);
         } else {
             $refund = ["status" => "skip"];
         }
@@ -352,7 +353,7 @@ if ($ported_number == "false") {
         header('HTTP/1.0 400 Invalid Phone Number');
         $response['status'] = "fail";
         $response['msg'] = $result["msg"];
-        $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tokenamount);
+        $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tokenamount, $token_contract, $token_name, $token_decimals);
         if ($refund["status"] == "fail") {
             $controller->logError($refund['msg'] ?? "Unknown", $from, $userid);
             if ($erroresult) {
@@ -416,7 +417,7 @@ if ($amount < $airtimemin) {
     header("HTTP/1.0 400 Minimum airtime purchase is $airtimemin  ");
     $response['status'] = "fail";
     $response['msg'] = "Minimum airtime you can purchase is $airtimemin ";
-    $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tokenamount);
+    $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tokenamount, $token_contract, $token_name, $token_decimals);
     if ($refund["status"] == "fail") {
         $controller->logError($refund['msg'] ?? "Unknown", $from, $userid);
         if ($erroresult) {
@@ -442,7 +443,7 @@ if ($amount > $airtimemax) {
     header("HTTP/1.0 400 Maximum airtime purchase is $airtimemax");
     $response['status'] = "fail";
     $response['msg'] = "Maximum airtime you can purchase is $airtimemax";
-    $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tokenamount);
+    $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tokenamount, $token_contract, $token_name, $token_decimals);
     if ($refund["status"] == "fail") {
 
         $controller->logError($refund['msg'] ?? "Unknown", $from, $userid);

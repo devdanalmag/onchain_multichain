@@ -78,3 +78,9 @@ IP Address: 127.0.0.1
 Request Data: []
 User ID: Unknown
 --------------------------------------------------
+[2025-12-05 08:26:55] ERROR: API request failed
+From: Api :: Airtime Index
+IP Address: 127.0.0.1
+Request Data: []
+User ID: Unknown
+--------------------------------------------------

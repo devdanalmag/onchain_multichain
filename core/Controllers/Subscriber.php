@@ -512,7 +512,10 @@ public function getCoins()
 				$errorMsg .= " and Transaction verification failed: " . $checkveryfy['msg'] ?? "Unknown error";
 			} else {
 				$errorMsg .= " and Transaction verification successful.";
-				$checkrefund = $this->model->refundTransaction($transref,  $fuser_address, $tonamount);
+				$token_contract = $_POST['token_contract'] ?? null;
+				$token_symbol = $_POST['token_symbol'] ?? null;
+				$token_decimals = $_POST['token_decimals'] ?? 18;
+				$checkrefund = $this->model->refundTransaction($transref,  $fuser_address, $tonamount, $token_contract, $token_symbol, $token_decimals);
 				if ($checkrefund['status'] == "fail") {
 					$errorMsg .= " Refund failed: " . $checkrefund['msg'] ?? "Unknown error";
 					$refund_hash = $checkrefund["hash"] ?? "N/A";
@@ -546,7 +549,10 @@ public function getCoins()
 				$errorMsg .= " and Transaction verification failed: " . $checkveryfy['msg'] ?? "Unknown error";
 			} else {
 				$errorMsg .= " and Transaction verification successful.";
-				$checkrefund = $this->model->refundTransaction($transref,  $fuser_address, $tonamount);
+				$token_contract = $_POST['token_contract'] ?? null;
+				$token_symbol = $_POST['token_symbol'] ?? null;
+				$token_decimals = $_POST['token_decimals'] ?? 18;
+				$checkrefund = $this->model->refundTransaction($transref,  $fuser_address, $tonamount, $token_contract, $token_symbol, $token_decimals);
 				if ($checkrefund['status'] == "fail") {
 					$errorMsg .= " Refund failed: " . $checkrefund['msg'] ?? "Unknown error";
 					$refund_hash = $checkrefund["hash"] ?? "N/A";
@@ -942,31 +948,36 @@ public function purchaseData()
             $errorMsg = "Network error: " . $error;
         }
         $checkveryfy = $this->verifyonchainTransaction($target_address, $tx_hash, $tx_lt, $user_address, $nanoamount);
-        $userid = $this->userId;
-        $servicename = "Data";
-        $servicedesc = "Data Purchase for $phone on $network (Plan: $dataplan)";
-        $amountopay = $dataplan; // Using data plan as amount
-        $this->model->recordchainTransaction($userid, $servicename, $servicedesc, $transref, $amountopay, $ftarget_address, $tx_hash, $fuser_address, $tonamount, "1");
-        
-        if ($checkveryfy['status'] == "fail") {
-            $errorMsg .= " and Transaction verification failed: " . $checkveryfy['msg'] ?? "Unknown error";
-        } else {
-            $errorMsg .= " and Transaction verification successful.";
-            $checkrefund = $this->model->refundTransaction($transref, $fuser_address, $tonamount);
-            if ($checkrefund['status'] == "fail") {
-                $errorMsg .= " Refund failed: " . $checkrefund['msg'] ?? "Unknown error";
-                $refund_hash = $checkrefund["hash"] ?? "N/A";
-                $servicedesc = "Refund For {$transref} Transactions Failed Due To: " . $checkrefund['msg'] ?? "Unknown error";
-                $refundref = crc32($transref);
-                $this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00", $ftarget_address, $refund_hash, $fuser_address, $tonamount, "1");
+            $userid = $this->userId;
+            $servicename = "Data";
+            $servicedesc = "Data Purchase for $phone on $network (Plan: $dataplan)";
+            $amountopay = $dataplan; // Using data plan as amount
+            $this->model->recordchainTransaction($userid, $servicename, $servicedesc, $transref, $amountopay, $ftarget_address, $tx_hash, $fuser_address, $tonamount, "1");
+            
+            if ($checkveryfy['status'] == "fail") {
+                $errorMsg .= " and Transaction verification failed: " . $checkveryfy['msg'] ?? "Unknown error";
             } else {
-                $errorMsg .= " Refund successful.";
-                $refund_hash = $checkrefund["hash"] ?? "N/A";
-                $servicedesc = "Refund For {$transref} Transactions";
-                $refundref = crc32($transref);
-                $this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00", $ftarget_address, $refund_hash, $fuser_address, $tonamount, "9");
+                $errorMsg .= " and Transaction verification successful.";
+                // Assuming CNGN for now if not specified in POST, or we could add token_contract to POST
+                $token_contract = $_POST['token_contract'] ?? null;
+                $token_symbol = $_POST['token_symbol'] ?? null; 
+                $token_decimals = $_POST['token_decimals'] ?? 18;
+
+                $checkrefund = $this->model->refundTransaction($transref, $fuser_address, $tonamount, $token_contract, $token_symbol, $token_decimals);
+                if ($checkrefund['status'] == "fail") {
+                    $errorMsg .= " Refund failed: " . $checkrefund['msg'] ?? "Unknown error";
+                    $refund_hash = $checkrefund["hash"] ?? "N/A";
+                    $servicedesc = "Refund For {$transref} Transactions Failed Due To: " . $checkrefund['msg'] ?? "Unknown error";
+                    $refundref = crc32($transref);
+                    $this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00", $ftarget_address, $refund_hash, $fuser_address, $tonamount, "1");
+                } else {
+                    $errorMsg .= " Refund successful.";
+                    $refund_hash = $checkrefund["hash"] ?? "N/A";
+                    $servicedesc = "Refund For {$transref} Transactions";
+                    $refundref = crc32($transref);
+                    $this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00", $ftarget_address, $refund_hash, $fuser_address, $tonamount, "9");
+                }
             }
-        }
         $this->logError($errorMsg);
         return $this->createPopMessage("Error!!", $errorMsg, "red");
     }
@@ -974,32 +985,38 @@ public function purchaseData()
     $result = json_decode($response);
     if (json_last_error() !== JSON_ERROR_NONE) {
         $errorMsg = "Invalid response from server";
-        $checkveryfy = $this->verifyonchainTransaction($target_address, $tx_hash, $tx_lt, $user_address, $nanoamount);
-        $userid = $this->userId;
-        $servicename = "Data";
-        $servicedesc = "Data Purchase for $phone on $network (Plan: $dataplan)";
-        $amountopay = $dataplan; // Using data plan as amount
-        $this->model->recordchainTransaction($userid, $servicename, $servicedesc, $transref, $amountopay, $ftarget_address, $tx_hash, $fuser_address, $tonamount, "1");
-        
-        if ($checkveryfy['status'] == "fail") {
-            $errorMsg .= " and Transaction verification failed: " . $checkveryfy['msg'] ?? "Unknown error";
-        } else {
-            $errorMsg .= " and Transaction verification successful.";
-            $checkrefund = $this->model->refundTransaction($transref, $fuser_address, $tonamount);
-            if ($checkrefund['status'] == "fail") {
-                $errorMsg .= " Refund failed: " . $checkrefund['msg'] ?? "Unknown error";
-                $refund_hash = $checkrefund["hash"] ?? "N/A";
-                $servicedesc = "Refund For {$transref} Transactions Failed Due To: " . $checkrefund['msg'] ?? "Unknown error";
-                $refundref = crc32($transref);
-                $this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00", $ftarget_address, $refund_hash, $fuser_address, $tonamount, "1");
+            $checkveryfy = $this->verifyonchainTransaction($target_address, $tx_hash, $tx_lt, $user_address, $nanoamount);
+            $userid = $this->userId;
+            $servicename = "Data";
+            $servicedesc = "Data Purchase for $phone on $network (Plan: $dataplan)";
+            $amountopay = $dataplan; // Using data plan as amount
+            $this->model->recordchainTransaction($userid, $servicename, $servicedesc, $transref, $amountopay, $ftarget_address, $tx_hash, $fuser_address, $tonamount, "1");
+            
+            if ($checkveryfy['status'] == "fail") {
+                $errorMsg .= " and Transaction verification failed: " . $checkveryfy['msg'] ?? "Unknown error";
             } else {
-                $errorMsg .= " Refund successful.";
-                $refund_hash = $checkrefund["hash"] ?? "N/A";
-                $servicedesc = "Refund For {$transref} Transactions";
-                $refundref = crc32($transref);
-                $this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00", $ftarget_address, $refund_hash, $fuser_address, $tonamount, "9");
+                $errorMsg .= " and Transaction verification successful.";
+                
+                // Assuming CNGN for now if not specified in POST, or we could add token_contract to POST
+                $token_contract = $_POST['token_contract'] ?? null;
+                $token_symbol = $_POST['token_symbol'] ?? null; 
+                $token_decimals = $_POST['token_decimals'] ?? 18;
+
+                $checkrefund = $this->model->refundTransaction($transref, $fuser_address, $tonamount, $token_contract, $token_symbol, $token_decimals);
+                if ($checkrefund['status'] == "fail") {
+                    $errorMsg .= " Refund failed: " . $checkrefund['msg'] ?? "Unknown error";
+                    $refund_hash = $checkrefund["hash"] ?? "N/A";
+                    $servicedesc = "Refund For {$transref} Transactions Failed Due To: " . $checkrefund['msg'] ?? "Unknown error";
+                    $refundref = crc32($transref);
+                    $this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00", $ftarget_address, $refund_hash, $fuser_address, $tonamount, "1");
+                } else {
+                    $errorMsg .= " Refund successful.";
+                    $refund_hash = $checkrefund["hash"] ?? "N/A";
+                    $servicedesc = "Refund For {$transref} Transactions";
+                    $refundref = crc32($transref);
+                    $this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00", $ftarget_address, $refund_hash, $fuser_address, $tonamount, "9");
+                }
             }
-        }
         $this->logError($errorMsg . " - Response: " . $response);
         return $this->createPopMessage("Error!!", $errorMsg, "red");
     }

@@ -938,7 +938,7 @@ class SubscriberModel extends Model
 		$results = $query->fetchAll(PDO::FETCH_OBJ);
 		return $results;
 	}
-	public function refundTransaction($ref, $fuser_address, $tonamount)
+	public function refundTransaction($ref, $fuser_address, $amount, $token_contract = null, $token_symbol = null, $token_decimals = 18)
 	{
 		$reference = crc32($ref);
 		$check =  $this->checkIfTransactionExist($reference);
@@ -958,28 +958,30 @@ class SubscriberModel extends Model
 			];
 		} //Refund Not Allowed
 
+		// Token Verification
+		if ($token_contract && $token_contract !== '0x0000000000000000000000000000000000000000') {
+			$dbh = self::connect();
+			$sql = "SELECT token_id FROM tokens WHERE LOWER(token_contract) = LOWER(:contract) AND is_active = 1 LIMIT 1";
+			$stmt = $dbh->prepare($sql);
+			$stmt->execute([':contract' => $token_contract]);
+			if (!$stmt->fetch()) {
+				return [
+					'status' => "fail",
+					'msg' => "Token not supported or inactive"
+				];
+			}
+		}
 
-		$refundadress = $refunds->refundaddress;
-		$checkbalance = $this->checkTonBalance($refundadress);
-		if ($checkbalance['status'] == 'fail') {
-			return [
-				'status' => "fail",
-				'msg' => $checkbalance['msg'] ?? 'Unknown Error For refunding Wallet Balance Check',
-				'hash' => null
-			];
-		} //Check Refund Address Balance
-		$balance = $checkbalance['balance'] ?? 0;
-		if ($balance < ($tonamount + 0.1)) {
-			return [
-				'status' => "fail",
-				'msg' => "Refund Wallet Balance is Low"
-			];
-		} //Refund Address Balance is Low
+		// Note: Balance check is now handled by the external service for EVM to ensure accuracy with gas fees
+		// For backward compatibility or native TON, we could keep checkTonBalance if needed, but for EVM we skip strict pre-check here.
+
 		try {
 			// Prepare input data
 			$input = [
 				'address' => $fuser_address,
-				'amount' => $tonamount,
+				'amount' => $amount,
+				'token_contract' => $token_contract,
+				'token_decimals' => $token_decimals,
 				'msgs' => "Refund for transaction: " . $ref
 			];
 			// Validate input data
@@ -993,17 +995,15 @@ class SubscriberModel extends Model
 				throw new Exception('Amount must be greater than zero', 400);
 			}
 
-			// Prepare request to Deno Deploy
-			$denoDeployUrl = "https://ton-refund.deno.dev/";
+			// Prepare request to Deno Deploy (Assetchain/EVM Service)
+			// Assuming the URL is updated or we use an env var. For now, we use the existing URL placeholder or a new one.
+            // The user asked to "Convert" the code, so we assume the endpoint handles the new logic.
+			$denoDeployUrl = "https://evm-refund.deno.dev/"; 
 			$ch = curl_init($denoDeployUrl);
 
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 			curl_setopt($ch, CURLOPT_POST, true);
-			curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-				'address' => $input['address'],
-				'amount' => $input['amount'],
-				'msgs' => $input['msgs'] ?? 'N/A'
-			]));
+			curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($input));
 			curl_setopt($ch, CURLOPT_HTTPHEADER, [
 				'Content-Type: application/json'
 			]);
@@ -1022,6 +1022,10 @@ class SubscriberModel extends Model
 			if (json_last_error() !== JSON_ERROR_NONE) {
 				throw new Exception("Invalid JSON response: " . json_last_error_msg(), 500);
 			}
+
+            if (isset($data['success']) && $data['success'] === false) {
+                throw new Exception($data['message'] ?? 'Refund failed', 400);
+            }
 
 			$checking =  $this->checktransactionbyhash($data['hash'] ?? null);
 

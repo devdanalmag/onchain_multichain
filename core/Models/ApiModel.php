@@ -361,7 +361,7 @@ class ApiModel extends Model
             return 1;
         }
     }
-    public function refundTransaction($ref, $fuser_address, $tonamount)
+    public function refundTransaction($ref, $fuser_address, $amount, $token_contract = null, $token_symbol = null, $token_decimals = 18)
     {
 
 
@@ -383,28 +383,27 @@ class ApiModel extends Model
             ];
         } //Refund Not Allowed
 
+        // Token Verification
+        if ($token_contract && $token_contract !== '0x0000000000000000000000000000000000000000') {
+            $dbh = self::connect();
+            $sql = "SELECT token_id FROM tokens WHERE LOWER(token_contract) = LOWER(:contract) AND is_active = 1 LIMIT 1";
+            $stmt = $dbh->prepare($sql);
+            $stmt->execute([':contract' => $token_contract]);
+            if (!$stmt->fetch()) {
+                return [
+                    'status' => "fail",
+                    'msg' => "Token not supported or inactive"
+                ];
+            }
+        }
 
-        $refundadress = $refunds->refundaddress;
-        $checkbalance = $this->checkTonBalance($refundadress);
-        if ($checkbalance['status'] == 'fail') {
-            return [
-                'status' => "fail",
-                'msg' => $checkbalance['msg'] ?? 'Unknown Error For refunding Wallet Balance Check',
-                'hash' => null
-            ];
-        } //Check Refund Address Balance
-        $balance = $checkbalance['balance'] ?? 0;
-        if ($balance < ($tonamount + 0.1)) {
-            return [
-                'status' => "fail",
-                'msg' => "Refund Wallet Balance is Low"
-            ];
-        } //Refund Address Balance is Low
         try {
             // Prepare input data
             $input = [
                 'address' => $fuser_address,
-                'amount' => $tonamount,
+                'amount' => $amount,
+                'token_contract' => $token_contract,
+                'token_decimals' => $token_decimals,
                 'msgs' => "Refund for transaction: " . $ref
             ];
             // Validate input data
@@ -419,16 +418,12 @@ class ApiModel extends Model
             }
 
             // Prepare request to Deno Deploy
-            $denoDeployUrl = "https://ton-refund.deno.dev/";
+            $denoDeployUrl = "https://evm-refund.deno.dev/";
             $ch = curl_init($denoDeployUrl);
 
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-                'address' => $input['address'],
-                'amount' => $input['amount'],
-                'msgs' => $input['msgs'] ?? 'N/A'
-            ]));
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($input));
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Content-Type: application/json'
             ]);
@@ -446,6 +441,10 @@ class ApiModel extends Model
             $data = json_decode($response, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 throw new Exception("Invalid JSON response: " . json_last_error_msg(), 500);
+            }
+
+            if (isset($data['success']) && $data['success'] === false) {
+                throw new Exception($data['message'] ?? 'Refund failed', 400);
             }
 
             $checking =  $this->checktransactionbyhash($data['hash'] ?? null);
