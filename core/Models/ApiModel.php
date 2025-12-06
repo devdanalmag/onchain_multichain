@@ -605,6 +605,19 @@ class ApiModel extends Model
     public function recordrefundchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status, $transaction_type = 'app', $token_name = null, $token_contract = null)
     {
         $dbh = self::connect();
+        
+        // Check for duplicate transaction by tx_hash
+        if (!empty($tx_hash)) {
+            $sqlCheck = "SELECT sId FROM transactions WHERE txhash = :txh LIMIT 1";
+            $qCheck = $dbh->prepare($sqlCheck);
+            $qCheck->bindParam(':txh', $tx_hash, PDO::PARAM_STR);
+            $qCheck->execute();
+            if ($qCheck->rowCount() > 0) {
+                // Transaction already exists
+                return 1; 
+            }
+        }
+
         $userid = (float) $userid;
         $status = (float) $status;
         $date = date("Y-m-d H:i:s");

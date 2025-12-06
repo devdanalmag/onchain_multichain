@@ -1280,8 +1280,9 @@
                 <select id="history-filter" aria-label="Filter transactions">
                   <option value="all">All</option>
                   <option value="confirmed">Confirmed</option>
-                  <option value="failed">Failed</option>
                   <option value="pending">Pending</option>
+                  <option value="failed">Failed</option>
+                  <option value="refunded">Refunded</option>
                 </select>
               </div>
             </div>
@@ -1414,6 +1415,10 @@
           // Add active class to clicked tab and corresponding content
           tab.classList.add('active');
           $(`#${tabId}-tab`).classList.add('active');
+          
+          if (tabId === 'history' && typeof loadHistoryIfEligible === 'function') {
+            loadHistoryIfEligible();
+          }
         });
       });
     }
@@ -2240,6 +2245,7 @@
       return { text: 'pending', cls: 'pending' };
     }
     function inferTxType(item, userAddr) {
+      if (item.servicename === 'Refund') return 'Refund';
       const from = (item.senderaddress || '').toLowerCase();
       const to = (item.targetaddress || '').toLowerCase();
       const u = (userAddr || '').toLowerCase();
@@ -2286,7 +2292,13 @@
         const bot = document.createElement('div'); bot.className = 'history-row';
         const amount = document.createElement('div'); amount.className = 'history-amount'; amount.textContent = `N${item.amount || '0.00'}`;
         const st = statusLabel(item.status);
-        const statusEl = document.createElement('div'); statusEl.className = 'history-status ' + st.cls; statusEl.textContent = st.text;
+        let statusText = st.text;
+        let statusClass = st.cls;
+        if (item.servicename === 'Refund' && (Number(item.status) === 0 || Number(item.status) === 9)) {
+            statusText = 'refunded';
+            statusClass = 'success';
+        }
+        const statusEl = document.createElement('div'); statusEl.className = 'history-status ' + statusClass; statusEl.textContent = statusText;
         bot.appendChild(amount); bot.appendChild(statusEl);
 
         row.appendChild(top); row.appendChild(mid); row.appendChild(bot);
@@ -2385,6 +2397,7 @@
         const filterItems = (items) => {
           const v = filterSel?.value || 'all';
           if (v === 'all') return items;
+          if (v === 'refunded') return items.filter(i => i.servicename === 'Refund');
           return items.filter(i => {
             const s = statusLabel(i.status).text;
             return s === v;
@@ -2392,16 +2405,21 @@
         };
         const update = async () => {
           status.textContent = 'Loading history...';
-          const data = await fetchWalletHistory(address, page, perPage);
-          if (data.status !== 'success') { status.textContent = data.msg || 'Failed to load history'; return; }
-          status.textContent = '';
-          lastData = data.items || [];
-          const filtered = filterItems(lastData);
-          const sorted = sortItems(filtered);
-          renderHistoryItems(sorted, address, network);
-          const pages = Number(data.pages || 0);
-          pageEl.textContent = pages ? `Page ${Number(data.page || 0) + 1} of ${pages}` : '';
-          prev.disabled = page <= 0; next.disabled = !pages || (page + 1) >= pages;
+          try {
+              const data = await fetchWalletHistory(address, page, perPage);
+              if (data.status !== 'success') { status.textContent = data.msg || 'Failed to load history'; return; }
+              status.textContent = '';
+              lastData = data.items || [];
+              const filtered = filterItems(lastData);
+              const sorted = sortItems(filtered);
+              renderHistoryItems(sorted, address, network);
+              const pages = Number(data.pages || 0);
+              pageEl.textContent = pages ? `Page ${Number(data.page || 0) + 1} of ${pages}` : '';
+              prev.disabled = page <= 0; next.disabled = !pages || (page + 1) >= pages;
+          } catch (err) {
+              status.textContent = 'Error fetching history';
+              console.error(err);
+          }
         };
         prev.onclick = async () => { if (page > 0) { page--; await update(); } };
         next.onclick = async () => { page++; await update(); };

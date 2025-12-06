@@ -892,6 +892,9 @@ class SubscriberModel extends Model
 				if ($searchfor == "reference") {
 					$addon = " AND b.transref LIKE :search ";
 				}
+				if ($searchfor == "refund") {
+					$addon = " AND b.servicename = 'Refund' ";
+				}
 			} else {
 
 				if ($searchfor == "all") {
@@ -923,6 +926,9 @@ class SubscriberModel extends Model
 				}
 				if ($searchfor == "reference") {
 					$addon = " AND b.transref LIKE :search ";
+				}
+				if ($searchfor == "refund") {
+					$addon = " AND (b.servicedesc LIKE :search AND b.servicename = 'Refund') ";
 				}
 			}
 		}

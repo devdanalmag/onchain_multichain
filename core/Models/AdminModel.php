@@ -1440,6 +1440,9 @@ class AdminModel extends Model
 				if ($searchfor == "reference") {
 					$addon = " AND b.transref LIKE :search ";
 				}
+				if ($searchfor == "refund") {
+					$addon = " AND b.servicename = 'Refund' ";
+				}
 			} else {
 
 				if ($searchfor == "all") {
@@ -1458,22 +1461,25 @@ class AdminModel extends Model
 					$addon = " AND ((a.sPhone LIKE :search OR a.sEmail LIKE :search) AND b.servicedesc LIKE '%Paystack%') ";
 				}
 				if ($searchfor == "airtime") {
-					$addon = " AND (a.sPhone LIKE :search OR b.servicdesc LIKE :search) AND b.servicename LIKE '%Airtime%') ";
+					$addon = " AND ((a.sPhone LIKE :search OR b.servicedesc LIKE :search) AND b.servicename LIKE '%Airtime%') ";
 				}
 				if ($searchfor == "data") {
-					$addon = " AND ((a.sPhone LIKE :search OR b.servicdesc LIKE :search) AND b.servicename LIKE '%Data%') ";
+					$addon = " AND ((a.sPhone LIKE :search OR b.servicedesc LIKE :search) AND b.servicename LIKE '%Data%') ";
 				}
 				if ($searchfor == "cable") {
-					$addon = " AND ((a.sPhone LIKE :search OR b.servicdesc LIKE :search) AND b.servicename LIKE '%Cable%') ";
+					$addon = " AND ((a.sPhone LIKE :search OR b.servicedesc LIKE :search) AND b.servicename LIKE '%Cable%') ";
 				}
 				if ($searchfor == "electricity") {
-					$addon = " AND ((a.sPhone LIKE :search OR b.servicdesc LIKE :search) AND b.servicename LIKE '%Electricity%') ";
+					$addon = " AND ((a.sPhone LIKE :search OR b.servicedesc LIKE :search) AND b.servicename LIKE '%Electricity%') ";
 				}
 				if ($searchfor == "exam") {
-					$addon = " AND ((a.sPhone LIKE :search OR b.servicdesc LIKE :search) AND b.servicename LIKE '%Exam%') ";
+					$addon = " AND ((a.sPhone LIKE :search OR b.servicedesc LIKE :search) AND b.servicename LIKE '%Exam%') ";
 				}
 				if ($searchfor == "reference") {
 					$addon = " AND b.transref LIKE :search ";
+				}
+				if ($searchfor == "refund") {
+					$addon = " AND ((a.sPhone LIKE :search OR b.servicedesc LIKE :search) AND b.servicename = 'Refund') ";
 				}
 			}
 		}
