@@ -2835,7 +2835,13 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculating...';
         $('#airtime-status').innerHTML = '';
 
+        // Validation
+        const network = $('#airtime-network').value;
+        const phone = $('#airtime-phone').value;
         const ngn = parseFloat($('#airtime-amount').value || '0');
+
+        if (!network) throw new Error('Please select a network provider');
+        if (!phone) throw new Error('Please enter a phone number');
         if (!ngn) throw new Error('Please enter a valid amount');
 
         const wei = await calcWeiFromNaira(ngn);
@@ -2887,7 +2893,11 @@
 
         const network = $('#data-network').value;
         const plan = $('#data-plan').value;
-        if (!network || !plan) throw new Error('Please select network and plan');
+        const phone = $('#data-phone').value;
+
+        if (!network) throw new Error('Please select a network provider');
+        if (!plan) throw new Error('Please select a data plan');
+        if (!phone) throw new Error('Please enter a phone number');
 
         const res = await fetch(`${apiBase}/access.php?action=checkDataPlanPrice&network=${encodeURIComponent(network)}&plan=${encodeURIComponent(plan)}`);
         const data = await res.json();
@@ -3083,6 +3093,17 @@
       const btnId = service === 'airtime' ? 'airtime-send' : 'data-send';
       const statusEl = service === 'airtime' ? $('#airtime-status') : $('#data-status');
       
+      // Validation Check
+      if (service === 'airtime') {
+          if (!$('#airtime-network').value) { showStatus(statusEl, 'Please select a network provider', false); return; }
+          if (!$('#airtime-phone').value) { showStatus(statusEl, 'Please enter a phone number', false); return; }
+          if (!parseFloat($('#airtime-amount').value)) { showStatus(statusEl, 'Please enter a valid amount', false); return; }
+      } else {
+          if (!$('#data-network').value) { showStatus(statusEl, 'Please select a network provider', false); return; }
+          if (!$('#data-plan').value) { showStatus(statusEl, 'Please select a data plan', false); return; }
+          if (!$('#data-phone').value) { showStatus(statusEl, 'Please enter a phone number', false); return; }
+      }
+
       // 1. Immediate disable and visual state
       setButtonState(btnId, 'loading', 'Preparing...');
       showGlobalLoader();
