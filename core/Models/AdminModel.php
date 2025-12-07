@@ -1504,22 +1504,38 @@ class AdminModel extends Model
 	public function getTransactionsByAddress($address, $page = 0, $perPage = 10)
 	{
 		$dbh = self::connect();
-		$addr = strtolower(trim((string)$address));
+		$address = trim((string)$address);
+        // Detect if EVM (starts with 0x) or other (e.g. TON)
+        $isEvm = (stripos($address, '0x') === 0);
+        
+        // For EVM, we normalize to lowercase for case-insensitive matching.
+        // For TON (Base64), case matters, so we use exact match.
+		$addrParam = $isEvm ? strtolower($address) : $address;
+
 		$page = max(0, (int)$page);
 		$perPage = max(1, (int)$perPage);
 		$offset = $page * $perPage;
 
 		// Count total
-		$sqlC = "SELECT COUNT(*) AS cnt FROM transactions b WHERE (LOWER(b.senderaddress)=LOWER(:addr) OR LOWER(b.targetaddress)=LOWER(:addr))";
+        if ($isEvm) {
+		    $sqlC = "SELECT COUNT(*) AS cnt FROM transactions b WHERE (LOWER(b.senderaddress)=LOWER(:addr) OR LOWER(b.targetaddress)=LOWER(:addr))";
+        } else {
+            // Case-sensitive match for non-EVM
+            $sqlC = "SELECT COUNT(*) AS cnt FROM transactions b WHERE (b.senderaddress=:addr OR b.targetaddress=:addr)";
+        }
 		$qC = $dbh->prepare($sqlC);
-		$qC->bindParam(':addr', $addr, PDO::PARAM_STR);
+		$qC->bindParam(':addr', $addrParam, PDO::PARAM_STR);
 		$qC->execute();
 		$total = (int)($qC->fetch(PDO::FETCH_ASSOC)['cnt'] ?? 0);
 
-		// Fetch items (use LEFT JOIN to expose optional subscriber info if needed)
-		$sql = "SELECT a.sEmail,a.sPhone,a.sType,b.* FROM transactions b LEFT JOIN subscribers a ON a.sId=b.sId WHERE (LOWER(b.senderaddress)=LOWER(:addr) OR LOWER(b.targetaddress)=LOWER(:addr)) ORDER BY b.date DESC LIMIT $offset, $perPage";
+		// Fetch items
+        if ($isEvm) {
+		    $sql = "SELECT a.sEmail,a.sPhone,a.sType,b.* FROM transactions b LEFT JOIN subscribers a ON a.sId=b.sId WHERE (LOWER(b.senderaddress)=LOWER(:addr) OR LOWER(b.targetaddress)=LOWER(:addr)) ORDER BY b.date DESC LIMIT $offset, $perPage";
+        } else {
+            $sql = "SELECT a.sEmail,a.sPhone,a.sType,b.* FROM transactions b LEFT JOIN subscribers a ON a.sId=b.sId WHERE (b.senderaddress=:addr OR b.targetaddress=:addr) ORDER BY b.date DESC LIMIT $offset, $perPage";
+        }
 		$q = $dbh->prepare($sql);
-		$q->bindParam(':addr', $addr, PDO::PARAM_STR);
+		$q->bindParam(':addr', $addrParam, PDO::PARAM_STR);
 		$q->execute();
 		$items = $q->fetchAll(PDO::FETCH_OBJ);
 

@@ -159,9 +159,10 @@ try {
             $address = isset($_GET['address']) ? trim($_GET['address']) : '';
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
-            // Basic EVM address validation
-            $isHex = preg_match('/^0x[a-fA-F0-9]{40}$/', $address) === 1;
-            if (!$isHex) {
+            // Basic address validation (EVM or TON/Base64)
+            // Allow 0x hex (42 chars) or longer strings (TON addresses ~48 chars)
+            $isValid = (strlen($address) >= 40 && strlen($address) <= 100);
+            if (!$isValid) {
                 http_response_code(400);
                 $out = [ 'status' => 'fail', 'msg' => 'Invalid address' ];
                 break;
