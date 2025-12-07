@@ -43,6 +43,93 @@
       --transition: all 0.3s ease;
     }
 
+    /* Light Theme Overrides */
+    [data-theme="light"] {
+      --dark: #FFFFFF;
+      --darker: #F0F2F5;
+      --light: #1A1E2E;
+      --gray: #5E6C84;
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --border-color: rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="light"] body {
+      background: linear-gradient(135deg, #F0F2F5 0%, #FFFFFF 100%);
+      color: var(--light);
+    }
+
+    [data-theme="light"] .card,
+    [data-theme="light"] .tips-section,
+    [data-theme="light"] .receipt-card,
+    [data-theme="light"] .wallet-dropdown {
+      background: var(--card-bg);
+      border-color: rgba(0, 0, 0, 0.08);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    [data-theme="light"] input,
+    [data-theme="light"] select {
+      background: rgba(0, 0, 0, 0.03);
+      border-color: rgba(0, 0, 0, 0.1);
+      color: var(--light);
+    }
+
+    [data-theme="light"] input:focus,
+    [data-theme="light"] select:focus {
+      background: #FFFFFF;
+      border-color: var(--primary);
+    }
+
+    [data-theme="light"] .btn-secondary {
+      background: rgba(0, 0, 0, 0.05);
+      color: var(--light);
+    }
+
+    [data-theme="light"] .btn-secondary:hover {
+      background: rgba(0, 0, 0, 0.08);
+    }
+
+    [data-theme="light"] header {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    [data-theme="light"] .nav-links a:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    [data-theme="light"] .wallet-info {
+      background: rgba(0, 0, 0, 0.03);
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+
+    #theme-toggle {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--light);
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-left: 10px;
+    }
+
+    #theme-toggle:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    [data-theme="light"] #theme-toggle {
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="light"] #theme-toggle:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -62,12 +149,15 @@
       margin: 0 auto;
       padding: 0 20px;
     }
-    .kv a{
+
+    .kv a {
       color: #7B7B7B;
     }
-    .history-hash a{
+
+    .history-hash a {
       color: #7B7B7B;
     }
+
     /* Header Styles */
     header {
       padding: 20px 0;
@@ -706,7 +796,7 @@
 
     /* Alert modal */
     .alert-modal {
-      top:280%;
+      top: 280%;
       position: fixed;
       inset: 0;
       z-index: 2000;
@@ -736,8 +826,15 @@
     }
 
     @keyframes alertPop {
-      from { transform: scale(0.95); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
+      from {
+        transform: scale(0.95);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
     }
 
     .alert-header {
@@ -889,6 +986,7 @@
       opacity: 0.8;
       cursor: not-allowed;
     }
+
     .btn.loading .spinner {
       display: inline-block;
       width: 1em;
@@ -900,7 +998,12 @@
       margin-right: 0.5em;
       vertical-align: middle;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
 
     /* Custom wallet dropdown and connect UI */
     /* Transaction Receipts */
@@ -1073,8 +1176,13 @@
     }
 
     @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
     }
   </style>
 </head>
@@ -1111,10 +1219,14 @@
             <span class="step step-connect" data-step="connect" title="Wallet connection step">Connect</span>
             <span class="step step-network" data-step="network" title="Assetchain network step">Network</span>
             <span class="step step-signin" data-step="signin" title="Sign-in step">Sign-in</span>
+                    <button id="theme-toggle"  class="btn btn-primary" aria-label="Toggle theme">
+            <i class="fas fa-sun"></i>
+          </button>
           </div>
           <button id="sign-in-btn" class="btn btn-primary" style="display:none;margin-left:8px;">
             <i class="fas fa-user-check"></i> Sign In
           </button>
+
           <div id="alert-modal" class="alert-modal" aria-hidden="true" role="dialog" aria-modal="true"
             style="display:none; top:280%;">
             <div class="alert-backdrop"></div>
@@ -1206,10 +1318,12 @@
 
             <div class="form-group">
               <label for="airtime-phone">Phone Number</label>
-              <input id="airtime-phone" type="tel" placeholder="e.g. 08012345678" required  />
+              <input id="airtime-phone" type="tel" placeholder="e.g. 08012345678" required />
             </div>
-            <div class="form-group checkbox-group" style="flex-direction: row; align-items: center; gap: 10px; margin-top: -10px; margin-bottom: 10px;">
-              <input id="airtime-ported" type="checkbox" aria-label="Is this a ported number?" style="width: auto; margin: 0;" />
+            <div class="form-group checkbox-group"
+              style="flex-direction: row; align-items: center; gap: 10px; margin-top: -10px; margin-bottom: 10px;">
+              <input id="airtime-ported" type="checkbox" aria-label="Is this a ported number?"
+                style="width: auto; margin: 0;" />
               <label for="airtime-ported" style="margin-bottom: 0; cursor: pointer;">Is Ported Number</label>
             </div>
 
@@ -1219,8 +1333,8 @@
             </div>
 
             <!-- <div class="form-group"> -->
-              <!-- <label for="airtime-ref">Reference ID</label> -->
-              <input id="airtime-ref" class="mono" required readonly hidden />
+            <!-- <label for="airtime-ref">Reference ID</label> -->
+            <input id="airtime-ref" class="mono" required readonly hidden />
             <!-- </div> -->
             <div class="form-group">
               <label for="airtime-token">Token</label>
@@ -1231,8 +1345,8 @@
           <div class="divider"></div>
 
           <div class="form-grid">
-              <input id="airtime-target" class="mono" placeholder="Site EVM receiving address" readonly hidden required />
-              <input id="airtime-nano" class="mono" placeholder="Auto-calculated" required readonly hidden/>
+            <input id="airtime-target" class="mono" placeholder="Site EVM receiving address" readonly hidden required />
+            <input id="airtime-nano" class="mono" placeholder="Auto-calculated" required readonly hidden />
 
             <div class="form-group">
               <label for="airtime-display">Amount (Selected Currency)</label>
@@ -1332,8 +1446,10 @@
               <label for="data-phone">Phone Number</label>
               <input id="data-phone" type="tel" placeholder="e.g. 08012345678" />
             </div>
-            <div class="form-group checkbox-group" style="flex-direction: row; align-items: center; gap: 10px; margin-top: -10px; margin-bottom: 10px;">
-              <input id="data-ported" type="checkbox" aria-label="Is this a ported number?" style="width: auto; margin: 0;" />
+            <div class="form-group checkbox-group"
+              style="flex-direction: row; align-items: center; gap: 10px; margin-top: -10px; margin-bottom: 10px;">
+              <input id="data-ported" type="checkbox" aria-label="Is this a ported number?"
+                style="width: auto; margin: 0;" />
               <label for="data-ported" style="margin-bottom: 0; cursor: pointer;">Is Ported Number</label>
             </div>
 
@@ -1356,35 +1472,35 @@
               <input id="data-display" class="mono" placeholder="Auto-calculated" readonly />
             </div>
 
-          <div class="button-group">
-            <button id="data-calc" class="btn btn-secondary">
-              <i class="fas fa-calculator"></i> Calculate Amount
-            </button>
-            <button id="data-send" class="btn btn-primary" style="display:none;" disabled>
-              <i class="fas fa-paper-plane"></i> Buy
-            </button>
-            <button id="data-reset" class="btn btn-secondary">
-              <i class="fas fa-redo"></i> Reset
-            </button>
+            <div class="button-group">
+              <button id="data-calc" class="btn btn-secondary">
+                <i class="fas fa-calculator"></i> Calculate Amount
+              </button>
+              <button id="data-send" class="btn btn-primary" style="display:none;" disabled>
+                <i class="fas fa-paper-plane"></i> Buy
+              </button>
+              <button id="data-reset" class="btn btn-secondary">
+                <i class="fas fa-redo"></i> Reset
+              </button>
+            </div>
+
+            <div id="data-status"></div>
           </div>
-
-          <div id="data-status"></div>
         </div>
-      </div>
 
-      <div class="tips-section">
-        <h3 class="tips-title"><i class="fas fa-lightbulb"></i> How It Works</h3>
-        <ul class="tips-list">
-          <li>Use the Account Center to connect and manage your wallet</li>
-          <li>Select your network provider and enter your phone number</li>
-          <li>Choose the amount (for airtime) or data plan you want to purchase</li>
-          <li>Calculate the CNGN amount (wei) and send the payment</li>
-          <li>Your transaction will be verified on-chain and your airtime/data will be delivered</li>
-          <li>All transactions are secure and processed on the Assetchain network</li>
-        </ul>
+        <div class="tips-section">
+          <h3 class="tips-title"><i class="fas fa-lightbulb"></i> How It Works</h3>
+          <ul class="tips-list">
+            <li>Use the Account Center to connect and manage your wallet</li>
+            <li>Select your network provider and enter your phone number</li>
+            <li>Choose the amount (for airtime) or data plan you want to purchase</li>
+            <li>Calculate the CNGN amount (wei) and send the payment</li>
+            <li>Your transaction will be verified on-chain and your airtime/data will be delivered</li>
+            <li>All transactions are secure and processed on the Assetchain network</li>
+          </ul>
+        </div>
+        <div id="tx-receipts" class="receipts-container" aria-live="polite" aria-label="Transaction receipts"></div>
       </div>
-      <div id="tx-receipts" class="receipts-container" aria-live="polite" aria-label="Transaction receipts"></div>
-    </div>
   </main>
 
   <script>
@@ -1413,7 +1529,7 @@
           // Add active class to clicked tab and corresponding content
           tab.classList.add('active');
           $(`#${tabId}-tab`).classList.add('active');
-          
+
           if (tabId === 'history' && typeof loadHistoryIfEligible === 'function') {
             loadHistoryIfEligible();
           }
@@ -1427,29 +1543,29 @@
     function cleanErrorMessage(msg) {
       if (!msg) return '';
       const s = String(msg);
-      
+
       // Priority 1: Human readable common errors
       if (s.includes('user rejected transaction')) return 'User rejected transaction';
       if (s.includes('User denied transaction')) return 'User denied transaction';
       if (s.includes('insufficient funds')) return 'Insufficient funds';
       if (s.includes('scanner_unreachable')) return 'Scanner unreachable';
-      
+
       // Priority 2: EVM Reverts
-       if (s.includes('execution reverted')) {
-         const reason = s.match(/execution reverted:? (.*)/);
-         if (reason && reason[1]) {
-            let r = reason[1];
-            // Clean up if it looks like "reason", code=...
-            if (r.includes('",')) {
-                r = r.split('",')[0];
-                if (r.startsWith('"')) r = r.slice(1);
-            } else if (r.startsWith('"') && r.endsWith('"')) {
-                r = r.slice(1, -1);
-            }
-            return 'Execution reverted: ' + r;
-         }
-         return 'Execution reverted';
-       }
+      if (s.includes('execution reverted')) {
+        const reason = s.match(/execution reverted:? (.*)/);
+        if (reason && reason[1]) {
+          let r = reason[1];
+          // Clean up if it looks like "reason", code=...
+          if (r.includes('",')) {
+            r = r.split('",')[0];
+            if (r.startsWith('"')) r = r.slice(1);
+          } else if (r.startsWith('"') && r.endsWith('"')) {
+            r = r.slice(1, -1);
+          }
+          return 'Execution reverted: ' + r;
+        }
+        return 'Execution reverted';
+      }
 
       // Priority 3: Technical codes
       const codeMatch = s.match(/code=([A-Z_]+)/);
@@ -2296,12 +2412,12 @@
         let statusText = st.text;
         let statusClass = st.cls;
         if (item.servicename === 'Refund' && (Number(item.status) === 0 || Number(item.status) === 9)) {
-            statusText = 'refunded';
-            statusClass = 'success';
+          statusText = 'refunded';
+          statusClass = 'success';
         }
         if (item.servicename === 'Refund' && Number(item.status) === 1) {
-            statusText = 'refund failed';
-            statusClass = 'failed';
+          statusText = 'refund failed';
+          statusClass = 'failed';
         }
         const statusEl = document.createElement('div'); statusEl.className = 'history-status ' + statusClass; statusEl.textContent = statusText;
         bot.appendChild(amount); bot.appendChild(statusEl);
@@ -2380,11 +2496,11 @@
         status.textContent = 'Loading history...';
         let network = ASSETCHAIN_ID_HEX;
         try {
-            if (window.ethereum && window.ethereum.request) {
-                network = await window.ethereum.request({ method: 'eth_chainId' });
-            }
+          if (window.ethereum && window.ethereum.request) {
+            network = await window.ethereum.request({ method: 'eth_chainId' });
+          }
         } catch (e) {
-            console.warn('Failed to get chainId from provider, using default', e);
+          console.warn('Failed to get chainId from provider, using default', e);
         }
         let page = 0; const perPage = 10;
         let lastData = null;
@@ -2412,19 +2528,19 @@
         const update = async () => {
           status.textContent = 'Loading history...';
           try {
-              const data = await fetchWalletHistory(address, page, perPage);
-              if (data.status !== 'success') { status.textContent = data.msg || 'Failed to load history'; return; }
-              status.textContent = '';
-              lastData = data.items || [];
-              const filtered = filterItems(lastData);
-              const sorted = sortItems(filtered);
-              renderHistoryItems(sorted, address, network);
-              const pages = Number(data.pages || 0);
-              pageEl.textContent = pages ? `Page ${Number(data.page || 0) + 1} of ${pages}` : '';
-              prev.disabled = page <= 0; next.disabled = !pages || (page + 1) >= pages;
+            const data = await fetchWalletHistory(address, page, perPage);
+            if (data.status !== 'success') { status.textContent = data.msg || 'Failed to load history'; return; }
+            status.textContent = '';
+            lastData = data.items || [];
+            const filtered = filterItems(lastData);
+            const sorted = sortItems(filtered);
+            renderHistoryItems(sorted, address, network);
+            const pages = Number(data.pages || 0);
+            pageEl.textContent = pages ? `Page ${Number(data.page || 0) + 1} of ${pages}` : '';
+            prev.disabled = page <= 0; next.disabled = !pages || (page + 1) >= pages;
           } catch (err) {
-              status.textContent = 'Error fetching history';
-              console.error(err);
+            status.textContent = 'Error fetching history';
+            console.error(err);
           }
         };
         prev.onclick = async () => { if (page > 0) { page--; await update(); } };
@@ -2509,24 +2625,24 @@
           const parts = val.split('.');
           let whole = parts[0];
           let frac = parts[1] || '';
-          
+
           // Ensure we have enough digits to round
           while (frac.length < 4) frac += '0';
-          
+
           const first3 = frac.substring(0, 3);
           const fourth = frac[3];
-          
+
           let roundedFrac = parseInt(first3, 10);
           if (parseInt(fourth, 10) >= 5) {
             roundedFrac += 1;
           }
-          
+
           // Handle carry over (e.g. 0.999 -> 1.000)
           if (roundedFrac >= 1000) {
             whole = ethers.BigNumber.from(whole).add(1).toString();
             roundedFrac = 0;
           }
-          
+
           const roundedFracStr = String(roundedFrac).padStart(3, '0');
           return `${whole}.${roundedFracStr} ${symbol}`;
         }
@@ -2649,7 +2765,7 @@
       const btnExp = document.createElement('button'); btnExp.className = 'btn btn-secondary'; btnExp.textContent = 'Check Explorer'; btnExp.setAttribute('aria-label', 'Open transaction in explorer');
       btnView.onclick = () => {
         try {
-          const params = new URLSearchParams({ status: model.status || 'pending', amount: String(model.tokenAmount || '0'), symbol: model.symbol || '', sender: model.from || '', target: model.to || '', txHash: model.hash || '', timestamp: String(model.timestamp || Date.now()), service: model.service || '', provider: model.providerDisplay || 'N/A', recipient: model.recipientPhone || 'N/A', fiatValue: model.amountDisplay || '', reference: model.reference  || '', tokenAmount: model.tokenAmount || '', description: model.description || '' });
+          const params = new URLSearchParams({ status: model.status || 'pending', amount: String(model.tokenAmount || '0'), symbol: model.symbol || '', sender: model.from || '', target: model.to || '', txHash: model.hash || '', timestamp: String(model.timestamp || Date.now()), service: model.service || '', provider: model.providerDisplay || 'N/A', recipient: model.recipientPhone || 'N/A', fiatValue: model.amountDisplay || '', reference: model.reference || '', tokenAmount: model.tokenAmount || '', description: model.description || '' });
           const url = 'receipt.html?' + params.toString();
           window.open(url, '_blank', 'noopener');
         } catch (_) { }
@@ -2734,28 +2850,28 @@
       btnView.onclick = () => {
         try {
           // Ensure we have valid values for the receipt, falling back to calculated values if needed
-           const amtDisplay = model.amountDisplay || formatTokenAmount(model.amountWei || '0', model.decimals || 6, model.symbol || 'CNGN');
-           const tAmount = model.tokenAmount || amtDisplay;
-           
-           // Strip symbol from amount/tokenAmount for URL params as receipt.html adds it separately
-           const numericAmount = String(tAmount).split(' ')[0];
+          const amtDisplay = model.amountDisplay || formatTokenAmount(model.amountWei || '0', model.decimals || 6, model.symbol || 'CNGN');
+          const tAmount = model.tokenAmount || amtDisplay;
 
-           const params = new URLSearchParams({
-             status: model.status || 'pending',
-             amount: numericAmount,
-             symbol: model.symbol || 'CNGN',
-             sender: model.from || '',
-             target: model.to || '',
-             txHash: model.hash || '',
-             timestamp: String(model.timestamp || Date.now()),
-             service: model.service || '',
-             provider: model.providerDisplay || 'N/A',
-             recipient: model.recipientPhone || 'N/A',
-             fiatValue: amtDisplay,
-             reference: model.reference || model.ref || 'N/A',
-             tokenAmount: numericAmount,
-             description: model.description || ''
-           });
+          // Strip symbol from amount/tokenAmount for URL params as receipt.html adds it separately
+          const numericAmount = String(tAmount).split(' ')[0];
+
+          const params = new URLSearchParams({
+            status: model.status || 'pending',
+            amount: numericAmount,
+            symbol: model.symbol || 'CNGN',
+            sender: model.from || '',
+            target: model.to || '',
+            txHash: model.hash || '',
+            timestamp: String(model.timestamp || Date.now()),
+            service: model.service || '',
+            provider: model.providerDisplay || 'N/A',
+            recipient: model.recipientPhone || 'N/A',
+            fiatValue: amtDisplay,
+            reference: model.reference || model.ref || 'N/A',
+            tokenAmount: numericAmount,
+            description: model.description || ''
+          });
           const url = 'receipt.html?' + params.toString();
           window.open(url, '_blank', 'noopener');
         } catch (e) { console.error('Error opening receipt:', e); }
@@ -2903,7 +3019,7 @@
         const res = await fetch(`${apiBase}/access.php?action=checkDataPlanPrice&network=${encodeURIComponent(network)}&plan=${encodeURIComponent(plan)}`);
         const data = await res.json();
         const ngn = Number(data.amount || data.price || data.naira || 0);
-        
+
         if (!ngn) throw new Error('Failed to fetch plan price');
 
         const wei = ngn ? await calcWeiFromNairaBySelector('data-token', ngn) : '';
@@ -3033,11 +3149,11 @@
     function showGlobalLoader() {
       const loader = document.getElementById('global-loader');
       if (!loader) return;
-      
+
       loader.classList.add('visible');
       loader.setAttribute('aria-hidden', 'false');
       loader.setAttribute('aria-busy', 'true');
-      
+
       // Disable all interactive elements
       document.body.style.overflow = 'hidden';
     }
@@ -3045,11 +3161,11 @@
     function hideGlobalLoader() {
       const loader = document.getElementById('global-loader');
       if (!loader) return;
-      
+
       loader.classList.remove('visible');
       loader.setAttribute('aria-hidden', 'true');
       loader.setAttribute('aria-busy', 'false');
-      
+
       // Restore interactivity
       document.body.style.overflow = '';
     }
@@ -3058,7 +3174,7 @@
     function setButtonState(btnId, state, text) {
       const btn = document.getElementById(btnId);
       if (!btn) return;
-      
+
       if (state === 'loading') {
         btn.disabled = true;
         btn.classList.add('loading');
@@ -3080,29 +3196,29 @@
     // Persistent Transaction Storage
     const PENDING_TX_KEY = 'dex_pending_tx';
     function savePendingTx(data) {
-      try { localStorage.setItem(PENDING_TX_KEY, JSON.stringify(data)); } catch (_) {}
+      try { localStorage.setItem(PENDING_TX_KEY, JSON.stringify(data)); } catch (_) { }
     }
     function getPendingTx() {
       try { return JSON.parse(localStorage.getItem(PENDING_TX_KEY)); } catch (_) { return null; }
     }
     function clearPendingTx() {
-      try { localStorage.removeItem(PENDING_TX_KEY); } catch (_) {}
+      try { localStorage.removeItem(PENDING_TX_KEY); } catch (_) { }
     }
 
     // Handle sending CNGN via selected wallet provider on Assetchain
     async function handleSend(service) {
       const btnId = service === 'airtime' ? 'airtime-send' : 'data-send';
       const statusEl = service === 'airtime' ? $('#airtime-status') : $('#data-status');
-      
+
       // Validation Check
       if (service === 'airtime') {
-          if (!$('#airtime-network').value) { showStatus(statusEl, 'Please select a network provider', false); return; }
-          if (!$('#airtime-phone').value) { showStatus(statusEl, 'Please enter a phone number', false); return; }
-          if (!parseFloat($('#airtime-amount').value)) { showStatus(statusEl, 'Please enter a valid amount', false); return; }
+        if (!$('#airtime-network').value) { showStatus(statusEl, 'Please select a network provider', false); return; }
+        if (!$('#airtime-phone').value) { showStatus(statusEl, 'Please enter a phone number', false); return; }
+        if (!parseFloat($('#airtime-amount').value)) { showStatus(statusEl, 'Please enter a valid amount', false); return; }
       } else {
-          if (!$('#data-network').value) { showStatus(statusEl, 'Please select a network provider', false); return; }
-          if (!$('#data-plan').value) { showStatus(statusEl, 'Please select a data plan', false); return; }
-          if (!$('#data-phone').value) { showStatus(statusEl, 'Please enter a phone number', false); return; }
+        if (!$('#data-network').value) { showStatus(statusEl, 'Please select a network provider', false); return; }
+        if (!$('#data-plan').value) { showStatus(statusEl, 'Please select a data plan', false); return; }
+        if (!$('#data-phone').value) { showStatus(statusEl, 'Please enter a phone number', false); return; }
       }
 
       // 1. Immediate disable and visual state
@@ -3117,7 +3233,7 @@
           setButtonState(btnId, 'idle');
           return;
         }
-        
+
         const selected = document.getElementById('wallet-select')?.value || window.currentWalletName || 'MetaMask';
         const ethProvider = window.currentProvider || resolveProviderBySelection(selected);
         if (!ethProvider || typeof ethProvider.request !== 'function') {
@@ -3183,10 +3299,10 @@
         }
 
         const amountWeiBN = toWeiFromInput(nano);
-        if (!amountWeiBN) { 
-            hideGlobalLoader(); 
-            setButtonState(btnId, 'idle');
-            return; 
+        if (!amountWeiBN) {
+          hideGlobalLoader();
+          setButtonState(btnId, 'idle');
+          return;
         }
 
         const erc20 = getErc20Contract(tokenContract, signer);
@@ -3197,12 +3313,12 @@
           setButtonState(btnId, 'idle');
           return;
         }
-        
+
         showStatus(statusEl, 'Sending transaction...', true);
         setButtonState(btnId, 'loading', 'Confirm in Wallet...');
-        
+
         const receipt = await sendTokenTransfer(signer, tokenContract, target, amountWeiBN);
-        
+
         showStatus(statusEl, 'Transaction sent. Verifying on-chain...', true);
         setButtonState(btnId, 'loading', 'Verifying...');
 
@@ -3259,24 +3375,24 @@
 
         // Save pending state
         savePendingTx({
-            hash: receipt.transactionHash,
-            service,
-            model,
-            payload,
-            timestamp: Date.now()
+          hash: receipt.transactionHash,
+          service,
+          model,
+          payload,
+          timestamp: Date.now()
         });
 
         // Timeout protection (60s)
         const timeoutMs = 60000;
-        const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Transaction verification timed out. Please check history.')), timeoutMs)
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Transaction verification timed out. Please check history.')), timeoutMs)
         );
 
         const out = await Promise.race([
-            verifyAndFulfil(service, payload),
-            timeoutPromise
+          verifyAndFulfil(service, payload),
+          timeoutPromise
         ]);
-        
+
         const isSuccess = (out.status === 'success') || (out.status === true) || (out.success === true);
         const msg = out.msg || out.message || (isSuccess ? 'Transaction successful!' : 'Transaction failed');
 
@@ -3293,11 +3409,11 @@
           ref: service === 'airtime' ? $('#airtime-ref').value : $('#data-ref').value,
           tokenAmount: formatTokenAmount(model.amountWei || '0', model.decimals || 6, model.symbol || 'CNGN')
         };
-        
+
         hideGlobalLoader();
         setButtonState(btnId, 'idle');
         openReceiptModal(finalModel);
-        
+
         // Clear pending on final result
         clearPendingTx();
 
@@ -3324,10 +3440,10 @@
           const descText = String('Error occurred');
           const extractedPhone = (service === 'airtime' ? $('#airtime-phone').value : $('#data-phone').value) || 'N/A';
           const netOk = /Assetchain/i.test(String(NetworkName));
-          
+
           // If we have a pending tx, we might want to use its info
           const pending = getPendingTx();
-          
+
           renderReceipt({
             status: 'failed',
             backendStatus: 'CLIENT',
@@ -3390,7 +3506,7 @@
         const inputs = $$(`#${section}-tab input, #${section}-tab select`);
         const btnCalc = $(`#${section}-calc`);
         const btnBuy = $(`#${section}-send`);
-        
+
         const resetState = () => {
           // Hide Buy, Show Calc
           if (btnBuy) {
@@ -3402,31 +3518,31 @@
               btnBuy.dataset.timer = '';
             }
           }
-          
+
           if (btnCalc) {
             btnCalc.style.display = 'inline-block';
             btnCalc.disabled = false;
             // Reset text if it was stuck
             if (btnCalc.innerHTML.includes('Calculating')) {
-               btnCalc.innerHTML = '<i class="fas fa-calculator"></i> Calculate Amount';
+              btnCalc.innerHTML = '<i class="fas fa-calculator"></i> Calculate Amount';
             }
           }
-          
+
           // Reset calculations display
           const nano = $(`#${section}-nano`);
           const display = $(`#${section}-display`);
           const status = $(`#${section}-status`);
-          
+
           if (nano) nano.value = '';
           if (display) display.value = '';
           if (status) status.innerHTML = '';
         };
-        
+
         inputs.forEach(input => {
           input.addEventListener('input', resetState);
           input.addEventListener('change', resetState);
         });
-        
+
         // Also clear timer on Buy click so it doesn't revert while buying
         if (btnBuy) {
           btnBuy.addEventListener('click', () => {
@@ -3439,61 +3555,61 @@
       });
     }
     initInputListeners();
-    
+
     // Check for pending transactions on load
     async function checkPendingTxs() {
       const pending = getPendingTx();
       if (!pending || !pending.hash) return;
-      
+
       // If it's too old (> 10 mins), clear it
       if (Date.now() - (pending.timestamp || 0) > 600000) {
-          clearPendingTx();
-          return;
+        clearPendingTx();
+        return;
       }
 
       if (pending.service) {
-          const btnId = pending.service === 'airtime' ? 'airtime-send' : 'data-send';
-          const statusEl = pending.service === 'airtime' ? $('#airtime-status') : $('#data-status');
+        const btnId = pending.service === 'airtime' ? 'airtime-send' : 'data-send';
+        const statusEl = pending.service === 'airtime' ? $('#airtime-status') : $('#data-status');
 
-          setButtonState(btnId, 'loading', 'Resuming...');
-          showGlobalLoader();
-          showStatus(statusEl, 'Resuming pending transaction...', true);
-          
-          if (pending.model) openReceiptModal(pending.model);
+        setButtonState(btnId, 'loading', 'Resuming...');
+        showGlobalLoader();
+        showStatus(statusEl, 'Resuming pending transaction...', true);
 
-          try {
-             const out = await verifyAndFulfil(pending.service, pending.payload);
-             const isSuccess = (out.status === 'success') || (out.status === true) || (out.success === true);
-             const msg = out.msg || out.message || (isSuccess ? 'Transaction successful!' : 'Transaction failed');
-             
-             showStatus(statusEl, msg, isSuccess);
-             
-             const finalModel = {
-               ...pending.model,
-               status: isSuccess ? 'success' : 'failed',
-               backendStatus: 'HISTORY',
-               message: isSuccess ? null : msg,
-               amountDisplay: pending.model.amountDisplay, 
-               ref: pending.model.ref,
-               tokenAmount: pending.model.tokenAmount
-             };
+        if (pending.model) openReceiptModal(pending.model);
 
-             hideGlobalLoader();
-             setButtonState(btnId, 'idle');
-             openReceiptModal(finalModel);
-             clearPendingTx();
-             
-             if (isSuccess) {
-                 notify('success', 'Transaction restored and verified!');
-             } else {
-                 notify('error', 'Transaction verification failed.');
-             }
+        try {
+          const out = await verifyAndFulfil(pending.service, pending.payload);
+          const isSuccess = (out.status === 'success') || (out.status === true) || (out.success === true);
+          const msg = out.msg || out.message || (isSuccess ? 'Transaction successful!' : 'Transaction failed');
 
-          } catch (e) {
-             hideGlobalLoader();
-             setButtonState(btnId, 'idle');
-             showStatus(statusEl, 'Error resuming transaction: ' + e.message, false);
+          showStatus(statusEl, msg, isSuccess);
+
+          const finalModel = {
+            ...pending.model,
+            status: isSuccess ? 'success' : 'failed',
+            backendStatus: 'HISTORY',
+            message: isSuccess ? null : msg,
+            amountDisplay: pending.model.amountDisplay,
+            ref: pending.model.ref,
+            tokenAmount: pending.model.tokenAmount
+          };
+
+          hideGlobalLoader();
+          setButtonState(btnId, 'idle');
+          openReceiptModal(finalModel);
+          clearPendingTx();
+
+          if (isSuccess) {
+            notify('success', 'Transaction restored and verified!');
+          } else {
+            notify('error', 'Transaction verification failed.');
           }
+
+        } catch (e) {
+          hideGlobalLoader();
+          setButtonState(btnId, 'idle');
+          showStatus(statusEl, 'Error resuming transaction: ' + e.message, false);
+        }
       }
     }
     checkPendingTxs();
@@ -3512,7 +3628,7 @@
         assert('formatTokenAmount basic', formatTokenAmount('1000000', 6, 'CNGN').includes('1'));
         const dummyReceipt = { gasUsed: ethers.BigNumber.from('21000'), effectiveGasPrice: ethers.BigNumber.from('1000000000') };
         assert('computeGasFee', computeGasFee(dummyReceipt).includes('ASET'));
-        
+
         // Test Button State
         const btn = document.createElement('button'); btn.id = 'test-btn'; document.body.appendChild(btn);
         setButtonState('test-btn', 'loading', 'Wait');
@@ -3528,7 +3644,7 @@
           const badge = card.querySelector('.status-badge');
           assert('Badge has success class', badge.classList.contains('status-success'));
           assert('Badge has correct text', badge.textContent.includes('SUCCESS • HISTORY'));
-          
+
           const failModel = { status: 'failed', backendStatus: 'HISTORY', timestamp: Date.now() };
           const failCard = renderReceipt(failModel);
           const failBadge = failCard.querySelector('.status-badge');
@@ -3540,6 +3656,38 @@
         exportReceiptAsImage(node).then(() => { assert('exportReceiptAsImage resolves', true); finish(); }).catch(() => { assert('exportReceiptAsImage resolves', false); finish(); });
         function finish() { console.group('Inline Tests'); tests.forEach(t => console[t.pass ? 'log' : 'error'](`${t.pass ? 'PASS' : 'FAIL'}: ${t.name}`)); console.groupEnd(); }
       } catch (e) { console.error('Tests failed to run', e); }
+    })();
+
+    // Theme Switcher Logic
+    (function () {
+      const toggleBtn = document.getElementById('theme-toggle');
+      if (!toggleBtn) return;
+
+      const icon = toggleBtn.querySelector('i');
+
+      function setTheme(theme) {
+        if (theme === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+          if (icon) {
+            icon.className = 'fas fa-moon';
+          }
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+          if (icon) {
+            icon.className = 'fas fa-sun';
+          }
+        }
+        localStorage.setItem('theme', theme);
+      }
+
+      // Init
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      setTheme(savedTheme);
+
+      toggleBtn.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme');
+        setTheme(current === 'light' ? 'dark' : 'light');
+      });
     })();
   </script>
   <!-- Loading Overlay -->
