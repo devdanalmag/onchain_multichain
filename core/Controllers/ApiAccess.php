@@ -317,11 +317,11 @@ class ApiAccess extends Controller
     {
         $response = array();
         $result = $this->model->recordchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status, $transaction_type, $token_name, $token_contract);
-        // if (!$result) {
-        //     $response["status"] = "fail";
-        //     $response["msg"] = "Failed To Record Transaction";
-        //     return $response;
-        // }
+        if ($result !== 0) {
+            $response["status"] = "fail";
+            $response["msg"] = "Failed To Record Transaction";
+            return $response;
+        }
         $response["status"] = "success";
         $response["amount"] = $amountopay;
         $response["service"] = $servicename;
@@ -333,11 +333,11 @@ class ApiAccess extends Controller
     {
         $response = array();
         $result = $this->model->recordrefundchainTransaction($userid, $servicename, $servicedesc, $reference, $amountopay, $target_address, $tx_hash, $sender_adress, $nanoamount, $status, $transaction_type, $token_name, $token_contract);
-        // if (!$result) {
-        //     $response["status"] = "fail";
-        //     $response["msg"] = "Failed To Record Transaction";
-        //     return $response;
-        // }
+        if ($result !== 0) {
+            $response["status"] = "fail";
+            $response["msg"] = "Failed To Record Transaction";
+            return $response;
+        }
         $response["status"] = "success";
         $response["amount"] = $amountopay;
         $response["service"] = $servicename;

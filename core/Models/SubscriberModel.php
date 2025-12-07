@@ -1607,16 +1607,15 @@ class SubscriberModel extends Model
         } catch (\Throwable $e) {}
     }
 
-	public function recordchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status)
+	public function recordchainTransaction($userid, $servicename, $servicedesc, $amountopay, $ref, $target_address, $tx_hash, $user_address, $nanoamount, $status, $transaction_type = 'app', $token_name = '', $token_contract = '')
 	{
 		$dbh = self::connect();
-		$sql = "SELECT * FROM transactions WHERE transref='$ref'";
+		$sql = "SELECT * FROM transactions WHERE transref=:ref";
 		$query = $dbh->prepare($sql);
-		$query->execute();
-		$result = $query->fetch(PDO::FETCH_OBJ);
+        $query->execute([':ref' => $ref]);
 		if ($query->rowCount() > 0) {
-			return 0;
-		} //Transaction Already Exist
+			return ['status' => 'success', 'msg' => 'Transaction exists'];
+		} 
 		$dbh = self::connect();
 		$userid = (float) $userid;
 		$status = (float) $status;
@@ -1624,31 +1623,46 @@ class SubscriberModel extends Model
 		$oldbalance = '0';
 		$newbalance = '0';
         $this->ensureTokenAmountColumn();
-		//Record Transaction
-		$sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, token_amount, date) 
-        VALUES (:user, :ref, :sn, :sd, :a, :s, :ob, :nb, :txh, :taddy, :uaddy, :ton, :d)";
-		$query = $dbh->prepare($sql);
-		$query->bindParam(':user', $userid, PDO::PARAM_INT);
-		$query->bindParam(':ref', $ref, PDO::PARAM_STR);
-		$query->bindParam(':sn', $servicename, PDO::PARAM_STR);
-		$query->bindParam(':sd', $servicedesc, PDO::PARAM_STR);
-		$query->bindParam(':a', $amountopay, PDO::PARAM_STR);
-		$query->bindParam(':s', $status, PDO::PARAM_INT);
-		$query->bindParam(':ob', $oldbalance, PDO::PARAM_STR);
-		$query->bindParam(':nb', $newbalance, PDO::PARAM_STR);
-		$query->bindParam(':txh', $tx_hash, PDO::PARAM_STR);
-		$query->bindParam(':taddy', $target_address, PDO::PARAM_STR);
-		$query->bindParam(':uaddy', $user_address, PDO::PARAM_STR);
-		$query->bindParam(':ton', $nanoamount, PDO::PARAM_STR);
-		$query->bindParam(':d', $date, PDO::PARAM_STR);
-		$query->execute();
+        
+        // Ensure extra columns exist
+        try {
+            $dbh->exec("ALTER TABLE transactions ADD COLUMN transaction_type VARCHAR(20) DEFAULT 'app'");
+            $dbh->exec("ALTER TABLE transactions ADD COLUMN token_name VARCHAR(20) NULL");
+            $dbh->exec("ALTER TABLE transactions ADD COLUMN token_contract VARCHAR(100) NULL");
+        } catch (\Throwable $e) {}
 
+		//Record Transaction
+		$sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, token_amount, date, transaction_type, token_name, token_contract) 
+        VALUES (:user, :ref, :sn, :sd, :a, :s, :ob, :nb, :txh, :taddy, :uaddy, :ton, :d, :ttype, :tname, :tcon)";
+		$query = $dbh->prepare($sql);
+		$query->execute([
+            ':user' => $userid,
+            ':ref' => $ref,
+            ':sn' => $servicename,
+            ':sd' => $servicedesc,
+            ':a' => $amountopay,
+            ':s' => $status,
+            ':ob' => $oldbalance,
+            ':nb' => $newbalance,
+            ':txh' => $tx_hash,
+            ':taddy' => $target_address,
+            ':uaddy' => $user_address,
+            ':ton' => $nanoamount,
+            ':d' => $date,
+            ':ttype' => $transaction_type,
+            ':tname' => $token_name,
+            ':tcon' => $token_contract
+        ]);
 
 		$lastInsertId = $dbh->lastInsertId();
 		if ($lastInsertId) {
-			return 0;
+			return ['status' => 'success'];
 		} else {
-			return 1;
+			return ['status' => 'fail'];
 		}
 	}
+
+    public function recordrefundchainTransaction($userid, $servicename, $servicedesc, $amount, $ref, $targetaddress, $txhash, $senderaddress, $tokenamount, $status, $transaction_type = 'app', $token_name = '', $token_contract = '') {
+        return $this->recordchainTransaction($userid, $servicename, $servicedesc, $amount, $ref, $targetaddress, $txhash, $senderaddress, $tokenamount, $status, $transaction_type, $token_name, $token_contract);
+    }
 }

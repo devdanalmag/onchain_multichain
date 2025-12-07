@@ -565,6 +565,15 @@ class ApiModel extends Model
     public function recordchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status, $transaction_type = 'app', $token_name = null, $token_contract = null)
     {
         $dbh = self::connect();
+        
+        // Check if transaction already exists by ref
+        $checkSql = "SELECT sId FROM transactions WHERE transref = :ref LIMIT 1";
+        $checkQuery = $dbh->prepare($checkSql);
+        $checkQuery->execute([':ref' => $ref]);
+        if ($checkQuery->rowCount() > 0) {
+            return 0; // Already exists, consider success
+        }
+
         $userid = (float) $userid;
         $status = (float) $status;
         $date = date("Y-m-d H:i:s");
@@ -614,7 +623,7 @@ class ApiModel extends Model
             $qCheck->execute();
             if ($qCheck->rowCount() > 0) {
                 // Transaction already exists
-                return 1; 
+                return 0; 
             }
         }
 

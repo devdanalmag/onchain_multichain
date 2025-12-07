@@ -221,6 +221,17 @@ $token_name = $trow['token_name'] ?? 'Unknown';
 $tokenamount = $controller->convertWeiToToken($amount_wei, $token_decimals);
 $from = "Api :: Airtime Index";
 
+$blockchainConfig = $controller->getBlockchainConfig('AssetChain');
+$siteaddress = $blockchainConfig['site_address'] ?? '';
+$transaction_type = $isDexToken ? 'dex' : 'app';
+$normTokenContract = $controller->normalizeEvmAddress($token_contract);
+$tokenInfo = $controller->getTokenInfo('CNGN');
+$cngnContractCfg = '';
+if ($tokenInfo && !empty($tokenInfo['token_contract'])) {
+    $cngnContractCfg = $controller->normalizeEvmAddress($tokenInfo['token_contract']);
+}
+$token_name = $trow['token_name'] ?? (($normTokenContract && $normTokenContract === $cngnContractCfg) ? 'cNGN' : (($normTokenContract) ? 'ERC20' : 'ASET'));
+
 // -------------------------------------------------------------------
 //  Verify Network Id
 // -------------------------------------------------------------------
@@ -230,6 +241,12 @@ if ($result["status"] == "fail") {
     header('HTTP/1.0 400 Invalid Network Id');
     $response['status'] = "fail";
     $response['msg'] = "The Network id is invalid ";
+    
+    // Record Failed Transaction
+    $servicename = "Airtime";
+    $servicedesc = "Failed {$network} Airtime purchase of N{$amount} for {$phone} (Invalid Network ID)";
+    $controller->recordchainTransaction($userid, $servicename, $servicedesc, $amount, $body->ref, $ftarget_address, $tx_hash, $fuser_address, $tokenamount, "1", $transaction_type, $token_name, $normTokenContract);
+
     // Refund on-chain disabled for Assetchain path
     if (!$isDexToken) {
         $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tokenamount, $token_contract, $token_name, $token_decimals);
@@ -243,9 +260,17 @@ if ($result["status"] == "fail") {
         } else {
             $response['msg'] .= " Failed To Refund, Please Try Again Later";
         }
+        
+        // Record Failed Refund
+        $servicedesc = "Refund Failed For {$body->ref} (Network Unavailable)";
+        $reference = crc32($body->ref . "REFFAIL");
+        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $fuser_address, "N/A", $siteaddress, $tokenamount, "1", $transaction_type, $token_name, $normTokenContract);
+
         echo json_encode($response);
         exit();
     }
+    
+    // Record Success Refund
     $servicedesc = "Refund For {$body->ref} Transactions";
     $reference = crc32($body->ref);
     if (($refund["status"] ?? '') === 'success') {
@@ -274,6 +299,12 @@ if ($airtime_type == "Share And Sell") {
         if ($networkDetails["sharesellStatus"] == "Off") {
             $response['msg'] = "Sorry, {$networkDetails["network"]} Share And Sell service is not available at the moment ";
         }
+        
+        // Record Failed Transaction
+        $servicename = "Airtime";
+        $servicedesc = "Failed {$networkDetails['network']} Airtime purchase of N{$amount} for {$phone} (Network Unavailable)";
+        $controller->recordchainTransaction($userid, $servicename, $servicedesc, $amount, $body->ref, $ftarget_address, $tx_hash, $fuser_address, $tokenamount, "1", $transaction_type, $token_name, $normTokenContract);
+
         if (!$isDexToken) {
             $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tokenamount, $token_contract, $token_name, $token_decimals);
         } else {
@@ -286,9 +317,17 @@ if ($airtime_type == "Share And Sell") {
             } else {
                 $response['msg'] .= " Failed To Refund, Please Try Again Later";
             }
+            
+            // Record Failed Refund
+            $servicedesc = "Refund Failed For {$body->ref} (Network Unavailable)";
+            $reference = crc32($body->ref . "REFFAIL");
+            $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $fuser_address, "N/A", $siteaddress, $tokenamount, "1", $transaction_type, $token_name, $normTokenContract);
+
             echo json_encode($response);
             exit();
         }
+
+        // Record Success Refund
         $servicedesc = "Refund For {$body->ref} Transactions";
         $reference = crc32($body->ref);
         if (($refund["status"] ?? '') === 'success') {
@@ -304,17 +343,6 @@ if ($airtime_type == "Share And Sell") {
 }
 
 
-$blockchainConfig = $controller->getBlockchainConfig('AssetChain');
-$siteaddress = $blockchainConfig['site_address'] ?? '';
-$transaction_type = $isDexToken ? 'dex' : 'app';
-$normTokenContract = $controller->normalizeEvmAddress($token_contract);
-$tokenInfo = $controller->getTokenInfo('CNGN');
-$cngnContractCfg = '';
-if ($tokenInfo && !empty($tokenInfo['token_contract'])) {
-    $cngnContractCfg = $controller->normalizeEvmAddress($tokenInfo['token_contract']);
-}
-$token_name = $trow['token_name'] ?? (($normTokenContract && $normTokenContract === $cngnContractCfg) ? 'cNGN' : (($normTokenContract) ? 'ERC20' : 'ASET'));
-
 if ($airtime_type == "VTU") {
     if ($networkDetails["networkStatus"] <> "On" || $networkDetails["vtuStatus"] <> "On") {
         header('HTTP/1.0 400 Network Not Available');
@@ -323,6 +351,12 @@ if ($airtime_type == "VTU") {
         if ($networkDetails["vtuStatus"] == "Off") {
             $response['msg'] = "Sorry, {$networkDetails["network"]} VTU service is not available at the moment ";
         }
+        
+        // Record Failed Transaction
+        $servicename = "Airtime";
+        $servicedesc = "Failed {$networkDetails['network']} Airtime purchase of N{$amount} for {$phone} (Network Unavailable)";
+        $controller->recordchainTransaction($userid, $servicename, $servicedesc, $amount, $body->ref, $ftarget_address, $tx_hash, $fuser_address, $tokenamount, "1", $transaction_type, $token_name, $normTokenContract);
+
         if (!$isDexToken) {
             $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tokenamount, $token_contract, $token_name, $token_decimals);
         } else {
@@ -335,9 +369,17 @@ if ($airtime_type == "VTU") {
             } else {
                 $response['msg'] .= "Failed To Refund, Please Try Again Later";
             }
+            
+            // Record Failed Refund
+            $servicedesc = "Refund Failed For {$body->ref} (Network Unavailable)";
+            $reference = crc32($body->ref . "REFFAIL");
+            $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $fuser_address, "N/A", $siteaddress, $tokenamount, "1", $transaction_type, $token_name, $normTokenContract);
+
             echo json_encode($response);
             exit();
         }
+
+        // Record Success Refund
         $servicedesc = "Refund For {$body->ref} Transactions";
         $reference = crc32($body->ref);
         if (($refund["status"] ?? '') === 'success') {
@@ -364,6 +406,12 @@ if ($ported_number == "false") {
         header('HTTP/1.0 400 Invalid Phone Number');
         $response['status'] = "fail";
         $response['msg'] = $result["msg"];
+
+        // Record Failed Transaction
+        $servicename = "Airtime";
+        $servicedesc = "Failed {$networkDetails['network']} Airtime purchase of N{$amount} for {$phone} (Invalid Phone)";
+        $controller->recordchainTransaction($userid, $servicename, $servicedesc, $amount, $body->ref, $ftarget_address, $tx_hash, $fuser_address, $tokenamount, "1", $transaction_type, $token_name, $normTokenContract);
+
         $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tokenamount, $token_contract, $token_name, $token_decimals);
         if ($refund["status"] == "fail") {
             $controller->logError($refund['msg'] ?? "Unknown", $from, $userid);
@@ -372,15 +420,23 @@ if ($ported_number == "false") {
             } else {
                 $response['msg'] .= " Failed To Refund, Please Try Again Later";
             }
+            
+            // Record Failed Refund
+            $servicedesc = "Refund Failed For {$body->ref} (Invalid Phone)";
+            $reference = crc32($body->ref . "REFFAIL");
+            $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $fuser_address, "N/A", $siteaddress, $tokenamount, "1", $transaction_type, $token_name, $normTokenContract);
+
             echo json_encode($response);
             exit();
         }
+        
+        // Record Success Refund
         $servicedesc = "Refund For {$body->ref} Transactions";
         $reference = crc32($body->ref);
         $refundwallet = $refund["sender"] ?? $siteaddress;
         $targetwallet = $refund["receiver"] ?? $fuser_address;
         $refund_hash = $refund["hash"] ?? "N/A";
-        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tokenamount, "9", $transaction_type, $token_name, $normTokenContract);
+        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tokenamount,  $refund["status"] == "fail" ? "1" : "9", $transaction_type, $token_name, $normTokenContract);
 
         echo json_encode($response);
         exit();
@@ -428,6 +484,12 @@ if ($amount < $airtimemin) {
     header("HTTP/1.0 400 Minimum airtime purchase is $airtimemin  ");
     $response['status'] = "fail";
     $response['msg'] = "Minimum airtime you can purchase is $airtimemin ";
+
+    // Record Failed Transaction
+    $servicename = "Airtime";
+    $servicedesc = "Failed {$network} Airtime purchase of N{$amount} for {$phone} (Below Min Amount)";
+    $controller->recordchainTransaction($userid, $servicename, $servicedesc, $amount, $body->ref, $ftarget_address, $tx_hash, $fuser_address, $tokenamount, "1", $transaction_type, $token_name, $normTokenContract);
+
     $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tokenamount, $token_contract, $token_name, $token_decimals);
     if ($refund["status"] == "fail") {
         $controller->logError($refund['msg'] ?? "Unknown", $from, $userid);
@@ -436,9 +498,17 @@ if ($amount < $airtimemin) {
         } else {
             $response['msg'] = " Failed To Refund, Please Try Again Later";
         }
+
+        // Record Failed Refund
+        $servicedesc = "Refund Failed For {$body->ref} (Below Min Amount)";
+        $reference = crc32($body->ref . "REFFAIL");
+        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $fuser_address, "N/A", $siteaddress, $tokenamount, "1", $transaction_type, $token_name, $normTokenContract);
+
         echo json_encode($response);
         exit();
     }
+    
+    // Record Success Refund
     $servicedesc = "Refund For {$body->ref} Transactions";
     $reference = crc32($body->ref);
     $refundwallet = $refund["sender"] ?? $siteaddress;
@@ -454,6 +524,12 @@ if ($amount > $airtimemax) {
     header("HTTP/1.0 400 Maximum airtime purchase is $airtimemax");
     $response['status'] = "fail";
     $response['msg'] = "Maximum airtime you can purchase is $airtimemax";
+
+    // Record Failed Transaction
+    $servicename = "Airtime";
+    $servicedesc = "Failed {$network} Airtime purchase of N{$amount} for {$phone} (Above Max Amount)";
+    $controller->recordchainTransaction($userid, $servicename, $servicedesc, $amount, $body->ref, $ftarget_address, $tx_hash, $fuser_address, $tokenamount, "1", $transaction_type, $token_name, $normTokenContract);
+
     $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tokenamount, $token_contract, $token_name, $token_decimals);
     if ($refund["status"] == "fail") {
 
@@ -463,9 +539,17 @@ if ($amount > $airtimemax) {
         } else {
             $response['msg'] = "Failed To Refund, Please Try Again Later";
         }
+        
+        // Record Failed Refund
+        $servicedesc = "Refund Failed For {$body->ref} (Above Max Amount)";
+        $reference = crc32($body->ref . "REFFAIL");
+        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $fuser_address, "N/A", $siteaddress, $tokenamount, "1", $transaction_type, $token_name, $normTokenContract);
+
         echo json_encode($response);
         exit();
     }
+    
+    // Record Success Refund
     $servicedesc = "Refund For {$body->ref} Transactions";
     $reference = crc32($body->ref);
     $refundwallet = $refund["sender"] ?? $siteaddress;
@@ -667,14 +751,7 @@ if ($checkprice['status'] == 'fail') {
         echo json_encode($response);
         exit();
     }
-    $servicedesc = "Refund For {$body->ref} Transactions";
-    $reference = crc32($body->ref);
-    if (($refund["status"] ?? '') === 'success') {
-        $refundwallet = $refund["sender"] ?? $siteaddress;
-        $targetwallet = $refund["receiver"] ?? $fuser_address;
-        $refund_hash = $refund["hash"] ?? "N/A";
-        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tokenamount, "9", $transaction_type, $token_name, $normTokenContract);
-    }
+
 
     // $controller->updateFailedTransactionStatus($userid, $servicedesc, $ref, $amountopay, "1");
     echo json_encode($response);

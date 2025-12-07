@@ -86,6 +86,10 @@
                         <span id="recipient" class="font-semibold text-gray-900 text-right"></span>
                     </div>
                     <div class="flex justify-between items-start">
+                        <span class="text-gray-500">Description</span>
+                        <span id="description" class="font-semibold text-gray-900 text-right"></span>
+                    </div>
+                    <div class="flex justify-between items-start">
                         <span class="text-gray-500">Value Received</span>
                         <span id="fiatValue" class="font-bold text-green-600 text-right"></span>
                     </div>
@@ -288,6 +292,7 @@
             document.getElementById('service').textContent = qs('service', 'Airtime Purchase');
             document.getElementById('provider').textContent = qs('provider', 'Provider');
             document.getElementById('recipient').textContent = qs('recipient', '');
+            document.getElementById('description').textContent = qs('description', '');
             document.getElementById('fiatValue').textContent = qs('fiatValue', '');
             
             const ref = qs('reference', '');

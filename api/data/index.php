@@ -191,15 +191,22 @@ if (!$trow) {
 $token_decimals = (int)($trow['token_decimals'] ?? 6);
 $token_name = $trow['token_name'] ?? 'Unknown';
 $tonamount = $controller->convertWeiToToken($amount_wei, $token_decimals);
+$normTokenContract = $controller->normalizeEvmAddress($token_contract);
+$transaction_type = 'app';
 
 $from = "Api :: Data Index";
-
 
 $result = $controller->verifyNetworkId($network);
 if ($result["status"] == "fail") {
     header('HTTP/1.0 400 Invalid Network Id');
     $response['status'] = "fail";
     $response['msg'] = "The Network id is invalid";
+    
+    // Record Failed Transaction
+    $servicename = "Data";
+    $servicedesc = "Failed {$network} Data purchase for {$phone} (Invalid Network ID)";
+    $controller->recordchainTransaction($userid, $servicename, $servicedesc, "0", $body->ref, $ftarget_address, $tx_hash, $fuser_address, $tonamount, "1", $transaction_type, $token_name, $normTokenContract);
+
     $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tonamount, $token_contract, $token_name, $token_decimals);
     if ($refund["status"] == "fail") {
         header('HTTP/1.0 400 Transaction Failed');
@@ -218,7 +225,7 @@ if ($result["status"] == "fail") {
     $refundwallet = $refund["sender"] ?? $siteaddress;
     $targetwallet = $refund["receiver"] ?? $fuser_address;
     $refund_hash = $refund["hash"] ?? "N/A";
-    $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tonamount,  $refund["status"] == "fail" ? "1" : "9");
+    $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tonamount,  $refund["status"] == "fail" ? "1" : "9", $transaction_type, $token_name, $normTokenContract);
 
     echo json_encode($response);
     exit();
@@ -235,6 +242,12 @@ if ($networkDetails["networkStatus"] <> "On") {
     header('HTTP/1.0 400 Network Not Available');
     $response['status'] = "fail";
     $response['msg'] = "Sorry, {$networkDetails["network"]} is not available at the moment";
+    
+    // Record Failed Transaction
+    $servicename = "Data";
+    $servicedesc = "Failed {$networkDetails['network']} Data purchase for {$phone} (Network Unavailable)";
+    $controller->recordchainTransaction($userid, $servicename, $servicedesc, "0", $body->ref, $ftarget_address, $tx_hash, $fuser_address, $tonamount, "1", $transaction_type, $token_name, $normTokenContract);
+
     $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tonamount, $token_contract, $token_name, $token_decimals);
     if ($refund["status"] == "fail") {
         $controller->logError($refund['msg'] ?? "Unknown", $from, $userid);
@@ -251,7 +264,7 @@ if ($networkDetails["networkStatus"] <> "On") {
     $refundwallet = $refund["sender"] ?? $siteaddress;
     $targetwallet = $refund["receiver"] ?? $fuser_address;
     $refund_hash = $refund["hash"] ?? "N/A";
-    $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tonamount,  $refund["status"] == "fail" ? "1" : "9");
+    $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tonamount,  $refund["status"] == "fail" ? "1" : "9", $transaction_type, $token_name, $normTokenContract);
 
     echo json_encode($response);
     exit();
@@ -266,6 +279,12 @@ if ($result["status"] == "fail") {
     header('HTTP/1.0 400 Invalid Data Plan Id');
     $response['status'] = "fail";
     $response['msg'] = "The Data Plan ID : $data_plan is invalid ";
+    
+    // Record Failed Transaction
+    $servicename = "Data";
+    $servicedesc = "Failed {$networkDetails['network']} Data purchase for {$phone} (Invalid Plan ID)";
+    $controller->recordchainTransaction($userid, $servicename, $servicedesc, "0", $body->ref, $ftarget_address, $tx_hash, $fuser_address, $tonamount, "1", $transaction_type, $token_name, $normTokenContract);
+
     $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tonamount, $token_contract, $token_name, $token_decimals);
     if ($refund["status"] == "fail") {
         $controller->logError($refund['msg'] ?? "Unknown", $from, $userid);
@@ -282,7 +301,7 @@ if ($result["status"] == "fail") {
     $refundwallet = $refund["sender"] ?? $siteaddress;
     $targetwallet = $refund["receiver"] ?? $fuser_address;
     $refund_hash = $refund["hash"] ?? "N/A";
-    $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tonamount,  $refund["status"] == "fail" ? "1" : "9");
+    $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tonamount,  $refund["status"] == "fail" ? "1" : "9", $transaction_type, $token_name, $normTokenContract);
 
     echo json_encode($response);
     exit();
@@ -310,6 +329,13 @@ if ($result["status"] == "fail") {
         header('HTTP/1.0 400 Data Not Available At The Moment');
         $response['status'] = "fail";
         $response['msg'] = $datagroupmessage;
+        
+        // Record Failed Transaction
+        $servicename = "Data";
+        $servicedesc = "Failed {$networkDetails['network']} Data purchase for {$phone} (Plan Unavailable)";
+        $amount = $result["amount"] ?? "0";
+        $controller->recordchainTransaction($userid, $servicename, $servicedesc, $amount, $body->ref, $ftarget_address, $tx_hash, $fuser_address, $tonamount, "1", $transaction_type, $token_name, $normTokenContract);
+
         $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tonamount, $token_contract, $token_name, $token_decimals);
         if ($refund["status"] == "fail") {
             $controller->logError($refund['msg'] ?? "Unknown", $from, $userid);
@@ -326,7 +352,7 @@ if ($result["status"] == "fail") {
         $refundwallet = $refund["sender"] ?? $siteaddress;
         $targetwallet = $refund["receiver"] ?? $fuser_address;
         $refund_hash = $refund["hash"] ?? "N/A";
-        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tonamount,  $refund["status"] == "fail" ? "1" : "9");
+        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tonamount,  $refund["status"] == "fail" ? "1" : "9", $transaction_type, $token_name, $normTokenContract);
 
         echo json_encode($response);
         exit();
@@ -350,7 +376,13 @@ if ($ported_number == "false") {
         header('HTTP/1.0 400 Invalid Phone Number');
         $response['status'] = "fail";
         $response['msg'] = $result["msg"];
-        $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tonamount);
+        
+        // Record Failed Transaction
+        $servicename = "Data";
+        $servicedesc = "Failed {$networkDetails['network']} Data purchase for {$phone} (Invalid Phone)";
+        $controller->recordchainTransaction($userid, $servicename, $servicedesc, $amountopay, $body->ref, $ftarget_address, $tx_hash, $fuser_address, $tonamount, "1", $transaction_type, $token_name, $normTokenContract);
+
+        $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tonamount, $token_contract, $token_name, $token_decimals);
         if ($refund["status"] == "fail") {
             $controller->logError($refund['msg'] ?? "Unknown", $from, $userid);
             if ($erroresult) {
@@ -366,7 +398,7 @@ if ($ported_number == "false") {
         $refundwallet = $refund["sender"] ?? $siteaddress;
         $targetwallet = $refund["receiver"] ?? $fuser_address;
         $refund_hash = $refund["hash"] ?? "N/A";
-        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tonamount,  $refund["status"] == "fail" ? "1" : "9");
+        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tonamount,  $refund["status"] == "fail" ? "1" : "9", $transaction_type, $token_name, $normTokenContract);
 
         echo json_encode($response);
         exit();
@@ -509,7 +541,7 @@ if ($checkprice['status'] == 'fail') {
     } else {
         $response['msg'] = "Price Maybe Higher or Lower, Please Try Again Later ";
     }
-    $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tonamount);
+    $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tonamount, $token_contract, $token_name, $token_decimals);
     if ($refund["status"] == "fail") {
         $controller->logError($refund['msg'] ?? "Unknown", $from, $userid);
         if ($erroresult) {
@@ -518,17 +550,23 @@ if ($checkprice['status'] == 'fail') {
             $response['msg'] .= "Failed To Refund, Please Try Again Later";
         }
         
-        // echo json_encode($response);
-        // exit();
+        // Record Failed Refund
+        $servicedesc = "Refund Failed For {$body->ref} (Price Impact)";
+        $reference = crc32($body->ref . "REFFAIL");
+        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $fuser_address, "N/A", $siteaddress, $tonamount, "1", $transaction_type, $token_name, $normTokenContract);
+
+        echo json_encode($response);
+        exit();
     }
-    $servicedesc = "Refund For {$body->ref} Transactions ". $refund['msg']?? " - ";
+
+    // Record Success Refund
+    $servicedesc = "Refund For {$body->ref} Transactions ". ($refund['msg']?? " - ");
     $reference = crc32($body->ref);
     $refundwallet = $refund["sender"] ?? $siteaddress;
     $targetwallet = $refund["receiver"] ?? $fuser_address;
     $refund_hash = $refund["hash"] ?? " - ";
-    $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tonamount,  $refund["status"] == "fail" ? "1" : "9");
+    $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tonamount, "9", $transaction_type, $token_name, $normTokenContract);
 
-    // $controller->updateFailedTransactionStatus($userid, $servicedesc, $ref, $amountopay, "1");
     echo json_encode($response);
     exit();
 }
@@ -561,7 +599,7 @@ if ($result["status"] == "success") {
     $controller->updateFailedTransactionStatus($userid, $servicedesc, $body->ref, $amountopay, "1");
     $erroresult = $controller->checkIfError();
     // Refund User Wallet
-    $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tonamount);
+    $refund = $controller->refundTransaction($body->ref,  $fuser_address, $tonamount, $token_contract, $token_name, $token_decimals);
     if ($refund["status"] == "fail") {
         header('HTTP/1.0 400 Transaction Failed');
         $response['status'] = "fail";
@@ -572,15 +610,23 @@ if ($result["status"] == "success") {
         } else {
             $response['msg'] .= " Failed To Refund, Please Try Again Later";
         }
-        // echo json_encode($response);
-        // exit();
+        
+        // Record Failed Refund
+        $servicedesc = "Refund Failed For {$body->ref} (Transaction Failed)";
+        $reference = crc32($body->ref . "REFFAIL");
+        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $fuser_address, "N/A", $siteaddress, $tonamount, "1", $transaction_type, $token_name, $normTokenContract);
+
+        echo json_encode($response);
+        exit();
     }
-    $servicedesc = "Refund For {$body->ref} Transactions" . " " . $refund['msg'] ?? "N/A";
+    
+    // Record Success Refund
+    $servicedesc = "Refund For {$body->ref} Transactions" . " " . ($refund['msg'] ?? "N/A");
     $reference = crc32($body->ref);
     $refundwallet = $refund["sender"] ?? $siteaddress;
     $targetwallet = $refund["receiver"] ?? $fuser_address;
     $refund_hash = $refund["hash"] ?? "N/A";
-    $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tonamount,  $refund["status"] == "fail" ? "1" : "9");
+    $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tonamount, "9", $transaction_type, $token_name, $normTokenContract);
     $controller->logError($response['msg'] ?? "Unknown", $from, $userid);
 
     echo json_encode($response);

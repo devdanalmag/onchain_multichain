@@ -84,3 +84,10 @@ IP Address: 127.0.0.1
 Request Data: []
 User ID: Unknown
 --------------------------------------------------
+{"timestamp":"2025-12-07 18:41:29","From":"Controller:: Airtime","message":"API Error: Unauthorized","context":{"timestamp":"2025-12-07 18:41:29","request":{"network":"2","amount":"100","mobile_number":"09127406311","Ported_number":"true","request-id":"REF-JA7BKECP","airtime_type":"VTU"},"response":"{\"status\":\"fail\",\"Status\":\"failed\",\"message\":\"Unauthorized\",\"msg\":\"Unauthorized\"}","error":"","http_code":401},"ip":"127.0.0.1","user_id":"unknown"}
+[2025-12-07 18:41:29] ERROR: Unknown
+From: Api :: Airtime Index
+IP Address: 127.0.0.1
+Request Data: []
+User ID: Unknown
+--------------------------------------------------
