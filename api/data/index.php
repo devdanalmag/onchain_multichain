@@ -1,6 +1,12 @@
 <?php
 //Auto Load Classes
 require_once("../autoloader.php");
+require_once("../security_helper.php");
+
+// Apply Security Measures
+ApiSecurity::disableErrorDisplay();
+ApiSecurity::applySecurityHeaders();
+ApiSecurity::rateLimit(30, 60);
 
 //Allowed API Headers
 header('Access-Control-Allow-Origin: *');
@@ -20,14 +26,16 @@ date_default_timezone_set('Africa/Lagos');
 //  Check Request Method
 // -------------------------------------------------------------------
 
-$requestMethod = $_SERVER["REQUEST_METHOD"];
-if ($requestMethod !== 'POST') {
-    header('HTTP/1.0 400 Bad Request');
-    $response["status"] = "fail";
-    $response["msg"] = "Only POST method is allowed";
-    echo json_encode($response);
-    exit();
-}
+ApiSecurity::enforceMethod('POST');
+
+// $requestMethod = $_SERVER["REQUEST_METHOD"];
+// if ($requestMethod !== 'POST') {
+//    header('HTTP/1.0 400 Bad Request');
+//    $response["status"] = "fail";
+//    $response["msg"] = "Only POST method is allowed";
+//    echo json_encode($response);
+//    exit();
+// }
 
 // -------------------------------------------------------------------
 //  Check For Api Authorization

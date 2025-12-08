@@ -130,6 +130,34 @@
       background: rgba(0, 0, 0, 0.05);
     }
 
+    [data-theme="light"] .hamburger {
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="light"] .hamburger:hover {
+      background: rgba(0, 0, 0, 0.05);
+      border-color: rgba(0, 0, 0, 0.2);
+    }
+
+    [data-theme="light"] .hamburger .bars span {
+      background: var(--light);
+    }
+
+    [data-theme="light"] .mobile-nav {
+      background: #FFFFFF;
+      border-left: 1px solid rgba(0, 0, 0, 0.1);
+      box-shadow: -5px 0 15px rgba(0, 0, 0, 0.05);
+    }
+
+    [data-theme="light"] .mobile-nav a {
+      color: var(--light);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    [data-theme="light"] .mobile-nav a:hover {
+      background: rgba(0, 0, 0, 0.03);
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -931,11 +959,11 @@
 
       .mobile-nav {
         display: none;
-        margin-top: 114px;
+        /* margin-top: 114px; */
         position: fixed;
         top: 0;
         right: 0;
-        height: 600px;
+        height: 500%;
         width: 260px;
         transform: translateX(100%);
         transition: transform 0.3s ease;
@@ -1219,7 +1247,7 @@
             <span class="step step-connect" data-step="connect" title="Wallet connection step">Connect</span>
             <span class="step step-network" data-step="network" title="Assetchain network step">Network</span>
             <span class="step step-signin" data-step="signin" title="Sign-in step">Sign-in</span>
-                    <button id="theme-toggle"  class="btn btn-primary" aria-label="Toggle theme">
+                    <button id="theme-toggle"  aria-label="Toggle theme">
             <i class="fas fa-sun"></i>
           </button>
           </div>

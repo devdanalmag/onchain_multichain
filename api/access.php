@@ -1,6 +1,12 @@
 <?php
 // Auto Load Classes
 require_once(__DIR__ . "/autoloader.php");
+require_once(__DIR__ . "/security_helper.php");
+
+// Apply Security Measures
+ApiSecurity::disableErrorDisplay();
+ApiSecurity::applySecurityHeaders();
+// ApiSecurity::rateLimit(100, 60); // Higher limit for general access
 
 // CORS and JSON headers
 header('Access-Control-Allow-Origin: *');
