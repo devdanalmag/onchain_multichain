@@ -3447,13 +3447,15 @@
 
         if (isSuccess) {
           notify('success', 'Transaction successful!');
-          if (service === 'airtime') {
-            $('#airtime-ref').value = randRef();
-          } else {
-            $('#data-ref').value = randRef();
-          }
         } else {
           notify('error', 'Transaction failed.');
+        }
+        
+        // Always reset ref
+        if (service === 'airtime') {
+          $('#airtime-ref').value = randRef();
+        } else {
+          $('#data-ref').value = randRef();
         }
       } catch (e) {
         hideGlobalLoader();
@@ -3492,6 +3494,13 @@
           });
         } catch (_) { }
         showAlert('Error', e && e.message ? e.message : 'Unknown error occurred.', { okText: 'OK' });
+        
+        // Always reset ref on error too
+        if (service === 'airtime') {
+          $('#airtime-ref').value = randRef();
+        } else {
+          $('#data-ref').value = randRef();
+        }
       }
     }
 
