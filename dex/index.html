@@ -1425,6 +1425,12 @@
                   <option value="refunded">Refunded</option>
                 </select>
               </div>
+              <div class="form-group">
+                <label for="history-reload">Actions</label>
+                <button id="history-reload" class="btn btn-secondary" style="width:100%" aria-label="Reload history">
+                  <i class="fas fa-sync-alt"></i> Reload History
+                </button>
+              </div>
             </div>
           </div>
           <div id="history-status" class="mono" aria-live="polite"></div>
@@ -2575,6 +2581,13 @@
         next.onclick = async () => { page++; await update(); };
         if (sortSel) sortSel.addEventListener('change', update);
         if (filterSel) filterSel.addEventListener('change', update);
+        const reloadBtn = document.getElementById('history-reload');
+        if (reloadBtn) {
+          reloadBtn.onclick = async () => {
+            page = 0;
+            await update();
+          };
+        }
         await update();
       } catch (e) {
         const status = document.getElementById('history-status');
