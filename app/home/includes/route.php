@@ -146,17 +146,17 @@ else:
         echo 1;
     }
 
-    // Check Ton Price
-    if (isset($_GET["check-ton-price"])) {
-        echo $response = $controller->checkTonPrice();
+    // Check Native Price (AssetChain/EVM)
+    if (isset($_GET["check-ton-price"]) || isset($_GET["check-native-price"])) {
+        echo $response = $controller->checkNativePrice();
         exit();
     }
 
-    // Get TON Balance in Wallet 
-    if (isset($_GET["check-ton-balance"])) {
+    // Get Native Balance in Wallet 
+    if (isset($_GET["check-ton-balance"]) || isset($_GET["check-native-balance"])) {
         if (isset($_GET["address"])) {
             $address = $_GET["address"];
-            $response = $controller->checkTonBalance($address);
+            $response = $controller->checkNativeBalance($address);
             echo $response;
         } else {
             echo json_encode(["error" => "No address provided"]);

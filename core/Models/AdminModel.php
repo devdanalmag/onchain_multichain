@@ -152,7 +152,7 @@ class AdminModel extends Model
 	}
 
 	//Update Site Setting
-	public function updateSiteSetting($sitename, $siteurl, $apidocumentation, $coingeckoapi, $toncentreapi, $blockchain, $walletname, $refundstatus, $refundaddress, $errorStatus, $referalupgradebonus, $referalairtimebonus, $referaldatabonus, $referalwalletbonus, $referalcablebonus, $referalexambonus, $referalmeterbonus, $wallettowalletcharges, $agentupgrade, $vendorupgrade, $electricitycharges, $airtimemin, $airtimemax)
+	public function updateSiteSetting($sitename, $siteurl, $apidocumentation, $coingeckoapi, $blockchain, $walletname, $refundstatus, $refundaddress, $errorStatus, $referalupgradebonus, $referalairtimebonus, $referaldatabonus, $referalwalletbonus, $referalcablebonus, $referalexambonus, $referalmeterbonus, $wallettowalletcharges, $agentupgrade, $vendorupgrade, $electricitycharges, $airtimemin, $airtimemax)
 	{
 		$dbh = self::connect();
 		$sql = "UPDATE sitesettings SET 
@@ -176,7 +176,6 @@ class AdminModel extends Model
 			wallettowalletcharges=:wwc,
 			electricitycharges=:electc,
 			coingeckoapikey=:geckokey,
-			toncentreapikey=:toncentreapi,
 			airtimemin=:amin,
 			airtimemax=:amax
 		WHERE sId=1";
@@ -201,7 +200,6 @@ class AdminModel extends Model
 		$query->bindParam(':wwc', $wallettowalletcharges, PDO::PARAM_STR);
 		$query->bindParam(':electc', $electricitycharges, PDO::PARAM_STR);
 		$query->bindParam(':geckokey', $coingeckoapi, PDO::PARAM_STR);
-		$query->bindParam(':toncentreapi', $toncentreapi, PDO::PARAM_STR);
 		$query->bindParam(':amin', $airtimemin, PDO::PARAM_STR);
 		$query->bindParam(':amax', $airtimemax, PDO::PARAM_STR);
 		$query->execute();

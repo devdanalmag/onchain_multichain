@@ -133,9 +133,9 @@ var texts = `<p class="mb-0 text-center font-600 color-highlight">Selected Netwo
 
                     <div class="input-style input-style-always-active has-borders validate-field mb-4">
                         <label for="amounttopay" class="color-theme opacity-80 font-700 font-12">Amount To Pay</label>
-                        <input name="ton-to-pay" type="hidden" id="ton-to-pay" value="" hidden />
-                        <input type="number" name="amounttopay" placeholder="Amount To Pay" tontopay="" value="" class="round-small" id="amounttopay" readonly required />
-                        <u class="pricetopay"><em> <b id="amounttopayinton">0.00 $TON</b> <i class="fa fa-spinner" aria-hidden="true" hidden> <i id="countdown" hidden>0</i></i></em></u>
+                        <input name="native-to-pay" type="hidden" id="native-to-pay" value="" hidden />
+                        <input type="number" name="amounttopay" placeholder="Amount To Pay" nativepay="" value="" class="round-small" id="amounttopay" readonly required />
+                        <u class="pricetopay"><em> <b id="amounttopayinton">0.00 Native</b> <i class="fa fa-spinner" aria-hidden="true" hidden> <i id="countdown" hidden>0</i></i></em></u>
                     </div>
 
                     <div class="form-check icon-check">
@@ -144,7 +144,7 @@ var texts = `<p class="mb-0 text-center font-600 color-highlight">Selected Netwo
                         <i class="icon-check-1 fa fa-square color-gray-dark font-16"></i>
                         <i class="icon-check-2 fa fa-check-square font-16 color-highlight"></i>
                     </div>
-                    <input type="text" value="ton" id="blockchainselect" hidden />
+                    <input type="text" value="native" id="blockchainselect" hidden />
                     <input name="transref" type="hidden" value="<?php echo $transRef; ?>" />
                     <input name="transkey" id="transkey" type="hidden" />
                     <input type="hidden" name="" id="walletdatainfo" connection="" saved-address="<?php echo $data3->sTonaddress ?>" address-status="<?php echo $data3->tonaddstatus; ?>">
@@ -155,12 +155,12 @@ var texts = `<p class="mb-0 text-center font-600 color-highlight">Selected Netwo
                         <button type="submit" id="data-btn" name="purchase-data" style="width: 100%;" class="btn btn-full btn-l font-600 font-15 gradient-highlight mt-4 rounded-s">
                             Buy Data
                         </button>
-                        <span id="fetch-price" style="width: 100%; display: none;" class="btn btn-full btn-l font-600 font-15 gradient-highlight mt-4 rounded-s" onclick="gettonPrice()" hidden>
+                        <span id="fetch-price" style="width: 100%; display: none;" class="btn btn-full btn-l font-600 font-15 gradient-highlight mt-4 rounded-s" onclick="getNativePrice()" hidden>
                             Get Price
                         </span>
                     </div>
                     <div class="form-button" id="ton-connect-btn-div" style="display: none;">
-                        <div id="ton-connect" style="display: grid; align-items: center; justify-content: center;flex-wrap: wrap;"></div>
+                        <button type="button" onclick="connectEVMWallet()" class="btn btn-full btn-l font-600 font-15 gradient-highlight mt-4 rounded-s">Connect Wallet</button>
                     </div>
                     <br>
                     <b id="disconnect-wallet-btn" style="display: flex;    align-items: center; justify-content: center; flex-wrap: wrap; cursor:pointer; " onclick="disconnectWallets()">Disconnect?</b>

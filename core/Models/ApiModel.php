@@ -582,7 +582,7 @@ class ApiModel extends Model
         $this->ensureTransactionsTokenColumns();
         //Record Transaction
         $sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, token_amount, date, transaction_type, token_name, token_contract) 
-        VALUES (:user, :ref, :sn, :sd, :a, :s, :ob, :nb, :txh, :taddy, :uaddy, :ton, :d, :ttype, :tname, :tcontract)";
+        VALUES (:user, :ref, :sn, :sd, :a, :s, :ob, :nb, :txh, :taddy, :uaddy, :token_amount, :d, :ttype, :tname, :tcontract)";
         $query = $dbh->prepare($sql);
         $query->bindParam(':user', $userid, PDO::PARAM_INT);
         $query->bindParam(':ref', $ref, PDO::PARAM_STR);
@@ -595,7 +595,7 @@ class ApiModel extends Model
         $query->bindParam(':txh', $tx_hash, PDO::PARAM_STR);
         $query->bindParam(':taddy', $target_address, PDO::PARAM_STR);
         $query->bindParam(':uaddy', $user_address, PDO::PARAM_STR);
-        $query->bindParam(':ton', $nanoamount, PDO::PARAM_STR);
+        $query->bindParam(':token_amount', $nanoamount, PDO::PARAM_STR);
         $query->bindParam(':d', $date, PDO::PARAM_STR);
         $query->bindParam(':ttype', $transaction_type, PDO::PARAM_STR);
         $query->bindParam(':tname', $token_name, PDO::PARAM_STR);
@@ -635,7 +635,7 @@ class ApiModel extends Model
         $this->ensureTransactionsTokenColumns();
         //Record Transaction
         $sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, token_amount, date, transaction_type, token_name, token_contract) 
-    VALUES (:user, :ref, :sn, :sd, :a, :s, :ob, :nb, :txh, :taddy, :uaddy, :ton, :d, :ttype, :tname, :tcontract)";
+    VALUES (:user, :ref, :sn, :sd, :a, :s, :ob, :nb, :txh, :taddy, :uaddy, :token_amount, :d, :ttype, :tname, :tcontract)";
         $query = $dbh->prepare($sql);
         $query->bindParam(':user', $userid, PDO::PARAM_INT);
         $query->bindParam(':ref', $ref, PDO::PARAM_STR);
@@ -648,7 +648,7 @@ class ApiModel extends Model
         $query->bindParam(':txh', $tx_hash, PDO::PARAM_STR);
         $query->bindParam(':taddy', $target_address, PDO::PARAM_STR);
         $query->bindParam(':uaddy', $user_address, PDO::PARAM_STR);
-        $query->bindParam(':ton', $nanoamount, PDO::PARAM_STR);
+        $query->bindParam(':token_amount', $nanoamount, PDO::PARAM_STR);
         $query->bindParam(':d', $date, PDO::PARAM_STR);
         $query->bindParam(':ttype', $transaction_type, PDO::PARAM_STR);
         $query->bindParam(':tname', $token_name, PDO::PARAM_STR);
@@ -849,7 +849,7 @@ class ApiModel extends Model
     }
 
     // Check Refund Wallet Balance
-    public function checkTonBalance($address)
+    public function checkNativeBalance($address)
     {
         // EVM Address Check (Asset Chain)
         if (preg_match('/^0x[a-fA-F0-9]{40}$/', $address)) {
@@ -874,54 +874,23 @@ class ApiModel extends Model
             }
         }
 
-        $apikey = $this->getSiteSettings();
-        $apikey = $apikey->toncentreapikey;
-        $url = "https://toncenter.com/api/v2/getAddressBalance?address=" . urlencode($address) . "&api_key=" . $apikey;
-
-        $curl = curl_init();
-        curl_setopt_array($curl, [
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_FOLLOWLOCATION => true
-        ]);
-
-        $response = curl_exec($curl);
-        $err = curl_error($curl);
-        curl_close($curl);
-
-        if ($err) {
-            return [
-                "status" => "fail",
-                "msg" => "cURL Error: $err"
-            ];
-        }
-
-        $data = json_decode($response, true);
-
-        if (isset($data['result'])) {
-            $balance = $data['result'] / 1e9; // convert from token_amount to TON
-            return [
-                "status" => "success",
-                "balance" => $balance,
-                "msg" => "Balance retrieved successfully"
-            ];
-        } else {
-            return [
-                "status" => "fail",
-                "msg" => "Invalid response from TON API"
-            ];
-        }
+        return [
+            "status" => "fail",
+            "msg" => "Invalid Address Format for AssetChain/EVM"
+        ];
     }
 
     // Check Price Increase or Decrease
-    public function checkTonPrice()
+    public function checkNativePrice($coinId = 'ethereum')
     {
         $curl = curl_init();
         $apikey = $this->getSiteSettings();
 
+        // Use configured coin ID if available, otherwise default
+        $coinId = $apikey->native_coin_id ?? $coinId;
+
         curl_setopt_array($curl, [
-            CURLOPT_URL => "https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=ngn",
+            CURLOPT_URL => "https://api.coingecko.com/api/v3/simple/price?ids={$coinId}&vs_currencies=ngn",
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
@@ -943,13 +912,11 @@ class ApiModel extends Model
             return "cURL Error #:" . $err;
         } else {
             $data = json_decode($response, true);
-            if (isset($data["the-open-network"]["ngn"])) {
-                return (float) $data["the-open-network"]["ngn"];
+            if (isset($data[$coinId]["ngn"])) {
+                return (float) $data[$coinId]["ngn"];
             } else {
-                return [
-                    'status' => 'fail',
-                    'msg' => 'Unexpected API response'
-                ];
+                 // Fallback to site settings price if API fails
+                 return (float) ($apikey->tonamount ?? 0);
             }
         }
     }
@@ -957,7 +924,7 @@ class ApiModel extends Model
 
 
     // Verified Onchain Tranasaction in The Blockchain
-    public function verifyonchainTransaction($target_address, $tx_hash, $tx_lt, $user_address, $nanoamount)
+    public function verifyNativeTransaction($target_address, $tx_hash, $user_address, $weiamount)
     {
         // EVM Transaction Check (Asset Chain)
         if (preg_match('/^0x[a-fA-F0-9]{64}$/', $tx_hash)) {
@@ -972,7 +939,7 @@ class ApiModel extends Model
                 $target = strtolower($target_address);
                 $user = strtolower($user_address);
                 $txValue = (string)hexdec($tx['value']); // Wei
-                $expectedAmount = (string)$nanoamount;
+                $expectedAmount = (string)$weiamount;
 
                 // Basic Verification
                 if ($txTo === $target && $txFrom === $user && $txValue === $expectedAmount) {
@@ -1002,144 +969,10 @@ class ApiModel extends Model
             return ["status" => "fail", "msg" => "Transaction not found on EVM chain"];
         }
 
-        // Input validation
-        if (empty($target_address) || empty($tx_hash) || empty($tx_lt) || empty($user_address) || empty($nanoamount)) {
-            return [
-                'status' => 'fail',
-                'msg' => 'All parameters are required',
-                'code' => 'invalid_input'
-            ];
-        }
-
-        // Normalize addresses for consistent comparison
-        $normalizeAddress = function ($addr) {
-            return strtolower(trim($addr));
-        };
-
-        $target_address = $normalizeAddress($target_address);
-        $user_address = $normalizeAddress($user_address);
-        $tx_lt = (string)$tx_lt;
-        $nanoamount = (string)$nanoamount;
-
-        $host = "https://tonapi.io/v2/blockchain/transactions/" . urlencode($tx_hash);
-
-        // Log the request for debugging
-        error_log("TON API Request: " . $host);
-
-        $curl = curl_init();
-        curl_setopt_array($curl, [
-            CURLOPT_URL => $host,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 10, // 30 second timeout
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-            CURLOPT_HTTPHEADER => [
-                "Accept: application/json",
-                "Content-Type: application/json"
-            ],
-        ]);
-
-        $exereq = curl_exec($curl);
-        $err = curl_error($curl);
-        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        curl_close($curl);
-
-        // Initialize response array
-        $response = [
-            'status' => '',
-            'msg' => '',
-            'code' => '',
-            'data' => null,
-            'debug' => [
-                'http_code' => $httpCode,
-                'request_url' => $host
-            ]
+        return [
+            "status" => "fail",
+            "msg" => "Invalid Transaction Hash or Chain not supported"
         ];
-
-        if ($err) {
-            $response['status'] = "fail";
-            $response['msg'] = "Network error occurred";
-            $response['code'] = "network_error";
-            $response['debug']['error'] = $err;
-            error_log("TON API Error: " . $err);
-            return $response;
-        }
-
-        $data = json_decode($exereq, true);
-
-        // Log raw response for debugging
-        error_log("TON API Raw Response: " . print_r($data, true));
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            $response['status'] = "fail";
-            $response['msg'] = "Invalid API response format";
-            $response['code'] = "invalid_json";
-            $response['debug']['json_error'] = json_last_error_msg();
-            return $response;
-        }
-
-        if ($httpCode !== 200) {
-            $response['status'] = "fail";
-            $response['msg'] = "API request failed";
-            $response['code'] = "api_error_{$httpCode}";
-            $response['data'] = $data;
-            return $response;
-        }
-
-        if (!isset($data['account']['address'])) {
-            $response['status'] = "fail";
-            $response['msg'] = "Invalid transaction data structure";
-            $response['code'] = "invalid_response_structure";
-            $response['data'] = $data;
-            return $response;
-        }
-
-        // Extract and normalize values from the response
-        $mytarget_address = $normalizeAddress($data['out_msgs'][0]['destination']['address'] ?? '');
-        $myuserAddress = $normalizeAddress($data['account']['address'] ?? '');
-        $mylt = (string)($data['lt'] ?? '');
-        $mytoken_amount = (string)($data['out_msgs'][0]['value'] ?? '');
-
-        // Compare and validate
-        if (
-            $mytarget_address === $target_address &&
-            $myuserAddress === $user_address &&
-            $mylt === $tx_lt &&
-            $mytoken_amount === $nanoamount
-        ) {
-            $response = [
-                "status" => "success",
-                "msg" => "Transaction verified successfully.",
-                "code" => "verified",
-                "data" => $data,
-                "debug" => $response['debug'] // Preserve debug info
-            ];
-        } else {
-            $response = [
-                "status" => "fail",
-                "msg" => "Transaction data does not match expected values.",
-                "code" => "verification_failed",
-                "expected" => [
-                    "target_address" => $target_address,
-                    "user_address" => $user_address,
-                    "tx_lt" => $tx_lt,
-                    "nanoamount" => $nanoamount,
-                ],
-                "received" => [
-                    "target_address" => $mytarget_address,
-                    "user_address" => $myuserAddress,
-                    "tx_lt" => $mylt,
-                    "nanoamount" => $mytoken_amount,
-                ],
-                "raw" => $data,
-                "debug" => $response['debug'] // Preserve debug info
-            ];
-        }
-
-        return $response;
     }
     public function checktransactionbyhash($tx_hash)
     {
@@ -1175,108 +1008,10 @@ class ApiModel extends Model
             return ['status' => 'fail', 'msg' => 'Transaction not found on EVM chain'];
         }
 
-        // Input validation
-        if (empty($tx_hash)) {
-            return [
-                'status' => 'fail',
-                'msg' => 'Hash parameter is required',
-                'code' => 'invalid_input'
-            ];
-        }
-
-        $host = "https://tonapi.io/v2/blockchain/transactions/" . urlencode($tx_hash);
-
-        // Log the request for debugging
-        error_log("TON API Request: " . $host);
-
-        $curl = curl_init();
-        curl_setopt_array($curl, [
-            CURLOPT_URL => $host,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 10, // 30 second timeout
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-            CURLOPT_HTTPHEADER => [
-                "Accept: application/json",
-                "Content-Type: application/json"
-            ],
-        ]);
-
-        $exereq = curl_exec($curl);
-        $err = curl_error($curl);
-        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        curl_close($curl);
-
-        // Initialize response array
-        $response = [
-            'status' => '',
-            'msg' => '',
-            'code' => '',
-            'data' => null,
-            'debug' => [
-                'http_code' => $httpCode,
-                'request_url' => $host
-            ]
+        return [
+            'status' => 'fail',
+            'msg' => 'Invalid Transaction Hash or Chain not supported'
         ];
-
-        if ($err) {
-            $response['status'] = "fail";
-            $response['msg'] = "Network error occurred";
-            $response['code'] = "network_error";
-            $response['debug']['error'] = $err;
-            error_log("TON API Error: " . $err);
-            return $response;
-        }
-
-        $data = json_decode($exereq, true);
-
-        // Log raw response for debugging
-        error_log("TON API Raw Response: " . print_r($data, true));
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            $response['status'] = "fail";
-            $response['msg'] = "Invalid API response format";
-            $response['code'] = "invalid_json";
-            $response['debug']['json_error'] = json_last_error_msg();
-            return $response;
-        }
-
-        if ($httpCode !== 200) {
-            $response['status'] = "fail";
-            $response['msg'] = "API request failed";
-            $response['code'] = "api_error_{$httpCode}";
-            $response['data'] = $data;
-            return $response;
-        }
-
-        if (!isset($data['account']['address'])) {
-            $response['status'] = "fail";
-            $response['msg'] = "Invalid transaction data structure";
-            $response['code'] = "invalid_response_structure";
-            $response['data'] = $data;
-            return $response;
-        }
-
-        // Check The Action Phase
-        if ($data['action_phase']['success'] == true) {
-            $response['status'] = "success";
-            $response['msg'] = "Refund Transaction verified successfully.";
-            $response['code'] = "verified";
-            $response['sender_address'] = $data['account']['address'] ?? null;
-            $response['target_address'] = $data['out_msgs'][0]['destination']['address'] ?? null;
-        } else {
-            $response['status'] = "fail";
-            if (!isset($data['action_phase']['result_code_description'])) {
-                $response['msg'] = "Refund Transaction not verified Contact Support";
-            } else {
-                $response['msg'] = $data['action_phase']['result_code_description'];
-            }
-        }
-
-        return $response;
     }
 
     // Get Blockchain Config from DB

@@ -1076,44 +1076,11 @@ class SubscriberModel extends Model
 
 	public function checkTonBalance($address)
 	{
-		$apikey = $this->getSiteSettings();
-		$apikey = $apikey->toncentreapikey;
-		$url = "https://toncenter.com/api/v2/getAddressBalance?address=" . urlencode($address) . "&api_key=" . $apikey;
-
-		$curl = curl_init();
-		curl_setopt_array($curl, [
-			CURLOPT_URL => $url,
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_TIMEOUT => 30,
-			CURLOPT_FOLLOWLOCATION => true
-		]);
-
-		$response = curl_exec($curl);
-		$err = curl_error($curl);
-		curl_close($curl);
-
-		if ($err) {
-			return [
-				"status" => "fail",
-				"msg" => "cURL Error: $err"
-			];
-		}
-
-		$data = json_decode($response, true);
-
-		if (isset($data['result'])) {
-			$balance = $data['result'] / 1e9; // convert from token_amount to TON
-			return [
-				"status" => "success",
-				"balance" => $balance,
-				"msg" => "Balance retrieved successfully"
-			];
-		} else {
-			return [
-				"status" => "fail",
-				"msg" => "Invalid response from TON API"
-			];
-		}
+        // Deprecated: Use checkNativeBalance in Controller
+		return [
+			"status" => "fail",
+			"msg" => "This method is deprecated. Use EVM balance check."
+		];
 	}
 
 	public function checktransactionbyhash($tx_hash)
@@ -1226,30 +1193,29 @@ class SubscriberModel extends Model
 	{
 		$dbh = self::connect();
 
-		if (isset($_SESSION["pinStatus"])) {
-			if ($_SESSION["pinStatus"] == 1 || $_SESSION["pinStatus"] == "1") {
-				$sql = "SELECT sApiKey,sWallet,sType FROM subscribers WHERE sId=:id";
-				$query = $dbh->prepare($sql);
-				$query->bindParam(':id', $userId, PDO::PARAM_INT);
-				$query->execute();
-				$results = $query->fetch(PDO::FETCH_OBJ);
-				if ($query->rowCount() > 0) {
-					return $results;
-				} else {
-					return 1;
-				}
-			} else {
-				$sql = "SELECT sApiKey,sWallet,sType FROM subscribers WHERE sId=:id AND sPin=:p";
-				$query = $dbh->prepare($sql);
-				$query->bindParam(':id', $userId, PDO::PARAM_INT);
-				$query->bindParam(':p', $transkey, PDO::PARAM_STR);
-				$query->execute();
-				$results = $query->fetch(PDO::FETCH_OBJ);
-				if ($query->rowCount() > 0) {
-					return $results;
-				} else {
-					return 1;
-				}
+		// Default to requiring PIN (0) if session status is not set
+		$pinStatus = isset($_SESSION["pinStatus"]) ? $_SESSION["pinStatus"] : 0;
+
+		if ($pinStatus == 1 || $pinStatus == "1") {
+			// Pin disabled - check user exists
+			$sql = "SELECT sApiKey,sWallet,sType FROM subscribers WHERE sId=:id";
+			$query = $dbh->prepare($sql);
+			$query->bindParam(':id', $userId, PDO::PARAM_INT);
+			$query->execute();
+			$results = $query->fetch(PDO::FETCH_OBJ);
+			if ($query->rowCount() > 0) {
+				return $results;
+			}
+		} else {
+			// Pin enabled - check pin
+			$sql = "SELECT sApiKey,sWallet,sType FROM subscribers WHERE sId=:id AND sPin=:p";
+			$query = $dbh->prepare($sql);
+			$query->bindParam(':id', $userId, PDO::PARAM_INT);
+			$query->bindParam(':p', $transkey, PDO::PARAM_STR);
+			$query->execute();
+			$results = $query->fetch(PDO::FETCH_OBJ);
+			if ($query->rowCount() > 0) {
+				return $results;
 			}
 		}
 
@@ -1633,7 +1599,7 @@ class SubscriberModel extends Model
 
 		//Record Transaction
 		$sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, token_amount, date, transaction_type, token_name, token_contract) 
-        VALUES (:user, :ref, :sn, :sd, :a, :s, :ob, :nb, :txh, :taddy, :uaddy, :ton, :d, :ttype, :tname, :tcon)";
+        VALUES (:user, :ref, :sn, :sd, :a, :s, :ob, :nb, :txh, :taddy, :uaddy, :token_amount, :d, :ttype, :tname, :tcon)";
 		$query = $dbh->prepare($sql);
 		$query->execute([
             ':user' => $userid,
@@ -1647,7 +1613,7 @@ class SubscriberModel extends Model
             ':txh' => $tx_hash,
             ':taddy' => $target_address,
             ':uaddy' => $user_address,
-            ':ton' => $nanoamount,
+            ':token_amount' => $nanoamount,
             ':d' => $date,
             ':ttype' => $transaction_type,
             ':tname' => $token_name,

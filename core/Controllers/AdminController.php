@@ -448,7 +448,7 @@ class AdminController extends Controller
 		$airtimemax = isset($airtimemax) ? $airtimemax : 0;
 
 		// Call model update with all parameters
-		$check = $this->model->updateSiteSetting($sitename, $siteurl, $apidocumentation, $coingeckoapi, $toncentreapi, $blockchain, $syswallet, $refstatus, $refundwallet, $errorshow, $referalupgradebonus, $referalairtimebonus, $referaldatabonus, $referalwalletbonus, $referalcablebonus, $referalexambonus, $referalmeterbonus, $wallettowalletcharges, $agentupgrade, $vendorupgrade, $electricitycharges, $airtimemin, $airtimemax);
+		$check = $this->model->updateSiteSetting($sitename, $siteurl, $apidocumentation, $coingeckoapi, $blockchain, $syswallet, $refstatus, $refundwallet, $errorshow, $referalupgradebonus, $referalairtimebonus, $referaldatabonus, $referalwalletbonus, $referalcablebonus, $referalexambonus, $referalmeterbonus, $wallettowalletcharges, $agentupgrade, $vendorupgrade, $electricitycharges, $airtimemin, $airtimemax);
 
 		if ($check == 0) {
 			return $this->createNotification1("alert-success", "Details Updated Successfully");

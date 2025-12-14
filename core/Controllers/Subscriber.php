@@ -15,6 +15,7 @@ class Subscriber extends Controller
 	public $siteurl;
 
 
+	/** @var SubscriberModel */
 	protected $model;
 
 	//Default Constructor
@@ -119,69 +120,48 @@ class Subscriber extends Controller
 		$check = $this->model->updateProfileKey($this->userId, $oldpass, $newpass);
 		return $check;
 	}
-	// Check Ton Balance in Wallet
-	public function checkTonBalance($address)
+	// Check Native Balance (AssetChain/EVM) with TON Fallback
+	public function checkNativeBalance($address)
 	{
 		// EVM Address Check (Asset Chain)
 		if (preg_match('/^0x[a-fA-F0-9]{40}$/', $address)) {
-			$config = $this->getAssetChainConfig();
 			$response = $this->callJsonRpc('eth_getBalance', [$address, 'latest']);
 			
 			if (isset($response['result'])) {
-				// Convert Hex to Decimal
 				$wei = hexdec($response['result']);
-				$balance = $wei / 1e18; // Asset Chain uses 18 decimals
-				
+				$balance = $wei / 1e18; // Convert Wei to Ether
 				return json_encode([
-					"balance" => $balance,
 					"status" => "success",
+					"balance" => $balance,
 					"msg" => "Balance retrieved successfully"
 				]);
 			} else {
 				return json_encode([
-					"error" => "Failed to retrieve EVM balance",
-					"status" => "fail"
+					"status" => "fail",
+					"msg" => "Failed to retrieve balance",
+					"debug" => $response
 				]);
 			}
 		}
 
-		$apikey = $this->model->getSiteSettings();
-		$apikey = $apikey->toncentreapikey;
-		$url = "https://toncenter.com/api/v2/getAddressBalance?address=" . urlencode($address) . "&api_key=" . $apikey;
-
-		$curl = curl_init();
-		curl_setopt_array($curl, [
-			CURLOPT_URL => $url,
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_TIMEOUT => 30,
-			CURLOPT_FOLLOWLOCATION => true
-		]);
-
-		$response = curl_exec($curl);
-		$err = curl_error($curl);
-		curl_close($curl);
-
-		if ($err) {
-			return json_encode(["error" => "cURL Error: $err"]);
-		}
-
-		$data = json_decode($response, true);
-
-		if (isset($data['result'])) {
-			$balance = $data['result'] / 1e9; // convert from token_amount to TON
-			return json_encode(["balance" => $balance]);
-		} else {
-			return json_encode(["error" => "Invalid response from TON API"]);
-		}
+		return json_encode(["status" => "fail", "msg" => "Invalid EVM address format"]);
 	}
 
-	// Check Ton Price in 
-	public function checkTonPrice()
+	// Legacy Alias
+	public function checkTonBalance($address)
+	{
+		return $this->checkNativeBalance($address);
+	}
+
+	// Check Native Price (AssetChain/EVM)
+	public function checkNativePrice()
 	{
 		$curl = curl_init();
-		$apikey = $this->model->getSiteSettings();
+		$settings = $this->model->getSiteSettings();
+		$coinId = $settings->native_coin_id ?? 'ethereum'; // Default to ethereum if not set
+		
 		curl_setopt_array($curl, [
-			CURLOPT_URL => "https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=ngn",
+			CURLOPT_URL => "https://api.coingecko.com/api/v3/simple/price?ids={$coinId}&vs_currencies=ngn",
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_ENCODING => "",
 			CURLOPT_MAXREDIRS => 10,
@@ -190,7 +170,7 @@ class Subscriber extends Controller
 			CURLOPT_CUSTOMREQUEST => "GET",
 			CURLOPT_HTTPHEADER => [
 				"accept: application/json",
-				"x-cg-demo-api-key: " . $apikey->coingeckoapikey,
+				"x-cg-demo-api-key: " . ($settings->coingeckoapikey ?? ''),
 			],
 		]);
 
@@ -200,14 +180,10 @@ class Subscriber extends Controller
 		curl_close($curl);
 
 		if ($err) {
-			return "cURL Error #:" . $err;
+			return json_encode(["status" => "fail", "msg" => "cURL Error: " . $err]);
 		} else {
-			// $response = json_encode($response, true); // true makes it return an associative array
-			// $data = json_decode($response, true); // true makes it return an associative array
-			// $data = $response["the-open-network"]["ngn"];
 			return $response;
 		}
-		// return $check;
 	}
 
 	public function verifyonchainTransaction($target_address, $tx_hash, $tx_lt, $user_address, $nanoamount)
@@ -255,144 +231,11 @@ class Subscriber extends Controller
 			return ["status" => "fail", "msg" => "Transaction not found on EVM chain"];
 		}
 
-		// Input validation
-		if (empty($target_address) || empty($tx_hash) || empty($tx_lt) || empty($user_address) || empty($nanoamount)) {
-			return [
-				'status' => 'fail',
-				'msg' => 'All parameters are required',
-				'code' => 'invalid_input'
-			];
-		}
-
-		// Normalize addresses for consistent comparison
-		$normalizeAddress = function ($addr) {
-			return strtolower(trim($addr));
-		};
-
-		$target_address = $normalizeAddress($target_address);
-		$user_address = $normalizeAddress($user_address);
-		$tx_lt = (string)$tx_lt;
-		$nanoamount = (string)$nanoamount;
-
-		$host = "https://tonapi.io/v2/blockchain/transactions/" . urlencode($tx_hash);
-
-		// Log the request for debugging
-		error_log("TON API Request: " . $host);
-
-		$curl = curl_init();
-		curl_setopt_array($curl, [
-			CURLOPT_URL => $host,
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_ENCODING => '',
-			CURLOPT_MAXREDIRS => 10,
-			CURLOPT_TIMEOUT => 10, // 30 second timeout
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-			CURLOPT_CUSTOMREQUEST => 'GET',
-			CURLOPT_HTTPHEADER => [
-				"Accept: application/json",
-				"Content-Type: application/json"
-			],
-		]);
-
-		$exereq = curl_exec($curl);
-		$err = curl_error($curl);
-		$httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-		curl_close($curl);
-
-		// Initialize response array
-		$response = [
-			'status' => '',
-			'msg' => '',
-			'code' => '',
-			'data' => null,
-			'debug' => [
-				'http_code' => $httpCode,
-				'request_url' => $host
-			]
+		return [
+			"status" => "fail",
+			"msg" => "Invalid Transaction Hash format for EVM",
+			"code" => "invalid_input"
 		];
-
-		if ($err) {
-			$response['status'] = "fail";
-			$response['msg'] = "Network error occurred";
-			$response['code'] = "network_error";
-			$response['debug']['error'] = $err;
-			error_log("TON API Error: " . $err);
-			return $response;
-		}
-
-		$data = json_decode($exereq, true);
-
-		// Log raw response for debugging
-		error_log("TON API Raw Response: " . print_r($data, true));
-
-		if (json_last_error() !== JSON_ERROR_NONE) {
-			$response['status'] = "fail";
-			$response['msg'] = "Invalid API response format";
-			$response['code'] = "invalid_json";
-			$response['debug']['json_error'] = json_last_error_msg();
-			return $response;
-		}
-
-		if ($httpCode !== 200) {
-			$response['status'] = "fail";
-			$response['msg'] = "API request failed";
-			$response['code'] = "api_error_{$httpCode}";
-			$response['data'] = $data;
-			return $response;
-		}
-
-		if (!isset($data['account']['address'])) {
-			$response['status'] = "fail";
-			$response['msg'] = "Invalid transaction data structure";
-			$response['code'] = "invalid_response_structure";
-			$response['data'] = $data;
-			return $response;
-		}
-
-		// Extract and normalize values from the response
-		$mytarget_address = $normalizeAddress($data['out_msgs'][0]['destination']['address'] ?? '');
-		$myuserAddress = $normalizeAddress($data['account']['address'] ?? '');
-		$mylt = (string)($data['lt'] ?? '');
-		$mytoken_amount = (string)($data['out_msgs'][0]['value'] ?? '');
-
-		// Compare and validate
-		if (
-			$mytarget_address === $target_address &&
-			$myuserAddress === $user_address &&
-			$mylt === $tx_lt &&
-			$mytoken_amount === $nanoamount
-		) {
-			$response = [
-				"status" => "success",
-				"msg" => "Transaction verified successfully.",
-				"code" => "verified",
-				"data" => $data,
-				"debug" => $response['debug'] // Preserve debug info
-			];
-		} else {
-			$response = [
-				"status" => "fail",
-				"msg" => "Transaction data does not match expected values.",
-				"code" => "verification_failed",
-				"expected" => [
-					"target_address" => $target_address,
-					"user_address" => $user_address,
-					"tx_lt" => $tx_lt,
-					"nanoamount" => $nanoamount,
-				],
-				"received" => [
-					"target_address" => $mytarget_address,
-					"user_address" => $myuserAddress,
-					"tx_lt" => $mylt,
-					"nanoamount" => $mytoken_amount,
-				],
-				"raw" => $data,
-				"debug" => $response['debug'] // Preserve debug info
-			];
-		}
-
-		return $response;
 	}
 	//Disable User Pin
 	public function disableUserPin()
@@ -511,18 +354,14 @@ public function getCoins()
 		$user_address = htmlspecialchars(strip_tags($_POST['user_address'] ?? ''));
 		$nanoamount = filter_var($_POST['nanoamount'], FILTER_SANITIZE_NUMBER_INT);
 		
-		// Handle EVM Address or TON Address
-		if (preg_match('/^0x[a-fA-F0-9]{40}$/', $user_address)) {
-			$fuser_address = $user_address;
-			$ftarget_address = $target_address;
-			$tonamount = $nanoamount / 1e18; // EVM uses 18 decimals
-		} else {
-			$fuser_address = $this->toFriendlyAddress($user_address, false, false);
-			$ftarget_address = $this->toFriendlyAddress($target_address, false, false);
-			$tonamount = $nanoamount / 1e9; // TON uses 9 decimals
-		}
+		// Handle EVM Address
+		$fuser_address = $this->normalizeEvmAddress($user_address);
+		$ftarget_address = $this->normalizeEvmAddress($target_address);
+		$tonamount = $nanoamount / 1e18; // EVM uses 18 decimals
 
 		// Verify transaction pin
+		
+		
 		$check = $this->model->verifyTransactionPin($this->userId, $transkey);
 		if (!is_object($check)) {
 			$errorMsg = "Incorrect Pin, Please Try Again.";
@@ -671,44 +510,6 @@ public function getCoins()
 
 		file_put_contents($logFile, $logMessage, FILE_APPEND | LOCK_EX);
 	}
-	public function toFriendlyAddress(string $rawAddress, bool $bounceable = false, bool $testOnly = false): string
-	{
-		if (strpos($rawAddress, ':') !== false) {
-			[$wc, $hex] = explode(':', $rawAddress);
-			$wc = intval($wc);
-		} else {
-			$wc = 0;
-			$hex = $rawAddress;
-		}
-
-		if (strlen($hex) !== 64) {
-			throw new Exception("Invalid address: expected 64 hex characters, got " . strlen($hex));
-		}
-
-		$tag = 0x11; // non-bounceable
-		if (!$bounceable) $tag = 0x51;
-		if ($testOnly) $tag |= 0x80;
-
-		$bytes = chr($tag) . chr($wc & 0xFF) . hex2bin($hex);
-		$crc = $this->crc16xmodem($bytes);
-		$bytes .= pack('n', $crc);
-
-		return rtrim(strtr(base64_encode($bytes), '+/', '-_'), '=');
-	}
-
-	public function crc16xmodem(string $data): int
-	{
-		$crc = 0;
-		foreach (str_split($data) as $b) {
-			$crc ^= ord($b) << 8;
-			for ($i = 0; $i < 8; $i++) {
-				$crc = ($crc & 0x8000) ? (($crc << 1) ^ 0x1021) : ($crc << 1);
-				$crc &= 0xFFFF;
-			}
-		}
-		return $crc;
-	}
-
 	// Helper to get Asset Chain Config
 	private function getAssetChainConfig() {
 		$path = __DIR__ . '/../../config/assetchain.json';
@@ -1000,8 +801,10 @@ public function purchaseData()
     $tx_lt = filter_var($_POST['tx_lt'], FILTER_SANITIZE_NUMBER_INT);
     $user_address = htmlspecialchars(strip_tags($_POST['user_address'] ?? ''));
     $nanoamount = filter_var($_POST['nanoamount'], FILTER_SANITIZE_NUMBER_INT);
-    $fuser_address = $this->toFriendlyAddress($user_address, false, false);
-    $ftarget_address = $this->toFriendlyAddress($target_address, false, false);
+    
+    // EVM addresses are used directly
+    $fuser_address = $user_address;
+    $ftarget_address = $target_address;
 
     // Verify transaction pin
     $check = $this->model->verifyTransactionPin($this->userId, $transkey);

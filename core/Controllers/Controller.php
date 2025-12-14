@@ -143,4 +143,16 @@ class Controller
 			}
 		}
 	}
+
+	// Normalize EVM address for comparison (lowercase, trim)
+	public function normalizeEvmAddress($address)
+	{
+		if (!is_string($address)) return '';
+		$addr = strtolower(trim($address));
+		// Ensure 0x prefix if missing
+		if ($addr && substr($addr, 0, 2) !== '0x' && strlen($addr) === 40) {
+			$addr = '0x' . $addr;
+		}
+		return $addr;
+	}
 }

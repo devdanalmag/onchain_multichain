@@ -376,15 +376,12 @@ if (isset($_GET['set-wallet'])) {
 
             <div data-bs-parent="#tab-group-1" class="collapse <?php echo $tab4show ?>" id="tab-4">
                 <p class="mb-n1 color-highlight font-600 font-12">Manage Wallet</p>
-                <div id="tonconn-div" class="tonconnectdiv" style="display: none;">
-                    <div id="ton-connect"></div>
-                </div>
                 <form id="add-walletform" method="post">
-                    <!-- <iframe src="../../assets/images/chains/ton_logo_light_background.png" alt="Ton" class="input-image" id="ton-logo-add" style="display: block;"> </iframe> -->
-                    <!-- <div id="wallet-info" style="display: none;"></div> -->
                     <div class="input-style list-group list-custom-small has-icon" id="walletinfo-div" style="display: none;">
+                        <i class="fa fa-wallet"></i>
                         <input type="text" class="form-control" name="walletaddress" id="wallet-add" readonly
                             value="<?php echo $data->sTonaddress ?>" changestatus="0" saved-address="<?php echo $data->sTonaddress ?>" address-status="<?php echo $data->tonaddstatus; ?>" />
+                        <label for="wallet-add" class="color-highlight">Wallet Address</label>
                         <em style="right: -42px !important; margin-top: -34px !important;  opacity: 1 !important;">
                             <iframe src="../../assets/images/icons/check.png" alt="Saved" class="input-image" id="saved-add" style="display: block;"></iframe>
                             <iframe src="../../assets/images/icons/caution.png" alt="Unsaved" class="input-image" id="unsaved-add" style="display: none;"></iframe>
@@ -403,7 +400,7 @@ if (isset($_GET['set-wallet'])) {
                     <div class="input-style has-borders no-icon input-style-always-active  mb-4" style="display: none;">
                         <select id="blockchainselect" disabled>
                             <option value="" disabled>Select Chain To Use</option>
-                            <option value="ton" selected> <b> Ton Blockchain </b> </option>
+                            <option value="native" selected> <b> Native Chain (AssetChain) </b> </option>
                             <option value="other">Other Chains</option>
                         </select><label for="blockchainselect" class="color-highlight">Select Chain To Use</label>
                         <em>(required)</em>

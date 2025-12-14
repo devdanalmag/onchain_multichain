@@ -13,3 +13,4 @@
 <script src="../../assets/js/pages/data-table.js"></script>
 
 <script src="https://kit.fontawesome.com/95325fb6b8.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>

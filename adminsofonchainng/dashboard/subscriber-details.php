@@ -94,7 +94,7 @@
                         </div>
                     </div>
                     <div class="form-group col-md-6">
-                        <label for="success" class="control-label">Wallet Adress</label>
+                        <label for="success" class="control-label">Wallet Address</label>
                         <div class="">
                             <input type="text" value="<?php echo $data->sTonaddress; ?>" class="form-control" readonly required="required">
                         </div>

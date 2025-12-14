@@ -43,8 +43,8 @@ class ApiAccess extends Controller
         $response = array();
         $response["name"] = $result->sLname . " " . $result->sFname;
         $response["balance"] = number_format($result->sWallet, 2);
-        $response["tonwalletstatus"] = $result->tonaddstatus;
-        $response["tonaddress"] = $result->sTonaddress;
+        $response["walletstatus"] = $result->tonaddstatus;
+        $response["walletaddress"] = $result->sTonaddress;
         return $response;
     }
 
@@ -537,71 +537,32 @@ class ApiAccess extends Controller
     // Check Blockchain transaction
     public function verifyTransaction($target_address, $tx_hash, $tx_lt, $user_address, $nanoamount)
     {
-        $response = $this->model->verifyonchainTransaction($target_address, $tx_hash, $tx_lt, $user_address, $nanoamount);
-        return $response;
-    }
-    // Get Friendly Adress
-    public function toFriendlyAddress(string $rawAddress,  $bounceable = false,  $testOnly = false)
-    {
-        if (strpos($rawAddress, ':') !== false) {
-            [$wc, $hex] = explode(':', $rawAddress);
-            $wc = intval($wc);
-        } else {
-            $wc = 0;
-            $hex = $rawAddress;
-        }
-
-        if (strlen($hex) !== 64) {
-            throw new Exception("Invalid address: expected 64 hex characters, got " . strlen($hex));
-        }
-
-        $tag = 0x11; // non-bounceable
-        if (!$bounceable) $tag = 0x51;
-        if ($testOnly) $tag |= 0x80;
-
-        $bytes = chr($tag) . chr($wc & 0xFF) . hex2bin($hex);
-        $crc = $this->crc16xmodem($bytes);
-        $bytes .= pack('n', $crc);
-
-        return rtrim(strtr(base64_encode($bytes), '+/', '-_'), '=');
+        // Legacy method wrapper for AssetChain/EVM verification
+        // Note: $tx_lt is unused in EVM
+        
+        // Attempt to get token contract from request
+        $token_contract = $_REQUEST['token_contract'] ?? null;
+        
+        return $this->verifyAssetTransaction($target_address, $tx_hash, $user_address, $nanoamount, $token_contract);
     }
 
-    public function crc16xmodem(string $data)
+    public function convertWeiToEther($wei_amount)
     {
-        $crc = 0;
-        foreach (str_split($data) as $b) {
-            $crc ^= ord($b) << 8;
-            for ($i = 0; $i < 8; $i++) {
-                $crc = ($crc & 0x8000) ? (($crc << 1) ^ 0x1021) : ($crc << 1);
-                $crc &= 0xFFFF;
-            }
-        }
-        return $crc;
+        return $wei_amount / 1e18;
     }
-    public function convertNanoToTon($token_amount)
+
+    //Check Price Impact
+    public function checkPriceImpact($price, $tokenAmount)
     {
-        return $token_amount / 1e9;
-    }
-    public function checkPriceImpact($price, $tonAmount)
-    {
-        // Initialize response array
-        $response = [
-            'status' => '',
-            'msg' => '',
-            'current_price' => 0,
-            'price_difference' => 0,
-            'percentage_drop' => 0,
-            'ton_amount' => $tonAmount
-        ];
+        $response = array();
 
         try {
-            // Mocked TON price in NGN (replace with actual API call)
-            // $currentTonPrice = 1100; // Assuming 1 TON = 1100 NGN
-            $currentTonPrice = $this->model->checkTonPrice();
-            $priceResult = $currentTonPrice * $tonAmount;
+            // Get the current Native price from the API
+            $currentNativePrice = $this->model->checkNativePrice();
+            $priceResult = $currentNativePrice * $tokenAmount;
             // $price = 20; // Assuming 20 NGN for the sake of example
             // Ensure we have valid numeric values
-            if (!is_numeric($price) || !is_numeric($tonAmount)) {
+            if (!is_numeric($price) || !is_numeric($tokenAmount)) {
                 throw new InvalidArgumentException('Invalid input values');
             }
 
@@ -641,17 +602,7 @@ class ApiAccess extends Controller
     }
 
     // ===== Assetchain (EVM) Helpers =====
-    // Normalize EVM address for comparison (lowercase, trim)
-    public function normalizeEvmAddress($address)
-    {
-        if (!is_string($address)) return '';
-        $addr = strtolower(trim($address));
-        // Ensure 0x prefix if missing
-        if ($addr && substr($addr, 0, 2) !== '0x' && strlen($addr) === 40) {
-            $addr = '0x' . $addr;
-        }
-        return $addr;
-    }
+
 
     // Convert wei to token units using decimals (default 18)
     public function convertWeiToToken($wei, $decimals = 18)

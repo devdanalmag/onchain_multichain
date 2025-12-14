@@ -404,7 +404,7 @@
             }
             // Check if the Airtime is lessthan 100 Naira
             if (amount < 100 || amount == null || amount == "" || amount == 0) {
-                document.getElementById("amounttopayinton").innerHTML = "0.00 $TON";
+                document.getElementById("amounttopayinton").innerHTML = "0.00 Native";
                 document.getElementById("amountwarning").removeAttribute("class");
                 document.getElementById("amountwarning").style.display = "block";
                 document.getElementById("airtime-btn").disabled = true;
@@ -460,7 +460,7 @@
                 $("#amounttopay").val(amounttopay);
                 $("#discount").val(discount + "%");
             } else {
-                document.getElementById("amounttopayinton").innerHTML = "0.00 $TON";
+                document.getElementById("amounttopayinton").innerHTML = "0.00 Native";
                 document.getElementById("amountwarning").removeAttribute("class");
                 document.getElementById("amountwarning").style.display = "block";
                 document.getElementById("airtime-btn").disabled = true;
@@ -501,7 +501,7 @@
 
                     let msg = "You are about to purchase an ";
                     msg += $('#networkid').find(":selected").attr('networkname') + " airtime of ";
-                    msg += $("#airtimeamount").val() + "N @ " + "<b>" + $("#amounttopay").attr("tontopay") + "TON" + "</b>" + " for the phone number " + $("#phone").val();
+                    msg += $("#airtimeamount").val() + "N @ " + "<b>" + $("#amounttopay").attr("nativepay") + " Native" + "</b>" + " for the phone number " + $("#phone").val();
                     msg += " <br/> Do you wish to continue?"
 
                     $("#continue-transaction-prompt-msg").html(msg);
@@ -908,7 +908,7 @@
 
             if ($("#amounttopay").val() <= 0 || $("#amounttopay").val() == null) {
                 $("#amounttopay").val("0");
-                document.getElementById("amounttopayinton").innerHTML = "0.00 $TON";
+                document.getElementById("amounttopayinton").innerHTML = "0.00 Native";
                 document.getElementById("amountwarning").removeAttribute("class");
                 document.getElementById("amountwarning").style.display = "block";
                 document.getElementById("data-btn").disabled = true;
@@ -974,7 +974,7 @@
                     let msg = "You are about to purchase an ";
                     let dataplan = $('#dataplan').find(":selected").attr('dataname');
                     msg += $('#networkid').find(":selected").attr('networkname') + " dataplan of ";
-                    msg += $("#amounttopay").val() + "N @ " + "<b>" + $("#amounttopay").attr("tontopay") + "TON" + "</b>" + " for the phone number " + $("#phone").val();
+                    msg += $("#amounttopay").val() + "N @ " + "<b>" + $("#amounttopay").attr("nativepay") + " Native" + "</b>" + " for the phone number " + $("#phone").val();
                     msg += " <br/> Do you wish to continue?"
 
                     $("#continue-transaction-prompt-msg").html(msg);
@@ -1463,7 +1463,7 @@
                             clearInterval(countdownInterval);
                             countdownInterval = null;
                             document.getElementById("countdown").textContent = 0;
-                            document.getElementById("amounttopayinton").innerHTML = "0.00 $TON";
+                            document.getElementById("amounttopayinton").innerHTML = "0.00 Native";
                             document.getElementById("airtime-btn").disabled = true;
                             document.getElementById("airtime-btn").setAttribute("type", "submit");
                             document.getElementById("airtime-btn").setAttribute("name", "purchase-airtime");
@@ -1478,7 +1478,7 @@
                             clearInterval(countdownInterval);
                             countdownInterval = null;
                             document.getElementById("countdown").textContent = 0;
-                            document.getElementById("amounttopayinton").innerHTML = "0.00 $TON";
+                            document.getElementById("amounttopayinton").innerHTML = "0.00 Native";
                             document.getElementById("data-btn").disabled = true;
                             document.getElementById("data-btn").setAttribute("type", "submit");
                             document.getElementById("data-btn").setAttribute("name", "purchase-data");
@@ -1647,7 +1647,7 @@
         startCountdown();
     }
 
-    function gettonPrice() {
+    function getNativePrice() {
         // let currentAmount = parseFloat(document.getElementById("airtimeamount").value) || 0;
         var amounttopays = parseFloat(document.getElementById("amounttopay").value);
         let page_name = document.getElementById("page-file-name").getAttribute("page-name");
@@ -1658,7 +1658,7 @@
         $('#fetch-price').addClass("btn-secondary");
         $('#fetch-price').html('<i class="fa fa-spinner fa-spin" aria-hidden="true"></i> Fetching price ...');
         $.ajax({
-            url: 'home/includes/route.php?check-ton-price',
+            url: 'home/includes/route.php?check-native-price',
             cache: false,
             contentType: false,
             processData: false,
@@ -1668,12 +1668,14 @@
             success: function(resp) {
                 // json.enc
                 console.log(resp);
-                var pricetopay = amounttopays / parseFloat(resp["the-open-network"].ngn);
+                // Get the first coin's price (dynamic coin ID)
+                var coinPrice = Object.values(resp)[0].ngn;
+                var pricetopay = amounttopays / parseFloat(coinPrice);
                 pricetopay = Number(pricetopay.toFixed(4));
                 console.log(pricetopay);
                 pricetopay = Number(pricetopay.toFixed(4))
-                document.getElementById("amounttopayinton").innerHTML = pricetopay + " $TON";
-                document.getElementById("amounttopay").setAttribute("tontopay", pricetopay);
+                document.getElementById("amounttopayinton").innerHTML = pricetopay + " Native";
+                document.getElementById("amounttopay").setAttribute("nativepay", pricetopay);
                 document.getElementById("fetch-price").style.display = "none";
                 if (page_name === "buy-airtime") {
                     purchase_btn = "airtime-btn";
@@ -2220,16 +2222,16 @@
             return "error"; // Return error for further handling
         }
         $.ajax({
-            url: 'home/includes/route.php?check-ton-balance=1&address=' + walletaddy,
+            url: 'home/includes/route.php?check-native-balance=1&address=' + walletaddy,
             method: 'GET',
             dataType: 'json',
             success: function(resp) {
-                if (resp.error) {
-                    console.error("Error:", resp.error);
+                if (resp.error || resp.status === 'fail') {
+                    console.error("Error:", resp.error || resp.msg);
                     return "error"; // Return error for further handling
                 } else {
                     const balance = resp.balance;
-                    console.log("Wallet balance From check:", balance + " TON");
+                    console.log("Wallet balance From check:", balance + " Native");
                     // You can update your HTML here
                     // document.getElementById('wallet-info').innerHTML += `Balance: ${balance} TON`;
                     // Set the balance attribute
@@ -2248,8 +2250,8 @@
     }
 
     window.Sendtransaction = function() {
-        var amount = document.getElementById("amounttopay").getAttribute("tontopay");
-        document.getElementById("ton-to-pay").setAttribute("value", amount);
+        var amount = document.getElementById("amounttopay").getAttribute("nativepay");
+        document.getElementById("native-to-pay").setAttribute("value", amount);
         // document.getElementById("continue-transaction-prompt").style.display = "none";
         $('#continue-transaction-in-wallet-prompt-btn').click();
         document.getElementById("continue-transaction-in-wallet-prompt").style.display = "block";
@@ -2324,18 +2326,11 @@
     }
     // Create Update Wallet JS CODE END
 </script>
-<script type="module">
-    import {
-        Address,
-        beginCell,
-        Cell
-    } from 'https://esm.sh/@ton/core';
-    import {
-        TonClient
-    } from 'https://esm.sh/@ton/ton';
-    import {
-        sha256
-    } from 'https://esm.sh/@ton/crypto';
+<script>
+    // EVM Wallet Integration
+    let TARGETADDRESS = '';
+    let userAddress = null;
+
     if (document.getElementById("blockchainselect")) {
         let chainselect = document.getElementById("blockchainselect");
         checkchain(chainselect);
@@ -2343,538 +2338,251 @@
 
     function checkchain(chainselect) {
         if (chainselect.value === "ton") {
-            mytonconnect();
+            // Replaced with EVM connect
+             connectEVMWallet();
         }
     }
-    let tonConnectUI = null; // declare globally
-    let TARGETADDRESS = '';
 
     window.disconnectWallets = function() {
-        mytonconnect();
-        if (tonConnectUI) {
-            tonConnectUI.disconnect();
-            console.log('Disconnected from TON Connect');
-            // Reset UI elements
-            tonConnectUI.disconnect();
-            return;
+        // For EVM, we can't strictly disconnect from the website side in the same way as TON Connect
+        // But we can clear our local state
+        userAddress = null;
+        // Update UI to reflect disconnection
+         var page_name = document.getElementById("page-file-name").getAttribute("page-name");
+         if (page_name === "buy-airtime" || page_name === "buy-data" || page_name === "buy-datapins" || page_name === "buy-alpha-plan" || page_name === "wallet-transfer") {
+            document.getElementById('walletdatainfo').setAttribute("connection", "0");
+            document.getElementById('ton-connect-btn-div').style.display = 'block';
+            document.getElementById('purchase-btn-div').style.display = 'none';
+             if(document.getElementById("disconnect-wallet-btn")){
+                 document.getElementById("disconnect-wallet-btn").style.display = "none";
+            }
+        } else {
+            document.getElementById('walletinfo-div').style.display = "none";
+        }
+         swal("Info", "Wallet disconnected from app. Please also disconnect in your wallet extension if needed.", "info");
+    }
+
+    async function connectEVMWallet() {
+        if (typeof window.ethereum !== 'undefined') {
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                handleWalletConnection(accounts[0]);
+            } catch (error) {
+                console.error('User rejected connection:', error);
+                swal("Error", "User rejected connection", "error");
+            }
+        } else {
+            console.log('MetaMask not installed');
+            swal("Error", "Please install MetaMask or another EVM wallet", "error");
         }
     }
-    // startCountdown();
-    function mytonconnect() {
-
-
-        setTimeout(function() {
-
-            // const TARGETADDRESS = '0:614a6ab7f8b855c36d06c71194a4cf3e208e38f584fddd3a1cfe8645286606e0';
-
-            TARGETADDRESS = '<?php echo $data9->walletaddress ?? ""; ?>';
-
-            // Create a TON client using the mainnet endpoint.
-            const client = new TonClient({
-                endpoint: 'https://toncenter.com/api/v2/jsonRPC',
-                apiKey: '',
-            });
-            // 1. Define a fetch with timeout (3 seconds)
-            // async function fetchWalletsWithTimeout() {
-            //     try {
-            //         const controller = new AbortController();
-            //         const timeout = setTimeout(() => controller.abort(), 1000); // 1-second timeout
-
-            //         const response = await fetch(
-            //             'https://raw.githubusercontent.com/ton-blockchain/wallets-list/main/wallets-v2.json', {
-            //                 signal: controller.signal
-            //             }
-            //         );
-
-            //         clearTimeout(timeout);
-            //         return await response.json();
-            //     } catch (error) {
-            //         console.error("Fetch failed, using local wallet list:", error);
-            //         // Your predefined wallets (Telegram, Tonkeeper, MyTonWallet, etc.)
-            //         return {
-            //             wallets: [{
-            //                     "app_name": "telegram-wallet",
-            //                     "name": "Wallet",
-            //                     "image": "https://wallet.tg/images/logo-288.png",
-            //                     "about_url": "https://wallet.tg/",
-            //                     "universal_url": "https://t.me/wallet?attach=wallet",
-            //                     "bridge": [{
-            //                         "type": "sse",
-            //                         "url": "https://walletbot.me/tonconnect-bridge/bridge"
-            //                     }],
-            //                     "platforms": ["ios", "android", "macos", "windows", "linux"]
-            //                 },
-            //                 {
-            //                     "app_name": "tonkeeper",
-            //                     "name": "Tonkeeper",
-            //                     "image": "https://tonkeeper.com/assets/tonconnect-icon.png",
-            //                     "about_url": "https://tonkeeper.com",
-            //                     "universal_url": "https://app.tonkeeper.com/ton-connect",
-            //                     "bridge": [{
-            //                         "type": "sse",
-            //                         "url": "https://bridge.tonapi.io/bridge"
-            //                     }],
-            //                     "platforms": ["ios", "android", "chrome", "macos"]
-            //                 },
-            //                 {
-            //                     "app_name": "mytonwallet",
-            //                     "name": "MyTonWallet",
-            //                     "image": "https://static.mytonwallet.io/icon-256.png",
-            //                     "about_url": "https://mytonwallet.io",
-            //                     "universal_url": "https://connect.mytonwallet.org",
-            //                     "bridge": [{
-            //                         "type": "sse",
-            //                         "url": "https://tonconnectbridge.mytonwallet.org/bridge/"
-            //                     }],
-            //                     "platforms": ["chrome", "windows", "macos", "linux", "ios", "android"]
-            //                 },
-            //                 {
-            //                     "app_name": "tonhub",
-            //                     "name": "Tonhub",
-            //                     "image": "https://tonhub.com/tonconnect_logo.png",
-            //                     "about_url": "https://tonhub.com",
-            //                     "universal_url": "https://tonhub.com/ton-connect",
-            //                     "bridge": [{
-            //                         "type": "sse",
-            //                         "url": "https://connect.tonhubapi.com/tonconnect"
-            //                     }],
-            //                     "platforms": ["ios", "android"]
-            //                 },
-            //                 {
-            //                     "app_name": "bitgetTonWallet",
-            //                     "name": "Bitget Wallet",
-            //                     "image": "https://raw.githubusercontent.com/bitgetwallet/download/main/logo/png/bitget_wallet_logo_288_mini.png",
-            //                     "about_url": "https://web3.bitget.com",
-            //                     "universal_url": "https://bkcode.vip/ton-connect",
-            //                     "bridge": [{
-            //                         "type": "sse",
-            //                         "url": "https://ton-connect-bridge.bgwapi.io/bridge"
-            //                     }],
-            //                     "platforms": ["ios", "android", "chrome"]
-            //                 }
-            //             ]
-            //         };
-            //     }
-            // }
-
-            // Initialize TON Connect with fallback support
-            tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-                manifestUrl: 'https://onchain.com.ng/Tonconnects/tonconnect-manifest.json',
-                buttonRootId: 'ton-connect',
-                // walletsListSource: fetchWalletsWithTimeout(), // Uses fetch + fallback
-            });
-            // Initialize TON Connect UI
-            // tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            //     manifestUrl: 'https://onchain.com.ng/Tonconnects/tonconnect-manifest.json',
-            //     buttonRootId: 'ton-connect',
-            // });
-
-
-            // When wallet status changes (connect/disconnect)
-            tonConnectUI.onStatusChange(async (status) => {
-                var page_name = document.getElementById("page-file-name").getAttribute("page-name");
-                if (status) {
-                    const rawAddress = status.account.address;
-
-                    // Check if wallet appears to be a testnet wallet by its appName.
-                    const isTestnet =
-                        tonConnectUI.wallet?.device?.appName?.toLowerCase().includes(
-                            'testnet'
-                        );
-                    if (isTestnet) {
-                        alert(
-                            'Testnet wallets are not allowed. Please connect a mainnet wallet.'
-                        );
-                        tonConnectUI.disconnect();
-                        return;
-                    }
-                    // Convert raw address to a mainnet-friendly format
-                    const userFriendlyAddress = Address.parse(rawAddress).toString({
-                        testOnly: false,
-                        bounceable: false,
-                    });
-                    if (page_name === "buy-airtime" || page_name === "buy-data" || page_name === "buy-datapins" || page_name === "buy-alpha-plan" || page_name === "wallet-transfer") {
-                        var walletaddy = document.getElementById("walletdatainfo").getAttribute("saved-address");
-                        let savedwallet = document.getElementById("walletdatainfo").getAttribute("address-status");
-                        document.getElementById('walletdatainfo').setAttribute("connection", "0");
-                        if (savedwallet !== "1") {
-                            swal("Oops!", "Riderecting To Profile and Add Web3 Wallet.", "info");
-                            tonConnectUI.disconnect();
-                            setTimeout(() => {
-                                window.location.href = "profile?set-wallet";
-                            }, 1000);
-                            return;
-                        } else {
-
-                            if (userFriendlyAddress != walletaddy) {
-                                // swal("Alert!!", "Wallet Address Mismatch, Please Update Wallet Address." + walletaddy, "info");
-                                swal({
-                                    title: 'Alert!!',
-                                    text: `Wallet Address Mismatch, Please Update Wallet Address...  <i style = 'color:blue; font-size:small; '><br> <br>Profile/Saved Wallet:  ${walletaddy}</i>`,
-                                    html: true
-                                });
-                                // swal("Oops!", "Please Connect The Saved Wallet.", "info");
-                                tonConnectUI.disconnect();
-                                return;
-                            } else {
-                                if (walletaddy === "" || walletaddy === null) {
-                                    swal("Oops!", "Invalid Wallet.", "info");
-                                    tonConnectUI.disconnect();
-                                    return;
-                                } else {
-                                    document.getElementById('walletdatainfo').setAttribute("connection", "1");
-                                    document.getElementById('ton-connect-btn-div').style.display = 'none';
-                                    document.getElementById('purchase-btn-div').style.display = 'block';
-                                }
-
-                            }
-                        }
-                    } else {
-                        var walletaddy = document.getElementById("wallet-add").getAttribute("saved-address");
-                        let savedwallet = document.getElementById("wallet-add").getAttribute("address-status");
-                        if (savedwallet !== "1") {
-                            document.getElementById('walletinfo-div').style.display = "block";
-                            document.getElementById("wallet-add").value = `${userFriendlyAddress}`;
-                            document.getElementById('saved-add').style.display = "none";
-                            document.getElementById('unsaved-add').style.display = "block";
-                        } else {
-                            if (walletaddy === "" || walletaddy === null) {
-                                document.getElementById('walletinfo-div').style.display = "block";
-                                document.getElementById("wallet-add").value = `${userFriendlyAddress}`;
-                                document.getElementById('saved-add').style.display = "none";
-                                document.getElementById('unsaved-add').style.display = "block";
-                            } else {
-                                document.getElementById('walletinfo-div').style.display = "block";
-                                if (userFriendlyAddress !== walletaddy) {
-                                    let changestatus = document.getElementById("wallet-add").getAttribute("changestatus");
-                                    if (changestatus !== "1") {
-                                        document.getElementById("tonconn-div").style.display = "flex";
-                                        swal("Alert!!", "Wallet Address Mismatch, Please Update Wallet Address", "info");
-                                    } else {
-                                        document.getElementById("wallet-add").value = `${userFriendlyAddress}`;
-                                    }
-                                    document.getElementById('saved-add').style.display = "none";
-                                    document.getElementById('unsaved-add').style.display = "block";
-                                } else {
-                                    document.getElementById("wallet-add").value = walletaddy;
-                                    document.getElementById('saved-add').style.display = "block";
-                                    document.getElementById('unsaved-add').style.display = "none";
-                                }
-                            }
-                        }
-                        // Show transaction form
-                        // document.getElementById('transaction-form').style.display = 'block';
-                    }
-                    // Fetch wallet balance from mainnet
-                    $.ajax({
-                        url: 'home/includes/route.php?check-ton-balance=1&address=' + encodeURIComponent(userFriendlyAddress),
-                        method: 'GET',
-                        dataType: 'json',
-                        success: function(resp) {
-                            if (resp.error) {
-                                console.error("Error:", resp.error);
-                            } else {
-                                const balance = resp.balance;
-                                console.log("Wallet balance:", balance + " TON");
-                                // You can update your HTML here
-                                if (document.getElementById("Wbalance")) {
-                                    document.getElementById("Wbalance").setAttribute("amount", parseFloat(balance).toFixed(3));
-                                }
-                            }
-                        },
-                        error: function(xhr, status, error) {
-                            console.error("AJAX Error:", error);
-                        }
-                    });
-                } else {
-                    // document.getElementById("wallet-add").value = ""; // Clear the wallet address
-                    if (page_name === "buy-airtime" || page_name === "buy-data" || page_name === "buy-datapins" || page_name === "buy-alpha-plan" || page_name === "wallet-transfer") {
-                        document.getElementById('walletdatainfo').setAttribute("connection", "0");
-                        document.getElementById('ton-connect-btn-div').style.display = 'block';
-                        document.getElementById('purchase-btn-div').style.display = 'none';
-                    } else {
-                        // document.getElementById('purchase-btn-div').style.display = 'none';
-                        document.getElementById('walletinfo-div').style.display = "none";
-                        // document.getElementById('transaction-info').styleFF.display = 'none';       
-                        // document.getElementById('transaction-form').style.display = 'none';
-                    }
-                }
-            });
-            const rawAddress = tonConnectUI.wallet?.account?.address;
-            var page_name = document.getElementById("page-file-name").getAttribute("page-name");
-            if (!rawAddress) {
-                if (page_name === "buy-airtime" || page_name === "buy-data" || page_name === "buy-datapins" || page_name === "buy-alpha-plan" || page_name === "wallet-transfer") {
-                    document.getElementById('walletdatainfo').setAttribute("connection", "0");
-                    document.getElementById('ton-connect-btn-div').style.display = 'block';
-                    document.getElementById('purchase-btn-div').style.display = 'none';
-                }
-                return;
+    
+    // Check if wallet is already connected
+    window.addEventListener('load', async () => {
+         if (typeof window.ethereum !== 'undefined') {
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+            if (accounts.length > 0) {
+                handleWalletConnection(accounts[0]);
             }
-        }, 500);
+             
+             // Listen for account changes
+            window.ethereum.on('accountsChanged', function (accounts) {
+                if(accounts.length > 0){
+                    handleWalletConnection(accounts[0]);
+                } else {
+                    disconnectWallets();
+                }
+            });
+         }
+         
+          TARGETADDRESS = '<?php echo $data9->walletaddress ?? ""; ?>';
+    });
 
+
+    function handleWalletConnection(address) {
+        userAddress = address;
+        console.log("Connected to EVM wallet:", userAddress);
+        
+        var page_name = document.getElementById("page-file-name").getAttribute("page-name");
+        
+        // Update UI button to show connected status (simplified)
+         const connectBtn = document.getElementById('ton-connect');
+         if(connectBtn) {
+             connectBtn.innerHTML = '<button class="btn btn-success">Connected: ' + userAddress.substring(0, 6) + '...' + userAddress.substring(userAddress.length - 4) + '</button>';
+         }
+         
+         if(document.getElementById("disconnect-wallet-btn")){
+             document.getElementById("disconnect-wallet-btn").style.display = "flex";
+         }
+
+        if (page_name === "buy-airtime" || page_name === "buy-data" || page_name === "buy-datapins" || page_name === "buy-alpha-plan" || page_name === "wallet-transfer") {
+            var walletaddy = document.getElementById("walletdatainfo").getAttribute("saved-address");
+            let savedwallet = document.getElementById("walletdatainfo").getAttribute("address-status");
+            document.getElementById('walletdatainfo').setAttribute("connection", "0");
+            
+            if (savedwallet !== "1") {
+                swal("Oops!", "Redirecting To Profile and Add Web3 Wallet.", "info");
+                setTimeout(() => {
+                    window.location.href = "profile?set-wallet";
+                }, 1000);
+                return;
+            } else {
+                 // Case insensitive comparison for EVM addresses
+                if (walletaddy.toLowerCase() !== userAddress.toLowerCase()) {
+                    swal({
+                        title: 'Alert!!',
+                        text: `Wallet Address Mismatch, Please Update Wallet Address...  <i style = 'color:blue; font-size:small; '><br> <br>Profile/Saved Wallet:  ${walletaddy}</i>`,
+                        html: true
+                    });
+                    return;
+                } else {
+                    if (walletaddy === "" || walletaddy === null) {
+                        swal("Oops!", "Invalid Wallet.", "info");
+                        return;
+                    } else {
+                        document.getElementById('walletdatainfo').setAttribute("connection", "1");
+                        document.getElementById('ton-connect-btn-div').style.display = 'none';
+                        document.getElementById('purchase-btn-div').style.display = 'block';
+                    }
+                }
+            }
+        } else {
+            // Profile page logic
+            var walletaddy = document.getElementById("wallet-add").getAttribute("saved-address");
+            let savedwallet = document.getElementById("wallet-add").getAttribute("address-status");
+            
+            document.getElementById('walletinfo-div').style.display = "block";
+            
+            if (savedwallet !== "1" || walletaddy === "" || walletaddy === null) {
+                 document.getElementById("wallet-add").value = userAddress;
+                 document.getElementById('saved-add').style.display = "none";
+                 document.getElementById('unsaved-add').style.display = "block";
+            } else {
+                 if (userAddress.toLowerCase() !== walletaddy.toLowerCase()) {
+                    let changestatus = document.getElementById("wallet-add").getAttribute("changestatus");
+                    if (changestatus !== "1") {
+                        document.getElementById("tonconn-div").style.display = "flex";
+                        swal("Alert!!", "Wallet Address Mismatch, Please Update Wallet Address", "info");
+                    } else {
+                        document.getElementById("wallet-add").value = userAddress;
+                    }
+                    document.getElementById('saved-add').style.display = "none";
+                    document.getElementById('unsaved-add').style.display = "block";
+                } else {
+                    document.getElementById("wallet-add").value = walletaddy;
+                    document.getElementById('saved-add').style.display = "block";
+                    document.getElementById('unsaved-add').style.display = "none";
+                }
+            }
+        }
+        
+        // Fetch balance
+        checkwalletbalance();
     }
 
     window.startTransactions = async function(amount) {
         var page_name = document.getElementById("page-file-name").getAttribute("page-name");
-        let reason = "";
         var transref = $('[name="transref"]').val();
         var amounttopay = $("#amounttopay").val();
-        mytonconnect();
+        
+        if (typeof window.ethereum === 'undefined' || !userAddress) {
+             swal("Alert!!", "Wallet is not connected", "error");
+             $('#transpinbtn').click();
+             return;
+        }
+
         const parsedAmount = parseFloat(amount);
-
-        if (isNaN(amount) || amount <= 0) {
-            // alert('Please enter a valid amount.');
-            swal("Alert!!", "Invalid $TON Amount", "error");
+        if (isNaN(parsedAmount) || parsedAmount <= 0) {
+            swal("Alert!!", "Invalid Amount", "error");
             $('#transpinbtn').click();
             return;
         }
 
-        const rawAddress = tonConnectUI.wallet?.account?.address;
-        if (!rawAddress) {
-            // alert('Wallet is not connected.');
-            swal("Alert!!", "Wallet is not connected", "error");
-            $('#transpinbtn').click();
-            return;
-        }
-
-        const amountInNano = BigInt(Math.floor(amount * 1e9));
-        // Replace the target address below with your own mainnet address.
-        const TRANSACTION_TIMEOUT = 70000; // 20 seconds
-        let result;
-        const targetAddress = TARGETADDRESS;
-        let type = null;
-        if (page_name === "buy-airtime") {
-            type = beginCell()
-                .storeUint(0, 32) // write 32 zero bits to indicate that a text comment will follow
-                .storeStringTail(amounttopay + "N Airtime Purchased (" + transref + ")") // write our text comment
-                .endCell();
-        } else if (page_name === "buy-data") {
-            type = beginCell()
-                .storeUint(0, 32) // write 32 zero bits to indicate that a text comment will follow
-                .storeStringTail(amounttopay + "N Data Purchased (" + transref + ")") // write our text comment
-                .endCell();
-        } else {
-            type = beginCell()
-                .storeUint(0, 32) // write 32 zero bits to indicate that a text comment will follow
-                .storeStringTail("Hello, TON!") // write our text comment
-                .endCell();
-        }
-        // Create the transaction object.
-        const transaction = {
-            validUntil: Math.floor(Date.now() / 1000) + 70,
-            messages: [{
-                address: targetAddress.toString(),
-                amount: amountInNano.toString(),
-                payload: type.toBoc().toString("base64")
-            }, ],
-        };
-
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        
+        // Note: Ethers.js v5 syntax
         try {
-            // Send the transaction via TON Connect.
-            // const result = await tonConnectUI.sendTransaction(transaction);
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Transaction timed out')), TRANSACTION_TIMEOUT)
-            );
+            const txParams = {
+                to: TARGETADDRESS,
+                value: ethers.utils.parseEther(amount.toString())
+            };
 
-            // Race between transaction and timeout
-            result = await Promise.race([
-                tonConnectUI.sendTransaction(transaction),
-                timeoutPromise
-            ]);
+            // Add data/memo for AssetChain/EVM
+            // Converting text to hex for data field
+            let memo = "";
+            if (page_name === "buy-airtime") {
+                memo = amounttopay + "N Airtime Purchased (" + transref + ")";
+            } else if (page_name === "buy-data") {
+                memo = amounttopay + "N Data Purchased (" + transref + ")";
+            } else if (page_name === "buy-datapins") {
+                memo = amounttopay + "N Data Pin Purchased (" + transref + ")";
+            } else if (page_name === "wallet-transfer") {
+                 memo = amounttopay + "N Wallet Transfer (" + transref + ")";
+            } else {
+                memo = "Payment Ref: " + transref;
+            }
+            
+            const utf8Encode = new TextEncoder();
+            const hexData = "0x" + Array.from(utf8Encode.encode(memo)).map(b => b.toString(16).padStart(2, '0')).join('');
+            txParams.data = hexData;
 
-            console.log('Transaction sent:', result);
-            // Parse the transaction BOC to extract a transaction hash.
-            const cell = Cell.fromBase64(result.boc);
-            const hashBuffer = cell.hash();
-            const txHash = hashBuffer.toString('hex');
-            console.log('Transaction Hash:', txHash);
-            console.log('User Raw Address', rawAddress);
-            console.log('Target Address', targetAddress.toString());
-            // Display preliminary transaction details.
-            // document.getElementById('target-account').textContent = targetAddress.toString();
-            // document.getElementById('tx-hash').textContent = txHash;
-            // Now poll the mainnet to confirm the transaction and retrieve its lt.
-            const lt = await verifyTransaction(txHash, TARGETADDRESS.toString(), rawAddress);
-            if (lt) {
+            const txResponse = await signer.sendTransaction(txParams);
+            console.log('Transaction sent:', txResponse);
+            
+            swal({
+                title: '<h3 class="text-center mt-4"><i class="fa fa-3x fa-spinner fa-spin" aria-hidden="true"></i></h3>',
+                text: 'Transaction sent. Waiting for confirmation...',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                 html: true
+            });
 
-                // Display the lt value once the transaction is confirmed.
-                // document.getElementById('tx-lt').textContent = lt;
-                // Display TON Viewer link on success.
-                console.log('Transaction confirmed on mainnet');
-                // alert('Transaction confirmed on mainnet!');
-                // swal("Alert!!", "Transaction confirmed on mainnet!", "error");
-                const tonViewerLink = `https://tonviewer.com/transaction/${txHash}`;
-                if (page_name === "buy-airtime" || page_name === "buy-data" || page_name === "buy-datapins" || page_name === "buy-alpha-plan" || page_name === "wallet-transfer") {
+            const receipt = await txResponse.wait();
+            console.log('Transaction confirmed:', receipt);
+            
+            const txHash = receipt.transactionHash;
+            // const explorerLink = `https://scan.assetchain.org/tx/${txHash}`; // Adjust explorer URL
+            
+            if (receipt.status === 1) {
+                // Populate hidden form fields for backend verification if needed
+                let onchain_data = `
+                    <input type="hidden" name="target_address" value="${TARGETADDRESS}" hidden />
+                    <input type="text" name="tx_hash" value="${txHash}" hidden />
+                    <input type="text" name="user_address" value="${userAddress}" hidden />
+                    <input type="text" name="amount_paid" value="${amount}" hidden />
+                `;
+                $("#transaction-data").html(onchain_data);
+
+                 if (page_name === "buy-airtime" || page_name === "buy-data" || page_name === "buy-datapins" || page_name === "buy-alpha-plan" || page_name === "wallet-transfer") {
                     swal({
                         title: '<h3 class="text-center mt-4"><i class="fa fa-3x fa-spinner fa-spin" aria-hidden="true"></i></h3>',
                         text: 'Transaction confirmed. Please wait... <h5> <i style="color:orange;"><br> <br> If this is taking longer than expected, your transaction may be refunded. Please remain patient.</i></h5>',
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                        allowEnterKey: false,
-                        showCancelButton: false,
-                        showCloseButton: false,
-                        html: true,
-                        showConfirmButton: false
+                         allowOutsideClick: false,
+                        showConfirmButton: false,
+                        html: true
                     });
                     setTimeout(() => {
                         $('#thetranspin').val(5);
                         $('#transpinbtn').click();
                     }, 500);
                 } else {
-                    return;
-                    $('#thetranspin').val(5);
-                    $('#transpinbtn').click();
-                    document.getElementById('transaction-info').style.display = 'block';
+                     $('#thetranspin').val(5);
+                     $('#transpinbtn').click();
                 }
             } else {
-                document.querySelector('.menu-hider').style.cursor = "default";
-                swal("Alert!!", "Transaction not confirmed on mainnet within the expected time. Please try again Or Contact Support", "error");
-                // $('#transpinbtn').click();
+                swal("Alert!!", "Transaction failed on chain.", "error");
             }
 
         } catch (error) {
             console.error('Transaction error:', error);
-            if (error.message.includes('timed out')) {
-                swal("Timeout", "Wallet took too long to respond. Please try again.", "error");
-                $('#transpinbtn').click();
-                return;
-            }
-            // Safely get error message and clean it
-            let reason = (error.message || String(error)).replace("[TON_CONNECT_SDK_ERROR]", "").trim();
-
-            swal("Alert!!", "Failed to send or verify transaction: " + reason, "error");
+             let reason = error.message || "Transaction failed";
+             if(reason.includes("user rejected")){
+                 reason = "User rejected transaction";
+             }
+            swal("Alert!!", "Failed to send transaction: " + reason, "error");
             $('#transpinbtn').click();
-
-            // alert('Failed to send or verify transaction. Please try again.');
         }
-
-        // });
-
-
-    }
-
-    // Function to poll for transaction confirmation on mainnet.
-    async function verifyTransaction(txHash, targetAddress, rawAddress) {
-        const maxAttempts = 20;
-        const interval = 2000;
-        let attempts = 0;
-        while (attempts < maxAttempts) {
-            // $("#continue-transaction-in-wallet-prompt-text").html("Confirming... " + (attempts + 1) + "/" + maxAttempts);
-            swal({
-                title: '<h3 class="text-center mt-4"><i class="fa fa-3x fa-spinner fa-spin" aria-hidden="true"></i></h3>',
-                text: "Confirming... " + (attempts + 1) + "/" + maxAttempts,
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                allowEnterKey: false,
-                showCancelButton: false,
-                showCloseButton: false,
-                html: true,
-                showConfirmButton: false
-            });
-            console.log(`Polling... Attempt ${attempts + 1}/${maxAttempts}`);
-
-            // Try both endpoints
-            const txConfirmed = await checkEndpoints(txHash, targetAddress, rawAddress);
-            if (txConfirmed) return txConfirmed;
-
-            await new Promise(resolve => setTimeout(resolve, interval));
-            attempts++;
-        }
-        return null;
-    }
-
-    async function checkEndpoints(txHash, targetAddress, rawAddress) {
-        // 1. First check the transaction endpoint
-        const txData = await checkEndpoint(
-            `https://tonapi.io/v2/blockchain/transactions/${txHash}`,
-            txHash, targetAddress, rawAddress
-        );
-        if (txData) return prepareTransactionData(txData);
-
-        // 2. If not found, check the message endpoint
-        const msgData = await checkEndpoint(
-            `https://tonapi.io/v2/blockchain/messages/${txHash}/transaction`,
-            txHash, targetAddress, rawAddress
-        );
-        if (msgData) return prepareTransactionData(msgData);
-
-        return false;
-    }
-
-    async function checkEndpoint(url, txHash, targetAddress, rawAddress) {
-        try {
-            const response = await fetch(url);
-            if (!response.ok) return null;
-
-            const data = await response.json();
-            if (!data) return null;
-
-            // Normalize addresses for comparison
-            const targetFriendly = Address.parse(targetAddress).toString({
-                testOnly: false,
-                bounceable: false
-            });
-
-            const senderSource = data.account?.address || data.in_msg?.source?.address || data.in_msg?.source?.address?.address;
-            const senderFriendly = senderSource ? Address.parse(senderSource).toString({
-                testOnly: false,
-                bounceable: false
-            }) : null;
-            const rawFriendly = Address.parse(rawAddress).toString({
-                testOnly: false,
-                bounceable: false
-            });
-
-            // Validate sender matches expected rawAddress if available
-            if (senderFriendly && senderFriendly !== rawFriendly) {
-                console.log('Sender address mismatch:' + senderFriendly + ' vs ' + rawFriendly);
-                return null;
-            }
-
-            // For outgoing transactions, verify the first out_msg matches our target
-            if (data.out_msgs?.length > 0) {
-                const outDest = data.out_msgs[0].destination?.address || data.out_msgs[0].destination;
-                if (outDest) {
-                    const outDestAddress = Address.parse(outDest).toString({
-                        testOnly: false,
-                        bounceable: false
-                    });
-                    if (outDestAddress === targetFriendly) {
-                        return data;
-                    }
-                }
-            }
-
-            // Fallback: check destination of in_msg
-            if (data.in_msg?.destination?.address) {
-                const inDestAddress = Address.parse(data.in_msg.destination.address).toString({
-                    testOnly: false,
-                    bounceable: false
-                });
-                if (inDestAddress === targetFriendly) {
-                    return data;
-                }
-            }
-
-        } catch (error) {
-            console.error(`Error checking ${url}:`, error);
-        }
-        return null;
-    }
-
-    function prepareTransactionData(data) {
-        const txHash = data.hash || data.in_msg?.hash;
-        const value = data.out_msgs?.[0]?.value || data.in_msg?.value;
-
-        let onchain_data = `
-        <input type="hidden" name="target_address" value="${data.out_msgs?.[0]?.destination?.address || data.in_msg?.destination?.address}" hidden />
-        <input type="text" name="tx_hash" value="${txHash}" hidden />
-        <input type="text" name="tx_lt" value="${data.lt}" hidden />
-        <input type="text" name="user_address" value="${data.account.address}" hidden />
-        <input type="text" name="nanoamount" value="${value}" hidden />
-    `;
-        $("#transaction-data").html(onchain_data);
-        return true;
     }
 </script>
 <!-- TON Connect JS CODE END--->

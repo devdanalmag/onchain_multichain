@@ -163,10 +163,14 @@ if ((isset($headers['Authorization']) || isset($headers['authorization'])) ||
     
     $token = "";
     if ((isset($headers['Authorization']) || isset($headers['authorization']))) {
-        $token = trim(str_replace("Token", "", (isset($headers['Authorization'])) ? $headers['Authorization'] : $headers['authorization']));
+        $raw = (isset($headers['Authorization'])) ? $headers['Authorization'] : $headers['authorization'];
+        $token = trim(str_replace("Token", "", $raw));
+        $token = trim(str_replace("Bearer", "", $token));
     }
     if ((isset($headers['Token']) || isset($headers['token']))) {
-        $token = trim(str_replace("Token", "", (isset($headers['Token'])) ? $headers['Token'] : $headers['token']));
+        $raw = (isset($headers['Token'])) ? $headers['Token'] : $headers['token'];
+        $token = trim(str_replace("Token", "", $raw));
+        $token = trim(str_replace("Bearer", "", $token));
     }
 
     // Check if it's a DEX token first
@@ -307,8 +311,7 @@ if (!$trow) {
 
 $token_decimals = (int)($trow['token_decimals'] ?? 6);
 $token_name = $trow['token_name'] ?? 'Unknown';
-$tokenamount = $controller->convertWeiToToken($amount_wei, $token_decimals);
-
+$tokenamount = number_format($controller->convertWeiToToken($amount_wei, $token_decimals), 4, '.', '');
 // -------------------------------------------------------------------
 //  Address Normalization and Validation
 // -------------------------------------------------------------------
@@ -674,7 +677,7 @@ if ($isDexToken) {
 //  Check For Duplicate Transaction Description
 // -------------------------------------------------------------------
 $servicename = "Airtime";
-$servicedesc = "{$networkDetails["network"]} Airtime purchase of N{$amount} @ {$tokenamount} CNGN for phone number {$phone}";
+$servicedesc = "{$networkDetails["network"]} Airtime purchase of N{$amount} @ {$tokenamount} {$token_name} for phone number {$phone}";
 
 $result = $controller->checkTransactionDuplicate($servicename, $servicedesc);
 if ($result["status"] == "fail") {
@@ -918,7 +921,7 @@ $checkprice = $controller->checkpriceimpactcngn($amountopay, $tokenamount);
 if ($checkprice['status'] == 'fail') {
     header('HTTP/1.0 400 Bad Request');
     
-    $updatedDesc = "{$networkDetails["network"]} Airtime purchase of N{$amount} @ {$tokenamount} CNGN for phone number {$phone} Failed Due To Price Impact";
+    $updatedDesc = "{$networkDetails["network"]} Airtime purchase of N{$amount} @ {$tokenamount} {$token_name} for phone number {$phone} Failed Due To Price Impact";
     $controller->updateFailedTransactionStatus($userid, $updatedDesc, $ref, $amountopay, "1");
     
     $response['status'] = "fail";
@@ -969,8 +972,8 @@ if ($checkprice['status'] == 'fail') {
 // -------------------------------------------------------------------
 //  Purchase Airtime
 // -------------------------------------------------------------------
-// $result = $airtimeController->purchaseMyAirtime($body, $networkDetails);
-$result["status"] = "success";
+$result = $airtimeController->purchaseMyAirtime($body, $networkDetails);
+// $result["status"] = "success";
 // -------------------------------------------------------------------
 //  Process Result
 // -------------------------------------------------------------------
@@ -995,7 +998,7 @@ if ($result["status"] == "success") {
     exit();
 } else {
     // Handle failed purchase
-    $updatedDesc = "{$networkDetails["network"]} Airtime purchase of N{$amount} @ {$tokenamount} CNGN for phone number {$phone} Failed - " . ($result["msg"] ?? "Network/Server Error");
+    $updatedDesc = "{$networkDetails["network"]} Airtime purchase of N{$amount} @ {$tokenamount} {$token_name} for phone number {$phone} Failed - " . ($result["msg"] ?? "Network/Server Error");
     $controller->updateFailedTransactionStatus($userid, $updatedDesc, $ref, $amountopay, "1");
     
     $erroresult = $controller->checkIfError();

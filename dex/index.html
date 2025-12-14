@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TON DEX - Airtime & Data Marketplace</title>
+  <title>AssetChain DEX - Airtime & Data Marketplace</title>
   <link rel="icon" href="/assets/img/favicon.ico" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert@2.1.2/dist/sweetalert.min.js"></script>
@@ -1326,6 +1326,10 @@
           <i class="fas fa-wifi"></i>
           Data Plans
         </div>
+        <div class="tab" data-tab="history">
+          <i class="fas fa-list"></i>
+          History
+        </div>
       </div>
 
       <!-- Airtime Tab Content -->
@@ -1396,6 +1400,98 @@
 
           <div id="airtime-status"></div>
         </div>
+
+
+      </div>
+
+      <!-- Data Tab Content -->
+      <div class="tab-content" id="data-tab">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon data-icon">
+              <i class="fas fa-wifi"></i>
+            </div>
+            <h2 class="card-title">Data Plans</h2>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="data-network">Network Provider</label>
+              <select id="data-network"></select>
+            </div>
+
+            <div class="form-group">
+              <label for="data-plan">Data Plan</label>
+              <select id="data-plan"></select>
+            </div>
+              <input id="data-nano" type="text" hidden />
+
+            <div class="form-group">
+              <label for="data-phone">Phone Number</label>
+              <input id="data-phone" type="tel" placeholder="e.g. 08012345678" />
+            </div>
+            <div class="form-group checkbox-group"
+              style="flex-direction: row; align-items: center; gap: 10px; margin-top: -10px; margin-bottom: 10px;">
+              <input id="data-ported" type="checkbox" aria-label="Is this a ported number?"
+                style="width: auto; margin: 0;" />
+              <label for="data-ported" style="margin-bottom: 0; cursor: pointer;">Is Ported Number</label>
+            </div>
+
+            <div class="form-group">
+              <label for="data-ref">Reference ID</label>
+              <input id="data-ref" class="mono" readonly />
+            </div>
+            <div class="form-group">
+              <label for="data-token">Token</label>
+              <select id="data-token" aria-label="Select token"></select>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="data-target">Receiving EVM Address</label>
+              <input id="data-target" class="mono" placeholder="Site EVM receiving address" />
+            </div>
+
+            <div class="form-group">
+              <label for="data-display">Amount (Selected Currency)</label>
+              <input id="data-display" class="mono" placeholder="Auto-calculated" readonly />
+            </div>
+
+            <div class="button-group">
+              <button id="data-calc" class="btn btn-secondary">
+                <i class="fas fa-calculator"></i> Calculate Amount
+              </button>
+              <button id="data-send" class="btn btn-primary" style="display:none;" disabled>
+                <i class="fas fa-paper-plane"></i> Buy
+              </button>
+              <button id="data-reset" class="btn btn-secondary">
+                <i class="fas fa-redo"></i> Reset
+              </button>
+            </div>
+
+            <div id="data-status"></div>
+          </div>
+      </div>
+
+      <!-- History Tab Content -->
+
+      <div class="tips-section">
+          <h3 class="tips-title"><i class="fas fa-lightbulb"></i> How It Works</h3>
+          <ul class="tips-list">
+            <li>Use the Account Center to connect and manage your wallet</li>
+            <li>Select your network provider and enter your phone number</li>
+            <li>Choose the amount (for airtime) or data plan you want to purchase</li>
+            <li>Calculate the CNGN amount (wei) and send the payment</li>
+            <li>Your transaction will be verified on-chain and your airtime/data will be delivered</li>
+            <li>All transactions are secure and processed on the Assetchain network</li>
+          </ul>
+        </div>
+        <div id="tx-receipts" class="receipts-container" aria-live="polite" aria-label="Transaction receipts"></div>
+      </div>
+            <div class="tab-content" id="history-tab">
         <div id="history-card" class="card" style="display:none;" aria-live="polite" aria-label="Transaction history">
           <div class="card-header">
             <div class="card-icon" style="background: linear-gradient(135deg, var(--secondary), var(--accent));">
@@ -1443,97 +1539,17 @@
                 class="fas fa-chevron-right"></i></button>
           </div>
         </div>
-        <div id="tx-modal" class="tx-modal" style="display:none;" aria-hidden="true" role="dialog" aria-modal="true">
-          <div class="tx-backdrop"></div>
-          <div class="tx-content" role="document">
-            <div class="tx-header">
-              <h3 id="tx-modal-title">Transaction Details</h3>
-              <button id="tx-modal-close" class="btn btn-link" aria-label="Close"><i class="fas fa-times"></i></button>
-            </div>
-            <div id="tx-modal-body" class="tx-body"></div>
-          </div>
-        </div>
       </div>
-
-      <!-- Data Tab Content -->
-      <div class="tab-content" id="data-tab">
-        <div class="card">
-          <div class="card-header">
-            <div class="card-icon data-icon">
-              <i class="fas fa-wifi"></i>
-            </div>
-            <h2 class="card-title">Data Plans</h2>
+      
+      <div id="tx-modal" class="tx-modal" style="display:none;" aria-hidden="true" role="dialog" aria-modal="true">
+        <div class="tx-backdrop"></div>
+        <div class="tx-content" role="document">
+          <div class="tx-header">
+            <h3 id="tx-modal-title">Transaction Details</h3>
+            <button id="tx-modal-close" class="btn btn-link" aria-label="Close"><i class="fas fa-times"></i></button>
           </div>
-
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="data-network">Network Provider</label>
-              <select id="data-network"></select>
-            </div>
-
-            <div class="form-group">
-              <label for="data-plan">Data Plan</label>
-              <select id="data-plan"></select>
-            </div>
-
-            <div class="form-group">
-              <label for="data-phone">Phone Number</label>
-              <input id="data-phone" type="tel" placeholder="e.g. 08012345678" />
-            </div>
-            <div class="form-group checkbox-group"
-              style="flex-direction: row; align-items: center; gap: 10px; margin-top: -10px; margin-bottom: 10px;">
-              <input id="data-ported" type="checkbox" aria-label="Is this a ported number?"
-                style="width: auto; margin: 0;" />
-              <label for="data-ported" style="margin-bottom: 0; cursor: pointer;">Is Ported Number</label>
-            </div>
-
-            <div class="form-group">
-              <label for="data-ref">Reference ID</label>
-              <input id="data-ref" class="mono" readonly />
-            </div>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="data-target">Receiving EVM Address</label>
-              <input id="data-target" class="mono" placeholder="Site EVM receiving address" />
-            </div>
-
-            <div class="form-group">
-              <label for="data-display">Amount (Selected Currency)</label>
-              <input id="data-display" class="mono" placeholder="Auto-calculated" readonly />
-            </div>
-
-            <div class="button-group">
-              <button id="data-calc" class="btn btn-secondary">
-                <i class="fas fa-calculator"></i> Calculate Amount
-              </button>
-              <button id="data-send" class="btn btn-primary" style="display:none;" disabled>
-                <i class="fas fa-paper-plane"></i> Buy
-              </button>
-              <button id="data-reset" class="btn btn-secondary">
-                <i class="fas fa-redo"></i> Reset
-              </button>
-            </div>
-
-            <div id="data-status"></div>
-          </div>
+          <div id="tx-modal-body" class="tx-body"></div>
         </div>
-
-        <div class="tips-section">
-          <h3 class="tips-title"><i class="fas fa-lightbulb"></i> How It Works</h3>
-          <ul class="tips-list">
-            <li>Use the Account Center to connect and manage your wallet</li>
-            <li>Select your network provider and enter your phone number</li>
-            <li>Choose the amount (for airtime) or data plan you want to purchase</li>
-            <li>Calculate the CNGN amount (wei) and send the payment</li>
-            <li>Your transaction will be verified on-chain and your airtime/data will be delivered</li>
-            <li>All transactions are secure and processed on the Assetchain network</li>
-          </ul>
-        </div>
-        <div id="tx-receipts" class="receipts-container" aria-live="polite" aria-label="Transaction receipts"></div>
       </div>
   </main>
 
@@ -1542,8 +1558,8 @@
     // DOM utility functions
     const $ = (s) => document.querySelector(s);
     const $$ = (s) => document.querySelectorAll(s);
-    // const apiBase = '/onchain_multichain/api';
-    const apiBase = '/api';
+    const apiBase = '/onchain_multichain/api';
+    // const apiBase = '/api';
 
     // Web3Onboard removed; using custom wallet dropdown and EIP-1193 providers
 
@@ -2203,8 +2219,8 @@
 
     // Generate random reference IDs
     const randRef = () => 'REF-' + Math.random().toString(36).slice(2, 10).toUpperCase();
-    $('#airtime-ref').value = randRef();
-    $('#data-ref').value = randRef();
+    const refAir = $('#airtime-ref'); if (refAir) refAir.value = randRef();
+    const refData = $('#data-ref'); if (refData) refData.value = randRef();
 
     // Fetch network providers
     async function fetchNetworks() {
@@ -2217,11 +2233,18 @@
         const networkOptions = nets.map(n =>
           `<option value="${n.id}">${n.name || n.network}</option>`
         ).join('');
-        $('#airtime-network').innerHTML = networkOptions;
-        $('#data-network').innerHTML = networkOptions;
-        // Default select first network
-        $('#airtime-network').value = nets[0]?.id || '';
-        $('#data-network').value = nets[0]?.id || '';
+        
+        const airNet = $('#airtime-network');
+        if (airNet) {
+            airNet.innerHTML = networkOptions;
+            airNet.value = nets[0]?.id || '';
+        }
+        
+        const dataNet = $('#data-network');
+        if (dataNet) {
+            dataNet.innerHTML = networkOptions;
+            dataNet.value = nets[0]?.id || '';
+        }
       } catch (e) {
         console.warn('Networks fetch failed', e);
         showStatus($('#airtime-status'), 'Failed to load networks', false);
@@ -2252,19 +2275,23 @@
     // Fetch data plans based on selected network
     async function fetchDataPlans() {
       try {
-        const network = $('#data-network').value;
+        const netEl = $('#data-network');
+        if (!netEl) return;
+        const network = netEl.value;
         if (!network) return;
         const res = await fetch(`${apiBase}/access.php?action=getDataPlans&network=${encodeURIComponent(network)}`);
         const data = await res.json();
         const plans = data.plans || data.data || [];
-        if (!plans.length) { $('#data-plan').innerHTML = ''; return; }
-        $('#data-plan').innerHTML = plans.map(p => {
+        const planEl = $('#data-plan');
+        if (!planEl) return;
+        if (!plans.length) { planEl.innerHTML = ''; return; }
+        planEl.innerHTML = plans.map(p => {
           const labelParts = [p.name, p.type, p.day ? `${p.day}d` : ''].filter(Boolean);
           return `<option value="${p.id || p.plan_id}">${labelParts.join(' ')}</option>`;
         }).join('');
         // Default select first plan
         const firstId = plans[0]?.id || plans[0]?.plan_id || '';
-        if (firstId) $('#data-plan').value = firstId;
+        if (firstId) planEl.value = firstId;
       } catch (e) {
         console.warn('Plans fetch failed', e);
         showStatus($('#data-status'), 'Failed to load data plans', false);
@@ -2279,8 +2306,8 @@
         const siteaddr = data.walletaddress || data.tonaddress || data.siteaddress || '';
 
         if (siteaddr) {
-          $('#airtime-target').value = siteaddr;
-          $('#data-target').value = siteaddr;
+          const at = $('#airtime-target'); if (at) at.value = siteaddr;
+          const dt = $('#data-target'); if (dt) dt.value = siteaddr;
         }
       } catch (e) {
         console.warn('Site settings fetch failed', e);
@@ -2288,7 +2315,8 @@
     }
 
     // Set up event listeners
-    $('#data-network').addEventListener('change', fetchDataPlans);
+    const dn = $('#data-network');
+    if (dn) dn.addEventListener('change', fetchDataPlans);
 
     // Initialize data and tabs
     fetchNetworks().then(fetchDataPlans).then(fetchSiteSettings).then(fetchTokens);
@@ -2516,25 +2544,38 @@
       return res.json();
     }
     async function loadHistoryIfEligible() {
+      const card = document.getElementById('history-card');
+      if (!card) return;
+
       try {
         const state = window.authState || {};
-        if (!(state.connected && state.networkOk && state.signedIn)) { return; }
         const address = window.currentAddress;
-        const card = document.getElementById('history-card');
+
+        // Always show the card when this function is called (e.g. tab click or connection)
+        card.style.display = 'block';
+
+        // If not connected, show message and return
+        if (!state.connected || !address) { 
+          console.warn('[dex] History skipped: not connected or no address');
+          const list = document.getElementById('history-list');
+          if (list) list.innerHTML = '<div class="history-item" style="text-align:center; padding:20px; color: var(--gray);">Please connect your wallet to view transaction history.</div>';
+          const status = document.getElementById('history-status');
+          if (status) status.textContent = '';
+          return; 
+        }
+
         const status = document.getElementById('history-status');
         const pageEl = document.getElementById('history-page');
         const prev = document.getElementById('history-prev');
         const next = document.getElementById('history-next');
-        if (!address || !card) return;
-        card.style.display = 'block';
-        status.textContent = 'Loading history...';
+        
+        if (status) status.textContent = 'Loading history...';
         let network = ASSETCHAIN_ID_HEX;
         try {
-          if (window.ethereum && window.ethereum.request) {
-            network = await window.ethereum.request({ method: 'eth_chainId' });
-          }
+          const cid = await getChainId();
+          if (cid) network = cid;
         } catch (e) {
-          console.warn('Failed to get chainId from provider, using default', e);
+          console.warn('Failed to get chainId, using default', e);
         }
         let page = 0; const perPage = 10;
         let lastData = null;
@@ -3003,7 +3044,7 @@
         if (!ngn) throw new Error('Please enter a valid amount');
 
         const wei = await calcWeiFromNaira(ngn);
-        $('#airtime-nano').value = wei;
+        const nano = $('#airtime-nano'); if (nano) nano.value = wei;
 
         if (!wei) {
           throw new Error('Failed to calculate token amount (swap or token unavailable)');
@@ -3011,7 +3052,7 @@
           const sel = document.getElementById('airtime-token');
           const dec = Number(sel?.selectedOptions[0]?.getAttribute('data-decimals') || 6);
           const name = sel?.selectedOptions[0]?.text || '';
-          $('#airtime-display').value = formatTokenAmount(wei, dec, name);
+          const disp = $('#airtime-display'); if (disp) disp.value = formatTokenAmount(wei, dec, name);
 
           // Success Transition
           btn.style.display = 'none';
@@ -3031,19 +3072,28 @@
         }
       } catch (e) {
         showStatus($('#airtime-status'), e.message, false);
-        $('#airtime-display').value = '';
-        $('#airtime-nano').value = '';
+        const disp = $('#airtime-display'); if (disp) disp.value = '';
+        const nano = $('#airtime-nano'); if (nano) nano.value = '';
         btn.disabled = false;
         btn.innerHTML = originalHtml;
       }
     });
 
-    $('#data-calc').addEventListener('click', async () => {
-      const btn = $('#data-calc');
-      const btnBuy = $('#data-send');
-      const originalHtml = btn.innerHTML;
+$('#data-calc').addEventListener('click', async () => {
+    const btn = $('#data-calc');
+    const btnBuy = $('#data-send');
+    const originalHtml = btn.innerHTML;
 
-      try {
+    try {
+        // Pre-checks
+        if (typeof ethers === 'undefined') {
+            throw new Error('Ethers.js library not loaded');
+        }
+        
+        if (!window.availableTokens || window.availableTokens.length === 0) {
+            throw new Error('Tokens not loaded yet');
+        }
+
         // Loading State
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculating...';
@@ -3064,43 +3114,58 @@
         if (!ngn) throw new Error('Failed to fetch plan price');
 
         const wei = ngn ? await calcWeiFromNairaBySelector('data-token', ngn) : '';
-        $('#data-nano').value = wei;
+        
+        // SAFE assignment to data-nano
+        const nanoEl = $('#data-nano');
+        if (nanoEl) {
+            nanoEl.value = wei;
+        }
 
         if (!wei) {
-          throw new Error('Failed to calculate token amount (swap or token unavailable)');
+            throw new Error('Failed to calculate token amount (swap or token unavailable)');
         } else {
-          const sel = document.getElementById('data-token');
-          const dec = Number(sel?.selectedOptions[0]?.getAttribute('data-decimals') || 6);
-          const name = sel?.selectedOptions[0]?.text || '';
-          const formatted = formatTokenAmount(wei, dec, name);
-          showStatus($('#data-status'), `Amount: ${formatted} (wei: ${wei})`, true);
-          $('#data-display').value = formatted;
+            const sel = document.getElementById('data-token');
+            const dec = Number(sel?.selectedOptions[0]?.getAttribute('data-decimals') || 6);
+            const name = sel?.selectedOptions[0]?.text || '';
+            const formatted = formatTokenAmount(wei, dec, name);
+            // showStatus($('#data-status'), `Amount: ${formatted}`, true);
+            
+            // SAFE assignment to data-display
+            const displayEl = $('#data-display');
+            if (displayEl) {
+                displayEl.value = formatted;
+            }
 
-          // Success Transition
-          btn.style.display = 'none';
-          btn.innerHTML = originalHtml;
-          btn.disabled = false;
+            // Success Transition
+            btn.style.display = 'none';
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
 
-          btnBuy.style.display = 'inline-block';
-          btnBuy.disabled = false;
+            btnBuy.style.display = 'inline-block';
+            btnBuy.disabled = false;
 
-          // 10s Timer
-          if (btnBuy.dataset.timer) clearTimeout(Number(btnBuy.dataset.timer));
-          btnBuy.dataset.timer = setTimeout(() => {
-            btnBuy.style.display = 'none';
-            btnBuy.disabled = true;
-            btn.style.display = 'inline-block';
-          }, 10000);
+            // 10s Timer
+            if (btnBuy.dataset.timer) clearTimeout(Number(btnBuy.dataset.timer));
+            btnBuy.dataset.timer = setTimeout(() => {
+                btnBuy.style.display = 'none';
+                btnBuy.disabled = true;
+                btn.style.display = 'inline-block';
+            }, 10000);
         }
-      } catch (e) {
+    } catch (e) {
         showStatus($('#data-status'), e.message, false);
-        $('#data-display').value = '';
-        $('#data-nano').value = '';
+        
+        // SAFE clearing of values
+        const displayEl = $('#data-display');
+        if (displayEl) displayEl.value = '';
+        
+        const nanoEl = $('#data-nano');
+        if (nanoEl) nanoEl.value = '';
+        
         btn.disabled = false;
         btn.innerHTML = originalHtml;
-      }
-    });
-
+    }
+});
     function prepareTransactionDataDex(data) {
       const txHash = data.hash || data.in_msg?.hash;
       const value = data.out_msgs?.[0]?.value || data.in_msg?.value || 0;

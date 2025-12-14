@@ -60,7 +60,7 @@ try {
             $data = [];
             foreach ($plans as $p) {
                 // dataplans fields: pId, datanetwork, name, planid, type, day, price, userprice, agentprice, vendorprice
-                if ($net && (string)($p->datanetwork ?? '') !== (string)$netName) { continue; }
+                if ($net && (string)($p->network ?? '') !== (string)$netName) { continue; }
                 $data[] = [
                     'id' => $p->pId ?? null,
                     'plan_id' => $p->planid ?? null,
@@ -79,25 +79,41 @@ try {
             $out = [
                 'status' => 'success',
                 'walletaddress' => $site->walletaddress ?? null,
-                'tonaddress' => $site->walletaddress ?? null,
+                'evm_address' => $site->walletaddress ?? null, // Alias for EVM
                 'siteaddress' => $site->walletaddress ?? null,
                 'sitename' => $site->sitename ?? null,
             ];
             break;
 
-        case 'checkTonPrice':
-            // Convert NGN amount to TON nano using server price
+        case 'checkNativePrice':
+            // Convert NGN amount to Native (AssetChain/EVM) Wei using server price
             $amount = isset($_GET['amount']) ? (float)$_GET['amount'] : 0;
-            $priceNgn = $api->getSiteSettings()->tonamount ?? null; // fallback if exists
+            $priceNgn = $api->getSiteSettings()->tonamount ?? null; // fallback if exists (using tonamount column as generic native price)
             $apiModel = new ApiModel();
-            $ngnPerTon = $apiModel->checkTonPrice();
-            if (!is_numeric($ngnPerTon) || $ngnPerTon <= 0) {
+            $ngnPerNative = $apiModel->checkNativePrice();
+            
+            // Fallback logic if API returns 0 or fails but we have a DB price
+            if ((!is_numeric($ngnPerNative) || $ngnPerNative <= 0) && $priceNgn > 0) {
+                $ngnPerNative = (float)$priceNgn;
+            }
+
+            if (!is_numeric($ngnPerNative) || $ngnPerNative <= 0) {
                 $out = [ 'status' => 'fail', 'msg' => 'Price unavailable' ];
                 break;
             }
-            $tonAmount = $amount / $ngnPerTon; // TON amount
-            $nano = (int) round($tonAmount * 1e9);
-            $out = [ 'status' => 'success', 'amount' => $amount, 'ngn_per_ton' => $ngnPerTon, 'ton_amount' => $tonAmount, 'nanoamount' => (string)$nano, 'amount_in_nano' => (string)$nano ];
+            $nativeAmount = $amount / $ngnPerNative; // Native amount (e.g. ETH/ASSET)
+            // Convert to Wei (18 decimals)
+            // Use number_format to avoid scientific notation for large numbers
+            $wei = number_format($nativeAmount * 1e18, 0, '', '');
+            
+            $out = [ 
+                'status' => 'success', 
+                'amount' => $amount, 
+                'ngn_per_native' => $ngnPerNative, 
+                'native_amount' => $nativeAmount, 
+                'weiamount' => (string)$wei, 
+                'amount_in_wei' => (string)$wei 
+            ];
             break;
 
         case 'checkDataPlanPrice':
@@ -113,7 +129,7 @@ try {
             if ($network && isset($idToName[(string)$network])) { $netName = $idToName[(string)$network]; }
             $selected = null;
             foreach ($plans as $p) {
-                if ((string)($p->datanetwork ?? '') === (string)$netName && ((string)($p->pId ?? '') === (string)$plan || (string)($p->planid ?? '') === (string)$plan)) {
+                if ((string)($p->network ?? '') === (string)$netName && ((string)($p->pId ?? '') === (string)$plan || (string)($p->planid ?? '') === (string)$plan)) {
                     $selected = $p; break;
                 }
             }
@@ -123,14 +139,29 @@ try {
             }
             $amount = isset($selected->userprice) ? (float)$selected->userprice : (float)$selected->price;
             $apiModel = new ApiModel();
-            $ngnPerTon = $apiModel->checkTonPrice();
-            if (!is_numeric($ngnPerTon) || $ngnPerTon <= 0) {
+            $ngnPerNative = $apiModel->checkNativePrice();
+            
+            // Fallback logic
+            $priceNgn = $api->getSiteSettings()->tonamount ?? null;
+            if ((!is_numeric($ngnPerNative) || $ngnPerNative <= 0) && $priceNgn > 0) {
+                $ngnPerNative = (float)$priceNgn;
+            }
+
+            if (!is_numeric($ngnPerNative) || $ngnPerNative <= 0) {
                 $out = [ 'status' => 'fail', 'msg' => 'Price unavailable' ];
                 break;
             }
-            $tonAmount = $amount / $ngnPerTon;
-            $nano = (int) round($tonAmount * 1e9);
-            $out = [ 'status' => 'success', 'amount' => $amount, 'ngn_per_ton' => $ngnPerTon, 'ton_amount' => $tonAmount, 'nanoamount' => (string)$nano, 'amount_in_nano' => (string)$nano ];
+            $nativeAmount = $amount / $ngnPerNative;
+            $wei = number_format($nativeAmount * 1e18, 0, '', '');
+            
+            $out = [ 
+                'status' => 'success', 
+                'amount' => $amount, 
+                'ngn_per_native' => $ngnPerNative, 
+                'native_amount' => $nativeAmount, 
+                'weiamount' => (string)$wei, 
+                'amount_in_wei' => (string)$wei 
+            ];
             break;
 
         case 'getDexToken':
