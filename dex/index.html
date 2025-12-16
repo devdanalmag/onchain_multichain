@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AssetChain DEX - Airtime & Data Marketplace</title>
-  <link rel="icon" href="/assets/img/favicon.ico" />
+  <link rel="icon" href="../assets/img/favicon.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert@2.1.2/dist/sweetalert.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
@@ -27,8 +27,8 @@
   </script>
   <style>
     :root {
-      --primary: #6C38FF;
-      --primary-dark: #5A2BE3;
+      --primary: #384fff;
+      --primary-dark: #2b65e3;
       --secondary: #00C2FF;
       --accent: #FF3E80;
       --dark: #0F1423;
@@ -209,9 +209,9 @@
     }
 
     .logo-icon {
-      width: 40px;
-      height: 40px;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      width: 60px;
+      height: 60px;
+      /* background: linear-gradient(135deg, var(--primary), var(--secondary)); */
       border-radius: 10px;
       display: flex;
       align-items: center;
@@ -1243,7 +1243,9 @@
     <div class="container">
       <div class="header-content">
         <div class="logo">
-          <div class="logo-icon">A</div>
+          <a class="logo-icon" href="../index.html" aria-label="Assetchain DEX Home">
+            <img src="../assets/img/favicon.png" alt="Assetchain DEX Logo" style="width: 100%; height: 100%; object-fit: contain;">
+          </a>
           <!-- <div class="logo-text">Assetchain DEX</div> -->
         </div>
         <nav class="site-nav" aria-label="Primary Navigation">
