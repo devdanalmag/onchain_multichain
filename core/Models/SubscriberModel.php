@@ -390,7 +390,10 @@ class SubscriberModel extends Model
 	public function getCoins()
 	{
 		$dbh = self::connect();
-		$sql = "SELECT * FROM p2pcoins ORDER BY cId ASC";
+		$sql = "SELECT p.cId, p.Symbol, p.status, t.token_contract, t.token_decimals 
+		        FROM p2pcoins p 
+		        LEFT JOIN tokens t ON LOWER(t.token_name)=LOWER(p.Symbol) AND t.is_active=1 
+		        ORDER BY p.cId ASC";
 		$query = $dbh->prepare($sql);
 		$query->execute();
 		$results = $query->fetchAll(PDO::FETCH_OBJ);

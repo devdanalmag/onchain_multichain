@@ -76,12 +76,19 @@ try {
 
         case 'getSiteSettings':
             $site = $admin->getSiteSettings();
+            $cfgFile = __DIR__ . '/../config/assetchain.json';
+            $cfg = null;
+            if (file_exists($cfgFile)) {
+                $cfg = json_decode(file_get_contents($cfgFile), true);
+            }
             $out = [
                 'status' => 'success',
                 'walletaddress' => $site->walletaddress ?? null,
-                'evm_address' => $site->walletaddress ?? null, // Alias for EVM
+                'evm_address' => $site->walletaddress ?? null,
                 'siteaddress' => $site->walletaddress ?? null,
                 'sitename' => $site->sitename ?? null,
+                'chain_id' => $cfg['chain_id'] ?? 42420,
+                'rpc_url' => $cfg['rpc_url'] ?? 'https://mainnet-rpc.assetchain.org/',
             ];
             break;
 
@@ -190,6 +197,33 @@ try {
             $q->execute();
             $rows = $q->fetchAll(PDO::FETCH_ASSOC);
             $out = [ 'status' => 'success', 'tokens' => $rows, 'data' => $rows ];
+            break;
+        
+        case 'getP2PCoins':
+            // Merge p2pcoins with token metadata if contracts exist
+            $dbh = AdminModel::connect();
+            $coins = $dbh->query("SELECT cId, Symbol, status FROM p2pcoins ORDER BY cId ASC")->fetchAll(PDO::FETCH_ASSOC);
+            $tokens = $dbh->query("SELECT LOWER(token_name) AS token_name, token_contract, token_decimals FROM tokens WHERE is_active=1")->fetchAll(PDO::FETCH_ASSOC);
+            $tmap = [];
+            foreach ($tokens as $t) {
+                $tmap[strtolower($t['token_name'])] = [
+                    'token_contract' => $t['token_contract'],
+                    'token_decimals' => $t['token_decimals']
+                ];
+            }
+            $result = [];
+            foreach ($coins as $c) {
+                $nameKey = strtolower($c['Symbol'] ?? '');
+                $meta = isset($tmap[$nameKey]) ? $tmap[$nameKey] : ['token_contract' => null, 'token_decimals' => null];
+                $result[] = [
+                    'id' => $c['cId'],
+                    'symbol' => $c['Symbol'],
+                    'status' => $c['status'],
+                    'token_contract' => $meta['token_contract'],
+                    'token_decimals' => $meta['token_decimals']
+                ];
+            }
+            $out = [ 'status' => 'success', 'coins' => $result, 'data' => $result ];
             break;
 
         case 'getWalletTransactions':

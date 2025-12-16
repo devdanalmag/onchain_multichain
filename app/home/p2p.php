@@ -139,14 +139,6 @@
 <!-- end head -->
 <div class="friends d-grid m-20 gap-20">
     <?php
-    // Example coin meta data (id => [name, icon, price_class])
-    $coinMeta = [
-        1 => ['name' => 'Sidra', 'icon' => 'sidra-logo.png', 'price_class' => 'price-up'],
-        2 => ['name' => 'PI',    'icon' => 'pi-logo.png',    'price_class' => 'price-up'],
-        3 => ['name' => 'USDT',  'icon' => 'usdt-logo.svg',  'price_class' => 'price-down'],
-        4 => ['name' => 'TON',   'icon' => 'ton.png',        'price_class' => 'price-up'],
-        // Add more coins as needed
-    ];
     if (!empty($data)) {
         foreach ($data as $mydata) {
             // Parse merchant's coins, limits, and prices
@@ -178,22 +170,26 @@
                         <tbody>
                             <?php
                             foreach ($coinIds as $i => $coinId) {
-                                // Find coin status from $data2
+                                // Find coin details from $data2
                                 $coinStatus = 0;
+                                $coinSymbol = '';
+                                $tokenContract = '';
+                                $tokenDecimals = '';
                                 if (isset($data2) && is_array($data2)) {
                                     foreach ($data2 as $coinRow) {
                                         if (isset($coinRow->cId) && intval($coinRow->cId) == $coinId) {
                                             $coinStatus = isset($coinRow->status) ? intval($coinRow->status) : 0;
+                                            $coinSymbol = isset($coinRow->Symbol) ? $coinRow->Symbol : '';
+                                            $tokenContract = isset($coinRow->token_contract) ? $coinRow->token_contract : '';
+                                            $tokenDecimals = isset($coinRow->token_decimals) ? $coinRow->token_decimals : '';
                                             break;
                                         }
                                     }
                                 }
                                 if ($coinStatus !== 1) continue;
-                                if (!isset($coinMeta[$coinId])) continue;
-                                $coin = $coinMeta[$coinId];
                                 $limit = isset($limits[$i]) ? htmlspecialchars($limits[$i]) : '';
                                 $price = isset($prices[$i]) ? htmlspecialchars($prices[$i]) : '';
-                                $priceClass = $coin['price_class'];
+                                $priceClass = 'price-up';
                                 // Format price if numeric
                                 if (is_numeric($price) && $price !== '') {
                                     $price = '₦' . number_format($price);
@@ -204,9 +200,13 @@
                                 <tr>
                                     <td>
                                         <div class="coin-name">
-                                            <img src="<?php echo HOME_IMAGE_LOC . '/' . $coin['icon']; ?>" alt="" class="coin-icon">
-                                            <?= htmlspecialchars($coin['name']) ?>
+                                            <?= htmlspecialchars($coinSymbol) ?>
                                         </div>
+                                        <?php if (!empty($tokenContract)) { ?>
+                                            <div style="font-size:10px;opacity:0.8;">
+                                                <?= htmlspecialchars($tokenContract) ?><?php if (!empty($tokenDecimals)) { ?> • <?= htmlspecialchars($tokenDecimals) ?><?php } ?>
+                                            </div>
+                                        <?php } ?>
                                     </td>
                                     <td><span class="limit"><?= $limit ?></span></td>
                                     <td class="<?= $priceClass ?>"><?= $price ?></td>

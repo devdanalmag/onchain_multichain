@@ -1050,7 +1050,7 @@
 
     .receipt-card {
       background: var(--card-bg);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0);
       border-radius: var(--border-radius);
       overflow: hidden;
     }
@@ -2524,7 +2524,7 @@
         decimals: 6,
         message: null,
         service: (item.servicename || item.service || (item.data_plan ? 'Data Purchase' : 'Airtime Purchase')),
-        purchaseValue: (item.data_plan ? ((item.plan_label || item.plan_name || item.data_plan) + ' Data') : ((item.amount ? `${item.amount}N Airtime` : `N${item.amount || '0.00'} Airtime`))),
+        purchaseValue: (item.data_plan ? ((item.plan_label || item.plan_name || item.data_plan) + ' Data') : ((item.amount ? `${item.amount}N` : `N${item.amount || '0.00'} Airtime`))),
         providerDisplay: parsedProvider || '—',
         recipientPhone: parsedPhone || 'N/A',
         description: item.servicedesc || item.servicedescription || ''
@@ -3446,7 +3446,7 @@ $('#data-calc').addEventListener('click', async () => {
           providerDisplay: await resolveProviderDisplay(service),
           recipientPhone: (service === 'airtime' ? $('#airtime-phone').value : $('#data-phone').value) || 'N/A',
           service: service === 'airtime' ? 'Airtime Purchase' : 'Data Purchase',
-          purchaseValue: service === 'airtime' ? `${$('#airtime-amount').value || ''}N Airtime` : `${($('#data-plan').selectedOptions[0]?.text || $('#data-plan').value || '').toString()} Data`
+          purchaseValue: service === 'airtime' ? `${$('#airtime-amount').value || ''}N` : `${($('#data-plan').selectedOptions[0]?.text || $('#data-plan').value || '').toString()} Data`
         };
         const modalCard = openReceiptModal(model);
 

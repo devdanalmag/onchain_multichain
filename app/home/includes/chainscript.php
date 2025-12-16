@@ -941,7 +941,7 @@
                 document.getElementById("fetch-price").style.display = "block";
                 document.getElementById("fetch-price").removeAttribute("hidden");
             } else {
-                document.getElementById("amounttopayinton").innerHTML = "0.00 $TON";
+                document.getElementById("amounttopayinton").innerHTML = "0.00 Native";
                 document.getElementById("amountwarning").removeAttribute("class");
                 document.getElementById("amountwarning").style.display = "block";
                 document.getElementById("data-btn").disabled = true;

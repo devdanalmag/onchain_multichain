@@ -552,9 +552,9 @@ require_once("includes/custom.php");
 
   <?php include_once("includes/jsFiles.php"); ?>
   <?php include_once("includes/chainscript.php"); ?>
+  <script type="module" src="includes/tonconnect-js.php"></script>
 
   <!-- Now load the script -->
-  <script src="https://onchain.com.ng/Tonconnects/tonconnect-ui.min.js"></script>
   <!-- Add html2canvas from CDN -->
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>

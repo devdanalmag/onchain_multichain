@@ -376,6 +376,11 @@ if (isset($_GET['set-wallet'])) {
 
             <div data-bs-parent="#tab-group-1" class="collapse <?php echo $tab4show ?>" id="tab-4">
                 <p class="mb-n1 color-highlight font-600 font-12">Manage Wallet</p>
+                <div class="tonconnectdiv" id="tonconn-div" style="display: none; justify-content: center; margin-bottom: 20px;">
+                    <button type="button" class="btn btn-full btn-l font-600 font-15 gradient-highlight mt-4 rounded-sm" onclick="window.connectEVMWallet()">
+                        Connect Wallet
+                    </button>
+                </div>
                 <form id="add-walletform" method="post">
                     <div class="input-style list-group list-custom-small has-icon" id="walletinfo-div" style="display: none;">
                         <i class="fa fa-wallet"></i>
