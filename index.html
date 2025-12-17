@@ -5,9 +5,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="img/png" href="index-files/imgs/onchain-small.png">
-    <title>Onchain - Gateway to Web3 Journey</title>
+    <title>Onchain - Your Gateway to Decentralized Services</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="index-files/styles.css">
+    <style>
+        .powered-by {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 16px 0;
+            padding: 12px 20px;
+            background: rgba(0, 242, 195, 0.08);
+            border: 1px solid rgba(0, 242, 195, 0.2);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: var(--text-color, #fff);
+        }
+        .powered-by span {
+            color: var(--gray, #999);
+        }
+        .powered-by strong {
+            color: #00f2c3;
+            font-weight: 600;
+        }
+        .powered-by img {
+            filter: drop-shadow(0 0 4px rgba(0, 242, 195, 0.3));
+        }
+    </style>
 </head>
 
 <body>
@@ -57,8 +82,13 @@
 
         <!-- Hero Section -->
         <section class="hero">
-            <h1>Gateway to Your <span>Web3 Journey</span></h1>
-            <p>Buy Airtime, Pay Bills, Trade Assets—All On-Chain with TON Blockchain.</p>
+            <h1>Your Gateway to <span>Decentralized Services</span></h1>
+            <p>Buy Airtime, Pay Bills, Trade Assets—All Secure and Fast</p>
+            <div class="powered-by" style="margin-top: 20px; width: fit-content; margin-left: auto; margin-right: auto;">
+                <span>Powered by</span>
+                <img src="index-files/imgs/asset3d.png" alt="Assetchain" style="height: 20px; margin: 0 8px; vertical-align: middle; filter: drop-shadow(0 0 4px rgba(0, 242, 195, 0.3));">
+                <strong>Assetchain</strong>
+            </div>
             <div class="cta-buttons">
                 <button class="btn primary-btn" onclick="window.location.href = 'app/login'">Login</button>
                 <button class="btn secondary-btn" onclick="window.location.href = 'app/register'">Sign-Up</button>
@@ -73,38 +103,33 @@
         <section class="section" id="services">
             <div class="section-title">
                 <h2>Our Services</h2>
-                <p>Everything you need for your daily life, powered by blockchain</p>
+                <p>Everything you need for your daily life, secure and transparent</p>
             </div>
             <div class="services-grid">
                 <div class="service-card" data-service="airtime">
                     <div class="icon"><i class="fas fa-mobile-alt"></i></div>
                     <h3>Airtime</h3>
-                    <p>Top up your phone instantly using TON blockchain</p>
-                    <div class="ton-badge"></div>
+                    <p>Top up your phone instantly and securely</p>
                 </div>
                 <div class="service-card" data-service="data">
                     <div class="icon"><i class="fas fa-wifi"></i></div>
                     <h3>Data</h3>
-                    <p>Purchase mobile data packages securely on-chain</p>
-                    <div class="ton-badge"></div>
+                    <p>Purchase mobile data packages securely</p>
                 </div>
                 <div class="service-card" data-service="bills">
                     <div class="icon"><i class="fas fa-lightbulb"></i></div>
                     <h3>Bills</h3>
-                    <p>Pay electricity and utility bills with crypto</p>
-                    <div class="ton-badge"></div>
+                    <p>Pay electricity and utility bills easily</p>
                 </div>
                 <div class="service-card" data-service="education">
                     <div class="icon"><i class="fas fa-graduation-cap"></i></div>
                     <h3>Education</h3>
                     <p>Pay for WAEC, NECO, JAMB and more</p>
-                    <div class="ton-badge"></div>
                 </div>
                 <div class="service-card" data-service="marketplace">
                     <div class="icon"><i class="fas fa-store"></i></div>
                     <h3>Marketplace</h3>
                     <p>Trade real-world assets peer-to-peer</p>
-                    <div class="ton-badge"></div>
                 </div>
             </div>
         </section>
@@ -122,16 +147,14 @@
                             <div class="benefit-icon"><i class="fas fa-bolt"></i></div>
                             <div>
                                 <h4>Lightning Fast</h4>
-                                <p>TON blockchain enables transactions that are faster and cheaper than traditional
-                                    methods.</p>
+                                <p>Our platform enables transactions that are faster and cheaper than traditional methods.</p>
                             </div>
                         </div>
                         <div class="benefit-item" id="benefit2">
                             <div class="benefit-icon"><i class="fas fa-lock"></i></div>
                             <div>
                                 <h4>Secure & Transparent</h4>
-                                <p>Every transaction is recorded on-chain, providing unmatched security and
-                                    transparency.</p>
+                                <p>Every transaction is recorded securely, providing unmatched transparency and trust.</p>
                             </div>
                         </div>
                         <div class="benefit-item" id="benefit3">
@@ -150,7 +173,7 @@
         <section class="section" id="how-it-works">
             <div class="section-title">
                 <h2>How It Works</h2>
-                <p>Get started with Onchain in just 3 simple steps</p>
+                <p>Get started with Onchain in just three simple steps</p>
             </div>
             <div class="steps-container">
                 <div class="progress-line" id="progressLine"></div>
@@ -165,20 +188,18 @@
                     </div>
                     <div class="step" data-step="3">
                         <div class="step-circle">3</div>
-                        <div class="step-text">Confirm On-Chain</div>
+                        <div class="step-text">Confirm Transaction</div>
                     </div>
                 </div>
                 <div class="step-content">
                     <div class="step-panel active" data-step="1">
-                        <h3>Connect Your TON Wallet</h3>
-                        <p>Securely connect your favorite TON wallet to get started. We support all major TON wallets.
-                        </p>
+                        <h3>Connect Your Wallet</h3>
+                        <p>Securely connect your wallet to get started. We support all major cryptocurrency wallets.</p>
                         <img src="index-files/imgs/onchain.png" alt="TON Wallet" style="height: 100px; margin: 20px 0;">
                     </div>
                     <div class="step-panel" data-step="2">
                         <h3>Choose Your Service</h3>
-                        <p>Select from our range of services - airtime, data, bills, education payments, or marketplace.
-                        </p>
+                        <p>Select from our range of services including airtime, data, bills, education payments, and marketplace.</p>
                         <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px;">
                             <i class="fas fa-mobile-alt" style="font-size: 2rem; color: var(--accent);"></i>
                             <i class="fas fa-wifi" style="font-size: 2rem; color: var(--accent);"></i>
@@ -187,9 +208,8 @@
                         </div>
                     </div>
                     <div class="step-panel" data-step="3">
-                        <h3>Confirm On Blockchain</h3>
-                        <p>Review and confirm your transaction. It will be processed instantly on the TON blockchain.
-                        </p>
+                        <h3>Confirm Your Transaction</h3>
+                        <p>Review and confirm your transaction. It will be processed instantly and securely.</p>
                         <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px;">
                             <i class="fas fa-lock" style="font-size: 2rem; color: var(--accent);"></i>
                         </div>
@@ -197,20 +217,10 @@
                 </div>
             </div>
         </section>
-        <section class="backed-by">
-            <h2>Backed By</h2>
-            <p>ACC (AREWA CRYPTO COMMUNITY)</p>
-            <img src="index-files/imgs/acc.png" alt="">
-            <div class="social-links">
-                <a href="#"><i class="fab fa-twitter"></i></a>
-                <a href="#"><i class="fab fa-telegram"></i></a>
-                <a href="#"><i class="fab fa-discord"></i></a>
-            </div>
-        </section>
         <!-- Final CTA Section -->
         <section class="final-cta">
-            <h2>Ready for Your Web3 Journey?</h2>
-            <p>Join thousands of users already enjoying seamless on-chain transactions with Onchain</p>
+            <h2>Ready to Get Started?</h2>
+            <p>Join thousands of users already enjoying seamless transactions with Onchain</p>
             <button class="glow-btn">Start Now</button>
             <div class="tooltip">No wallet? Click here to learn how!</div>
         </section>
@@ -218,7 +228,7 @@
         <!-- Footer -->
         <footer>
             <div class="footer-logo">
-                <img src="index-files/imgs/onchain-black.png" alt="TON Logo">
+                <img src="index-files/imgs/onchain-black.png" alt="Onchain Logo">
                 <span class="logo-text">Onchain</span>
             </div>
             <div class="social-links">
@@ -233,12 +243,12 @@
                 <a href="#">FAQ</a>
                 <a href="#">Contact Us</a>
             </div>
-            <div class="ton-powered">
+            <div class="powered-by">
                 <span>Powered by</span>
-                <img src="https://ton.org/download/ton_symbol.svg" alt="TON">
-                <span>TON Blockchain</span>
+                <img src="index-files/imgs/asset3d.png" alt="Assetchain" style="height: 24px; margin: 0 8px; vertical-align: middle;">
+                <strong>Assetchain</strong>
             </div>
-            <div class="copyright">
+            <div class="social-links">
                 &copy; 2023 Onchain. All rights reserved.
             </div>
         </footer>
