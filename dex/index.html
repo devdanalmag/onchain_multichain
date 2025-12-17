@@ -727,9 +727,6 @@
         flex-direction: column;
       }
 
-      .tabs {
-        flex-direction: column;
-      }
     }
 
     /* Animation for loading */
@@ -1027,6 +1024,9 @@
 
       .wallet-option {
         padding: 10px;
+      }
+            .tabs {
+        flex-direction: column;
       }
     }
 
@@ -1345,11 +1345,11 @@
       <div class="tabs">
         <div class="tab active" data-tab="airtime">
           <i class="fas fa-phone-alt"></i>
-          Airtime Top-up
+          Airtime
         </div>
         <div class="tab" data-tab="data">
           <i class="fas fa-wifi"></i>
-          Data Plans
+          Data
         </div>
         <div class="tab" data-tab="history">
           <i class="fas fa-list"></i>
@@ -1430,7 +1430,17 @@
 
           <div id="airtime-status"></div>
         </div>
-
+      <div class="tips-section">
+          <h3 class="tips-title"><i class="fas fa-lightbulb"></i> How It Works</h3>
+          <ul class="tips-list">
+            <li>Use the Account Center to connect and manage your wallet</li>
+            <li>Select your network provider and enter your phone number</li>
+            <li>Choose the amount (for airtime) or data plan you want to purchase</li>
+            <li>Calculate the CNGN amount and send the payment</li>
+            <li>Your transaction will be verified on-chain and your airtime/data will be delivered</li>
+            <li>All transactions are secure and processed on the Assetchain network</li>
+          </ul>
+        </div>
 
       </div>
 
@@ -1467,10 +1477,10 @@
               <label for="data-ported" style="margin-bottom: 0; cursor: pointer;">Is Ported Number</label>
             </div>
 
-            <div class="form-group">
-              <label for="data-ref">Reference ID</label>
-              <input id="data-ref" class="mono" readonly />
-            </div>
+            <!-- <div class="form-group"> -->
+              <!-- <label for="data-ref">Reference ID</label> -->
+              <input id="data-ref" class="mono" readonly hidden />
+            <!-- </div> -->
             <div class="form-group">
               <label for="data-token">Token</label>
               <div style="display: flex; gap: 8px;">
@@ -1485,10 +1495,10 @@
           <div class="divider"></div>
 
           <div class="form-grid">
-            <div class="form-group">
-              <label for="data-target">Receiving EVM Address</label>
-              <input id="data-target" class="mono" placeholder="Site EVM receiving address" />
-            </div>
+            <!-- <div class="form-group"> -->
+              <!-- <label for="data-target">Receiving EVM Address</label> -->
+              <input id="data-target" class="mono" placeholder="Site EVM receiving address" readonly hidden />
+            <!-- </div> -->
 
             <div class="form-group">
               <label for="data-display">Amount (Selected Currency)</label>
@@ -1519,11 +1529,12 @@
             <li>Use the Account Center to connect and manage your wallet</li>
             <li>Select your network provider and enter your phone number</li>
             <li>Choose the amount (for airtime) or data plan you want to purchase</li>
-            <li>Calculate the CNGN amount (wei) and send the payment</li>
+            <li>Calculate the CNGN amount and send the payment</li>
             <li>Your transaction will be verified on-chain and your airtime/data will be delivered</li>
             <li>All transactions are secure and processed on the Assetchain network</li>
           </ul>
         </div>
+        
         <div id="tx-receipts" class="receipts-container" aria-live="polite" aria-label="Transaction receipts"></div>
       </div>
             <div class="tab-content" id="history-tab">
@@ -2369,7 +2380,7 @@
       }
     }
 
-    // Fetch site settings for TON address
+    // Fetch site settings for  address
     async function fetchSiteSettings() {
       try {
         const res = await fetch(`${apiBase}/access.php?action=getSiteSettings`);
