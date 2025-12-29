@@ -25,6 +25,7 @@ class MoralisModel extends Model {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'accept: application/json',
             'X-API-Key: ' . $this->apiKey
@@ -32,21 +33,31 @@ class MoralisModel extends Model {
 
         $result = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
         curl_close($ch);
+
+        if ($result === false) {
+            return ['status' => 'fail', 'msg' => 'cURL error: ' . $curlError];
+        }
 
         if ($httpCode >= 400) {
              return ['status' => 'fail', 'msg' => 'Moralis API error: ' . $httpCode, 'data' => json_decode($result, true)];
         }
 
-        return json_decode($result, true);
+        $decoded = json_decode($result, true);
+        if ($decoded === null) {
+            return ['status' => 'fail', 'msg' => 'Failed to decode Moralis response'];
+        }
+
+        return $decoded;
     }
 
     public function getWalletTransactions($address, $chain, $page = 0, $limit = 10) {
         $chainMap = [
-            'base' => '0x2105', // Base Mainnet
-            'bsc' => '0x38',    // BSC Mainnet
-            'bnb' => '0x38',
-            'arbitrum' => '0xa4b1' // Arbitrum One
+            'base' => 'base',
+            'bsc' => 'bsc',
+            'bnb' => 'bsc',
+            'arbitrum' => 'arbitrum'
         ];
 
         $moralisChain = $chainMap[strtolower($chain)] ?? null;
@@ -146,10 +157,10 @@ class MoralisModel extends Model {
 
     public function getTransactionByHash($tx_hash, $chain) {
         $chainMap = [
-            'base' => '0x2105',
-            'bsc' => '0x38',
-            'bnb' => '0x38',
-            'arbitrum' => '0xa4b1'
+            'base' => 'base',
+            'bsc' => 'bsc',
+            'bnb' => 'bsc',
+            'arbitrum' => 'arbitrum'
         ];
 
         $moralisChain = $chainMap[strtolower($chain)] ?? null;
@@ -160,10 +171,10 @@ class MoralisModel extends Model {
 
     public function getTokenPrice($tokenAddress, $chain) {
         $chainMap = [
-            'base' => '0x2105',
-            'bsc' => '0x38',
-            'bnb' => '0x38',
-            'arbitrum' => '0xa4b1'
+            'base' => 'base',
+            'bsc' => 'bsc',
+            'bnb' => 'bsc',
+            'arbitrum' => 'arbitrum'
         ];
         $moralisChain = $chainMap[strtolower($chain)] ?? null;
         if (!$moralisChain) return null;
@@ -188,10 +199,10 @@ class MoralisModel extends Model {
     
     public function getNativeBalance($address, $chain) {
         $chainMap = [
-            'base' => '0x2105',
-            'bsc' => '0x38',
-            'bnb' => '0x38',
-            'arbitrum' => '0xa4b1'
+            'base' => 'base',
+            'bsc' => 'bsc',
+            'bnb' => 'bsc',
+            'arbitrum' => 'arbitrum'
         ];
         $moralisChain = $chainMap[strtolower($chain)] ?? null;
         if (!$moralisChain) return null;
