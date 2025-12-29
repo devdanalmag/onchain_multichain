@@ -756,7 +756,34 @@
     }
 
     .wallet-select {
-      display: none;
+      appearance: none;
+      -webkit-appearance: none;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      color: var(--light);
+      padding: 0 36px 0 14px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2.5 4.5L6 8L9.5 4.5' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      transition: all 0.2s ease;
+      height: 42px;
+      display: flex;
+      align-items: center;
+    }
+
+    .wallet-select:hover {
+      background-color: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .wallet-select option {
+      background: #1a1b23;
+      color: white;
     }
 
     .wallet-dropdown {
@@ -1025,7 +1052,8 @@
       .wallet-option {
         padding: 10px;
       }
-            .tabs {
+
+      .tabs {
         flex-direction: column;
       }
     }
@@ -1244,7 +1272,8 @@
       <div class="header-content">
         <div class="logo">
           <a class="logo-icon" href="../index.html" aria-label="Assetchain DEX Home">
-            <img src="../assets/img/favicon.png" alt="Assetchain DEX Logo" style="width: 100%; height: 100%; object-fit: contain;">
+            <img src="../assets/img/favicon.png" alt="Assetchain DEX Logo"
+              style="width: 100%; height: 100%; object-fit: contain;">
           </a>
           <!-- <div class="logo-text">Assetchain DEX</div> -->
         </div>
@@ -1260,11 +1289,12 @@
           </button>
         </nav>
         <div class="wallet-connect">
-          <select id="wallet-select" class="wallet-select" aria-label="Select wallet">
-            <option value="MetaMask" selected>MetaMask</option>
-            <option value="Bitget">Bitget Wallet</option>
-            <option value="OKX">OKX Wallet</option>
-          </select>
+          <!-- Hidden chain tracking (JavaScript managed) -->
+          <input type="hidden" id="chain-select" value="assetchain">
+          <!-- <select id="chain-select" class="form-select" aria-label="Chain selector">
+          <option value="Bitget">Bitget Wallet</option>
+          <option value="OKX">OKX Wallet</option>
+          </select> -->
           <button id="onboard-connect-btn" class="btn btn-secondary">
             <i class="fas fa-wallet"></i> Connect Wallet
           </button>
@@ -1272,9 +1302,9 @@
             <span class="step step-connect" data-step="connect" title="Wallet connection step">Connect</span>
             <span class="step step-network" data-step="network" title="Assetchain network step">Network</span>
             <span class="step step-signin" data-step="signin" title="Sign-in step">Sign-in</span>
-                    <button id="theme-toggle"  aria-label="Toggle theme">
-            <i class="fas fa-sun"></i>
-          </button>
+            <button id="theme-toggle" aria-label="Toggle theme">
+              <i class="fas fa-sun"></i>
+            </button>
           </div>
           <button id="sign-in-btn" class="btn btn-primary" style="display:none;margin-left:8px;">
             <i class="fas fa-user-check"></i> Sign In
@@ -1295,30 +1325,72 @@
               </div>
             </div>
           </div>
-          <div id="wallet-dropdown" class="wallet-dropdown" role="menu" aria-label="Wallet options">
-            <div class="wallet-dropdown-header">Select Wallet</div>
-            <div class="wallet-option" data-wallet="MetaMask">
-              <span class="icon"><img
-                  src="https://images.ctfassets.net/clixtyxoaeas/4rnpEzy1ATWRKVBOLxZ1Fm/a74dc1eed36d23d7ea6030383a4d5163/MetaMask-icon-fox.svg"
-                  width="18"></span>
-              <span>MetaMask</span>
+          <div id="wallet-dropdown" class="wallet-dropdown" role="menu" aria-label="Connection options">
+            <!-- Chain Selection Section (shown first) -->
+            <div id="chain-selection" class="dropdown-section">
+              <div class="wallet-dropdown-header">Select Chain</div>
+              <div class="wallet-option chain-option" data-chain="assetchain">
+                <span class="icon" style="background: linear-gradient(135deg, #d9e5ec, #55d7ee);">
+                  <img src="https://swap.assetchain.org/assets/assetChainWhite-CKHIdwHO.ico" width="18"
+                    onerror="this.style.display='none'">
+                </span>
+                <span>AssetChain</span>
+              </div>
+              <div class="wallet-option chain-option" data-chain="base">
+                <span class="icon" style="background: linear-gradient(135deg, #0052FF, #0066FF);">
+                  <img src="https://avatars.githubusercontent.com/u/108554348?s=200&v=4" width="18">
+                </span>
+                <span>Base</span>
+              </div>
+              <div class="wallet-option chain-option" data-chain="arbitrum">
+                <span class="icon" style="background: linear-gradient(135deg, #28A0F0, #1C7ED6);">
+                  <img src="https://cryptologos.cc/logos/arbitrum-arb-logo.png" width="18">
+                </span>
+                <span>Arbitrum</span>
+              </div>
+              <div class="wallet-option chain-option" data-chain="bsc">
+                <span class="icon" style="background: linear-gradient(135deg, #F3BA2F, #E6A800);">
+                  <img src="https://cryptologos.cc/logos/bnb-bnb-logo.png" width="18">
+                </span>
+                <span>BNB Chain</span>
+              </div>
+              <div class="wallet-option" id="chain-back-btn"
+                style="display:none; border-top:1px solid rgba(255,255,255,0.1);">
+                <span class="icon" style="background: var(--gray);"><i class="fas fa-arrow-left"></i></span>
+                <span>Back</span>
+              </div>
             </div>
-            <div class="wallet-option" data-wallet="Bitget">
-              <span class="icon"><img
-                  src="https://play-lh.googleusercontent.com/QbNP8A9GE_UM1s3RFNF8i599yWm_F37iwL4viYCueD9XhJaIZ2yZjMnEwsegeTaHa7Q=w240-h480-rw"
-                  width="18"></span>
-              <span>Bitget Wallet</span>
-            </div>
-            <div class="wallet-option" data-wallet="OKX">
-              <span class="icon"><img
-                  src="https://play-lh.googleusercontent.com/N00SbjLJJrhg4hbdnkk3Llk2oedNNgCU29DvR9cpep7Lr0VkzvBkmLqajWNgFb0d7IOO"
-                  width="18"></span>
-              <span>OKX Wallet</span>
-            </div>
-            <div id="wallet-disconnect-option" class="wallet-option" data-wallet="__disconnect__"
-              style="display:none;border-top:1px solid rgba(255,255,255,0.1);">
-              <span class="icon" style="background: var(--error);"><i class="fas fa-sign-out-alt"></i></span>
-              <span>Disconnect</span>
+            <!-- Wallet Selection Section (shown after chain selected) -->
+            <div id="wallet-selection" class="dropdown-section" style="display:none;">
+              <div class="wallet-dropdown-header">Select Wallet <span id="selected-chain-label"
+                  style="font-size:12px;color:var(--primary);margin-left:8px;"></span></div>
+              <div class="wallet-option" data-wallet="MetaMask">
+                <span class="icon"><img
+                    src="https://images.ctfassets.net/clixtyxoaeas/4rnpEzy1ATWRKVBOLxZ1Fm/a74dc1eed36d23d7ea6030383a4d5163/MetaMask-icon-fox.svg"
+                    width="18"></span>
+                <span>MetaMask</span>
+              </div>
+              <div class="wallet-option" data-wallet="Bitget">
+                <span class="icon"><img
+                    src="https://play-lh.googleusercontent.com/QbNP8A9GE_UM1s3RFNF8i599yWm_F37iwL4viYCueD9XhJaIZ2yZjMnEwsegeTaHa7Q=w240-h480-rw"
+                    width="18"></span>
+                <span>Bitget Wallet</span>
+              </div>
+              <div class="wallet-option" data-wallet="OKX">
+                <span class="icon"><img
+                    src="https://play-lh.googleusercontent.com/N00SbjLJJrhg4hbdnkk3Llk2oedNNgCU29DvR9cpep7Lr0VkzvBkmLqajWNgFb0d7IOO"
+                    width="18"></span>
+                <span>OKX Wallet</span>
+              </div>
+              <div class="wallet-option" id="wallet-back-btn" style="border-top:1px solid rgba(255,255,255,0.1);">
+                <span class="icon" style="background: var(--gray);"><i class="fas fa-arrow-left"></i></span>
+                <span>Back to Chains</span>
+              </div>
+              <div id="wallet-disconnect-option" class="wallet-option" data-wallet="__disconnect__"
+                style="display:none;border-top:1px solid rgba(255,255,255,0.1);">
+                <span class="icon" style="background: var(--error);"><i class="fas fa-sign-out-alt"></i></span>
+                <span>Disconnect</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1397,7 +1469,8 @@
               <label for="airtime-token">Token</label>
               <div style="display: flex; gap: 8px;">
                 <select id="airtime-token" aria-label="Select token" style="flex: 1;"></select>
-                <button type="button" class="btn-mini" onclick="addTokenToWallet('airtime-token')" title="Add token to wallet">
+                <button type="button" class="btn-mini" onclick="addTokenToWallet('airtime-token')"
+                  title="Add token to wallet">
                   <i class="fas fa-wallet"></i> Add
                 </button>
               </div>
@@ -1430,7 +1503,7 @@
 
           <div id="airtime-status"></div>
         </div>
-      <div class="tips-section">
+        <div class="tips-section">
           <h3 class="tips-title"><i class="fas fa-lightbulb"></i> How It Works</h3>
           <ul class="tips-list">
             <li>Use the Account Center to connect and manage your wallet</li>
@@ -1464,7 +1537,7 @@
               <label for="data-plan">Data Plan</label>
               <select id="data-plan"></select>
             </div>
-              <input id="data-nano" type="text" hidden />
+            <input id="data-nano" type="text" hidden />
 
             <div class="form-group">
               <label for="data-phone">Phone Number</label>
@@ -1478,14 +1551,15 @@
             </div>
 
             <!-- <div class="form-group"> -->
-              <!-- <label for="data-ref">Reference ID</label> -->
-              <input id="data-ref" class="mono" readonly hidden />
+            <!-- <label for="data-ref">Reference ID</label> -->
+            <input id="data-ref" class="mono" readonly hidden />
             <!-- </div> -->
             <div class="form-group">
               <label for="data-token">Token</label>
               <div style="display: flex; gap: 8px;">
                 <select id="data-token" aria-label="Select token" style="flex: 1;"></select>
-                <button type="button" class="btn-mini" onclick="addTokenToWallet('data-token')" title="Add token to wallet">
+                <button type="button" class="btn-mini" onclick="addTokenToWallet('data-token')"
+                  title="Add token to wallet">
                   <i class="fas fa-wallet"></i> Add
                 </button>
               </div>
@@ -1496,8 +1570,8 @@
 
           <div class="form-grid">
             <!-- <div class="form-group"> -->
-              <!-- <label for="data-target">Receiving EVM Address</label> -->
-              <input id="data-target" class="mono" placeholder="Site EVM receiving address" readonly hidden />
+            <!-- <label for="data-target">Receiving EVM Address</label> -->
+            <input id="data-target" class="mono" placeholder="Site EVM receiving address" readonly hidden />
             <!-- </div> -->
 
             <div class="form-group">
@@ -1519,11 +1593,11 @@
 
             <div id="data-status"></div>
           </div>
-      </div>
+        </div>
 
-      <!-- History Tab Content -->
+        <!-- History Tab Content -->
 
-      <div class="tips-section">
+        <div class="tips-section">
           <h3 class="tips-title"><i class="fas fa-lightbulb"></i> How It Works</h3>
           <ul class="tips-list">
             <li>Use the Account Center to connect and manage your wallet</li>
@@ -1534,10 +1608,10 @@
             <li>All transactions are secure and processed on the Assetchain network</li>
           </ul>
         </div>
-        
+
         <div id="tx-receipts" class="receipts-container" aria-live="polite" aria-label="Transaction receipts"></div>
       </div>
-            <div class="tab-content" id="history-tab">
+      <div class="tab-content" id="history-tab">
         <div id="history-card" class="card" style="display:none;" aria-live="polite" aria-label="Transaction history">
           <div class="card-header">
             <div class="card-icon" style="background: linear-gradient(135deg, var(--secondary), var(--accent));">
@@ -1586,7 +1660,7 @@
           </div>
         </div>
       </div>
-      
+
       <div id="tx-modal" class="tx-modal" style="display:none;" aria-hidden="true" role="dialog" aria-modal="true">
         <div class="tx-backdrop"></div>
         <div class="tx-content" role="document">
@@ -1604,8 +1678,59 @@
     // DOM utility functions
     const $ = (s) => document.querySelector(s);
     const $$ = (s) => document.querySelectorAll(s);
-    // const apiBase = '/onchain_multichain/api';
-    const apiBase = '/api';
+    const apiBase = '/onchain_multichain/api';
+    // const apiBase = '/api';
+
+    const CHAINS = {
+      assetchain: {
+        chainId: '0xa5b4',
+        chainName: 'AssetChain Mainnet',
+        nativeCurrency: { name: 'ASET', symbol: 'ASET', decimals: 18 },
+        rpcUrls: ['https://mainnet-rpc.assetchain.org/'],
+        blockExplorerUrls: ['https://scan.assetchain.org'],
+        useMoralis: false
+      },
+      base: {
+        chainId: '0x2105',
+        chainName: 'Base Mainnet',
+        nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+        rpcUrls: ['https://mainnet.base.org'],
+        blockExplorerUrls: ['https://basescan.org'],
+        useMoralis: true
+      },
+      arbitrum: {
+        chainId: '0xa4b1',
+        chainName: 'Arbitrum One',
+        nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+        rpcUrls: ['https://arb1.arbitrum.io/rpc'],
+        blockExplorerUrls: ['https://arbiscan.io'],
+        useMoralis: true
+      },
+      bsc: {
+        chainId: '0x38',
+        chainName: 'BNB Smart Chain',
+        nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+        rpcUrls: ['https://bsc-dataseed.binance.org/'],
+        blockExplorerUrls: ['https://bscscan.com'],
+        useMoralis: true
+      }
+    };
+
+    function getSelectedChain() {
+      // First check localStorage, then hidden input, then default
+      const saved = localStorage.getItem('dex_selected_chain');
+      if (saved && CHAINS[saved]) return saved;
+      return document.getElementById('chain-select')?.value || 'assetchain';
+    }
+
+    function setSelectedChain(chainKey) {
+      if (!chainKey || !CHAINS[chainKey]) return;
+      const chainSelect = document.getElementById('chain-select');
+      if (chainSelect) chainSelect.value = chainKey;
+      localStorage.setItem('dex_selected_chain', chainKey);
+      window.selectedChain = chainKey;
+    }
+
 
     // Web3Onboard removed; using custom wallet dropdown and EIP-1193 providers
 
@@ -1822,10 +1947,13 @@
     async function setConnectedUI(address, walletName) {
       const btn = document.getElementById('onboard-connect-btn');
       const disconnectOpt = document.getElementById('wallet-disconnect-option');
+      const chainId = await getChainId();
+      const supportedChainIds = Object.values(CHAINS).map(c => c.chainId.toLowerCase());
+      const currentChainEntry = Object.entries(CHAINS).find(([k, v]) => v.chainId.toLowerCase() === (chainId || '').toLowerCase());
+
       if (btn) {
         const short = formatAddress(address);
-        const chainId = await getChainId();
-        const netShort = chainId && chainId.toLowerCase() === ASSETCHAIN_ID_HEX.toLowerCase() ? 'Assetchain' : 'Wrong Network';
+        const netShort = currentChainEntry ? currentChainEntry[1].chainName.split(' ')[0] : 'Wrong Network';
         const isMobile = window.matchMedia('(max-width: 768px)').matches;
         const icon = walletIconHtml(walletName);
         if (isMobile) {
@@ -1841,7 +1969,7 @@
       window.authState = {
         ...(window.authState || {}),
         connected: true,
-        networkOk: (await getChainId()) === ASSETCHAIN_ID_HEX.toLowerCase(),
+        networkOk: supportedChainIds.includes((chainId || '').toLowerCase()),
         signedIn: !!(window.dexAuth && window.dexAuth.valid),
         address: address,
         wallet: walletName
@@ -1888,12 +2016,29 @@
           else setDisconnectedUI();
         };
         const onChainChanged = async (_) => {
-          const netOk = (await getChainId()) === ASSETCHAIN_ID_HEX.toLowerCase();
+          const currentChainId = (await getChainId() || '').toLowerCase();
+          // Check if current chain is one of our supported chains
+          const supportedChainIds = Object.values(CHAINS).map(c => c.chainId.toLowerCase());
+          const netOk = supportedChainIds.includes(currentChainId);
+
           window.authState = { ...(window.authState || {}), networkOk: !!netOk };
           updateAuthIndicators();
+
           if (!netOk) {
-            notify('warning', 'Switched away from Assetchain. Please switch back to continue.');
-            showAlert('Wrong Network', 'You switched away from Assetchain Mainnet. Please switch back to continue.', { okText: 'Got it' });
+            const chainNames = Object.values(CHAINS).map(c => c.chainName).join(', ');
+            notify('warning', 'Please switch to a supported network.');
+            showAlert('Unsupported Network', `The current network is not supported. Please switch to one of: ${chainNames}`, { okText: 'Got it' });
+          } else {
+            // Update selected chain based on current wallet chain
+            const chainEntry = Object.entries(CHAINS).find(([k, v]) => v.chainId.toLowerCase() === currentChainId);
+            if (chainEntry) {
+              const [chainKey] = chainEntry;
+              const chainSelect = document.getElementById('chain-select');
+              if (chainSelect) chainSelect.value = chainKey;
+              window.selectedChain = chainKey;
+              // Refresh tokens for new chain
+              try { await fetchTokens(); } catch (_) { }
+            }
           }
         };
         if (provider && typeof provider.on === 'function') {
@@ -1975,22 +2120,24 @@
     async function ensureNetwork(provider) {
       const ethProvider = provider || window.currentProvider || window.ethereum;
       if (!ethProvider) return false;
+      const selectedChainKey = getSelectedChain();
+      const chainConfig = CHAINS[selectedChainKey];
       try {
         const chainId = await ethProvider.request({ method: 'eth_chainId' });
-        if (chainId?.toLowerCase() === ASSETCHAIN_ID_HEX.toLowerCase()) return true;
+        if (chainId?.toLowerCase() === chainConfig.chainId.toLowerCase()) return true;
         try {
-          await ethProvider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: ASSETCHAIN_ID_HEX }] });
+          await ethProvider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: chainConfig.chainId }] });
           return true;
         } catch (e) {
           if (e && (e.code === 4902 || /not/i.test(String(e.message)))) {
             try {
               await ethProvider.request({
                 method: 'wallet_addEthereumChain', params: [{
-                  chainId: ASSETCHAIN_ID_HEX,
-                  chainName: 'Assetchain Mainnet',
-                  nativeCurrency: { name: 'ASET', symbol: 'ASET', decimals: 18 },
-                  rpcUrls: ['https://mainnet-rpc.assetchain.org/'],
-                  blockExplorerUrls: ['https://explorer.assetchain.org']
+                  chainId: chainConfig.chainId,
+                  chainName: chainConfig.chainName,
+                  nativeCurrency: chainConfig.nativeCurrency,
+                  rpcUrls: chainConfig.rpcUrls,
+                  blockExplorerUrls: chainConfig.blockExplorerUrls
                 }]
               });
               return true;
@@ -2003,7 +2150,7 @@
 
     async function requireAuthSequence() {
       try {
-        const selected = document.getElementById('wallet-select')?.value || 'MetaMask';
+        const selected = localStorage.getItem('dex_last_wallet') || 'MetaMask';
         let provider = window.currentProvider || resolveProviderBySelection(selected);
         if (!provider) {
           notify('error', 'No wallet provider found.');
@@ -2072,24 +2219,27 @@
 
     async function connectButtonHandler() {
       try {
-        const selected = document.getElementById('wallet-select')?.value || 'MetaMask';
+        // Get selected wallet from localStorage (set when user clicks wallet option)
+        const selected = localStorage.getItem('dex_last_wallet') || 'MetaMask';
         const ethProvider = resolveProviderBySelection(selected);
 
         if (ethProvider && typeof ethProvider.request === 'function') {
           const accounts = await ethProvider.request({ method: 'eth_requestAccounts' });
+          const selectedChainKey = getSelectedChain();
+          const chainConfig = CHAINS[selectedChainKey];
           try {
-            await ethProvider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: ASSETCHAIN_ID_HEX }] });
+            await ethProvider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: chainConfig.chainId }] });
           } catch (e) {
             if (e && (e.code === 4902 || /not/i.test(String(e.message)))) {
               try {
                 await ethProvider.request({
                   method: 'wallet_addEthereumChain',
                   params: [{
-                    chainId: ASSETCHAIN_ID_HEX,
-                    chainName: 'Assetchain Mainnet',
-                    nativeCurrency: { name: 'ASET', symbol: 'ASET', decimals: 18 },
-                    rpcUrls: ['https://mainnet-rpc.assetchain.org/'],
-                    blockExplorerUrls: ['https://explorer.assetchain.org']
+                    chainId: chainConfig.chainId,
+                    chainName: chainConfig.chainName,
+                    nativeCurrency: chainConfig.nativeCurrency,
+                    rpcUrls: chainConfig.rpcUrls,
+                    blockExplorerUrls: chainConfig.blockExplorerUrls
                   }]
                 });
               } catch (_) { }
@@ -2107,13 +2257,13 @@
             if (window.currentAddress) localStorage.setItem('dex_last_address', window.currentAddress);
           } catch (_) { }
           // Update indicators for network status
-          const netOk = (await getChainId()) === ASSETCHAIN_ID_HEX.toLowerCase();
+          const netOk = (await getChainId()) === CHAINS[getSelectedChain()].chainId.toLowerCase();
           window.authState = { ...(window.authState || {}), networkOk: !!netOk };
           updateAuthIndicators();
           if (netOk) {
             notify('info', 'Network confirmed. You can now sign in.');
           } else {
-            notify('warning', 'Please switch to Assetchain to proceed.');
+            notify('warning', `Please switch to ${CHAINS[getSelectedChain()].chainName} to proceed.`);
           }
           return;
         }
@@ -2128,44 +2278,92 @@
       const bind = () => {
         const btn = document.getElementById('onboard-connect-btn');
         const menu = document.getElementById('wallet-dropdown');
-        const select = document.getElementById('wallet-select');
+        const chainSection = document.getElementById('chain-selection');
+        const walletSection = document.getElementById('wallet-selection');
+        const chainSelect = document.getElementById('chain-select');
         const disconnectOpt = document.getElementById('wallet-disconnect-option');
         const signBtn = document.getElementById('sign-in-btn');
         const hamburger = document.getElementById('hamburger');
         const mobileNav = document.getElementById('mobile-nav');
+        const walletBackBtn = document.getElementById('wallet-back-btn');
+        const selectedChainLabel = document.getElementById('selected-chain-label');
+
         if (!btn) { console.warn('[dex] Connect button not found'); return; }
         if (!menu) { console.warn('[dex] Wallet dropdown menu not found'); return; }
 
-        const openMenu = () => { menu.classList.add('open'); };
+        const openMenu = () => {
+          menu.classList.add('open');
+          // Always show chain selection first when opening
+          if (chainSection) chainSection.style.display = 'block';
+          if (walletSection) walletSection.style.display = 'none';
+        };
         const closeMenu = () => { menu.classList.remove('open'); };
         const isOpen = () => menu.classList.contains('open');
 
-        // Click connect: show menu if closed; if open, proceed to connect
+        // Show wallet section (step 2)
+        const showWalletSection = (chainKey) => {
+          if (chainSection) chainSection.style.display = 'none';
+          if (walletSection) walletSection.style.display = 'block';
+          if (selectedChainLabel) {
+            const chainName = CHAINS[chainKey]?.chainName || chainKey;
+            selectedChainLabel.textContent = `(${chainName})`;
+          }
+        };
+
+        // Show chain section (step 1)
+        const showChainSection = () => {
+          if (chainSection) chainSection.style.display = 'block';
+          if (walletSection) walletSection.style.display = 'none';
+        };
+
+        // Click connect: show menu if closed
         btn.addEventListener('click', (e) => {
           e.preventDefault();
           if (!isOpen()) {
             openMenu();
-          } else {
-            connectButtonHandler();
           }
         });
 
-        // Wallet option click selects and connects
-        menu.querySelectorAll('.wallet-option').forEach(opt => {
+        // Chain option click - selects chain and shows wallet list
+        menu.querySelectorAll('.chain-option').forEach(opt => {
+          opt.addEventListener('click', async () => {
+            const chainKey = opt.getAttribute('data-chain');
+            if (!chainKey || !CHAINS[chainKey]) return;
+
+            // Save chain to localStorage and update hidden input
+            setSelectedChain(chainKey);
+
+            // Update tokens for this chain
+            try { await fetchTokens(); } catch (_) { }
+
+            // Show wallet selection step
+            showWalletSection(chainKey);
+          });
+        });
+
+        // Wallet option click - connects wallet
+        menu.querySelectorAll('#wallet-selection .wallet-option[data-wallet]').forEach(opt => {
           opt.addEventListener('click', async () => {
             const w = opt.getAttribute('data-wallet');
+            if (!w) return;
             if (w === '__disconnect__') {
               closeMenu();
               const ok = await confirmDialog('Disconnect Wallet', 'Are you sure you want to disconnect?', { confirmText: 'Disconnect', cancelText: 'Cancel' });
               if (ok) disconnectWallet();
               return;
             }
-            if (select) select.value = w;
             try { localStorage.setItem('dex_last_wallet', w); } catch (_) { }
             closeMenu();
             connectButtonHandler();
           });
         });
+
+        // Back button - go back to chain selection
+        if (walletBackBtn) {
+          walletBackBtn.addEventListener('click', () => {
+            showChainSection();
+          });
+        }
 
         // Click outside closes menu
         document.addEventListener('click', (evt) => {
@@ -2242,10 +2440,25 @@
           window.currentAddress = accounts[0];
           window.ethereum = provider;
           subscribeToProvider(provider);
+
+          // Detect wallet's current chain and sync with it
+          const currentChainId = await provider.request({ method: 'eth_chainId' });
+          const chainEntry = Object.entries(CHAINS).find(([k, v]) => v.chainId.toLowerCase() === (currentChainId || '').toLowerCase());
+          if (chainEntry) {
+            const [chainKey] = chainEntry;
+            setSelectedChain(chainKey);
+            // Refresh tokens for this chain
+            try { await fetchTokens(); } catch (_) { }
+          }
+
           await setConnectedUI(window.currentAddress, last);
-          const netOk = await ensureNetwork(provider);
+
+          // Check if on a supported network
+          const supportedChainIds = Object.values(CHAINS).map(c => c.chainId.toLowerCase());
+          const netOk = supportedChainIds.includes((currentChainId || '').toLowerCase());
           window.authState = { ...(window.authState || {}), networkOk: !!netOk };
           updateAuthIndicators();
+
           loadSession();
           const sessionValid = !!(window.dexAuth && window.dexAuth.valid && window.dexAuth.address?.toLowerCase() === window.currentAddress?.toLowerCase());
           if (sessionValid && netOk) {
@@ -2279,17 +2492,17 @@
         const networkOptions = nets.map(n =>
           `<option value="${n.id}">${n.name || n.network}</option>`
         ).join('');
-        
+
         const airNet = $('#airtime-network');
         if (airNet) {
-            airNet.innerHTML = networkOptions;
-            airNet.value = nets[0]?.id || '';
+          airNet.innerHTML = networkOptions;
+          airNet.value = nets[0]?.id || '';
         }
-        
+
         const dataNet = $('#data-network');
         if (dataNet) {
-            dataNet.innerHTML = networkOptions;
-            dataNet.value = nets[0]?.id || '';
+          dataNet.innerHTML = networkOptions;
+          dataNet.value = nets[0]?.id || '';
         }
       } catch (e) {
         console.warn('Networks fetch failed', e);
@@ -2300,7 +2513,8 @@
     // Fetch available tokens for selection
     async function fetchTokens() {
       try {
-        const res = await fetch(`${apiBase}/access.php?action=getTokens`);
+        const chain = getSelectedChain();
+        const res = await fetch(`${apiBase}/access.php?action=getTokens&chain=${chain}`);
         const data = await res.json();
         const tokens = data.tokens || data.data || [];
         const sel = document.getElementById('airtime-token');
@@ -2318,34 +2532,46 @@
       } catch (e) { console.warn('Tokens fetch failed', e); }
     }
 
+    // Chain select listener
+    document.getElementById('chain-select')?.addEventListener('change', async () => {
+      const provider = window.currentProvider;
+      if (provider) {
+        await ensureNetwork(provider);
+      }
+      await fetchTokens();
+      if (window.authState?.connected && window.currentAddress) {
+        loadHistoryIfEligible();
+      }
+    });
+
     async function addTokenToWallet(selectId) {
       try {
         const sel = document.getElementById(selectId);
         if (!sel || !sel.value) return;
         const address = sel.value;
         const token = window.availableTokens ? window.availableTokens.find(t => t.token_contract.toLowerCase() === address.toLowerCase()) : null;
-        
+
         if (!token) {
-           notify('error', 'Token details not found');
-           return;
+          notify('error', 'Token details not found');
+          return;
         }
 
         if (!window.ethereum) {
-           notify('error', 'No wallet provider found');
-           return;
+          notify('error', 'No wallet provider found');
+          return;
         }
 
         await window.ethereum.request({
-            method: 'wallet_watchAsset',
-            params: {
-                type: 'ERC20',
-                options: {
-                    address: token.token_contract,
-                    symbol: token.token_name,
-                    decimals: Number(token.token_decimals),
-                    image: token.token_image || token.image || '',
-                },
+          method: 'wallet_watchAsset',
+          params: {
+            type: 'ERC20',
+            options: {
+              address: token.token_contract,
+              symbol: token.token_name,
+              decimals: Number(token.token_decimals),
+              image: token.token_image || token.image || '',
             },
+          },
         });
         notify('success', `Request to add ${token.token_name} sent`);
       } catch (error) {
@@ -2621,7 +2847,8 @@
       })();
     }
     async function fetchWalletHistory(address, page = 0, perPage = 10) {
-      const url = `${apiBase}/access.php?action=getWalletTransactions&address=${encodeURIComponent(address)}&page=${page}&limit=${perPage}`;
+      const chain = getSelectedChain();
+      const url = `${apiBase}/access.php?action=getWalletTransactions&address=${encodeURIComponent(address)}&page=${page}&limit=${perPage}&chain=${chain}`;
       const res = await fetch(url);
       return res.json();
     }
@@ -2637,20 +2864,20 @@
         card.style.display = 'block';
 
         // If not connected, show message and return
-        if (!state.connected || !address) { 
+        if (!state.connected || !address) {
           console.warn('[dex] History skipped: not connected or no address');
           const list = document.getElementById('history-list');
           if (list) list.innerHTML = '<div class="history-item" style="text-align:center; padding:20px; color: var(--gray);">Please connect your wallet to view transaction history.</div>';
           const status = document.getElementById('history-status');
           if (status) status.textContent = '';
-          return; 
+          return;
         }
 
         const status = document.getElementById('history-status');
         const pageEl = document.getElementById('history-page');
         const prev = document.getElementById('history-prev');
         const next = document.getElementById('history-next');
-        
+
         if (status) status.textContent = 'Loading history...';
         let network = ASSETCHAIN_ID_HEX;
         try {
@@ -2719,7 +2946,9 @@
     }
     // Explorer mapping and utilities
     const ExplorerMap = {
-      '0xa5b4': { base: 'https://scan.assetchain.org', paths: { tx: (h) => `/tx/${h}`, address: (a) => `/address/${a}` } }
+      '0xa5b4': { base: 'https://scan.assetchain.org', paths: { tx: (h) => `/tx/${h}`, address: (a) => `/address/${a}` } },
+      '0x2105': { base: 'https://basescan.org', paths: { tx: (h) => `/tx/${h}`, address: (a) => `/address/${a}` } },
+      '0x38': { base: 'https://bscscan.com', paths: { tx: (h) => `/tx/${h}`, address: (a) => `/address/${a}` } }
     };
     // Network provider numeric code → name mapping
     // This maps database numeric codes to human-readable provider names
@@ -2759,6 +2988,7 @@
         let codeResolved = null;
         if (selId) {
           const res = await fetch(`${apiBase}/access.php?action=getNetworks`);
+
           const json = await res.json();
           if (json && Array.isArray(json.items || json.data)) {
             const items = json.items || json.data;
@@ -3161,19 +3391,19 @@
       }
     });
 
-$('#data-calc').addEventListener('click', async () => {
-    const btn = $('#data-calc');
-    const btnBuy = $('#data-send');
-    const originalHtml = btn.innerHTML;
+    $('#data-calc').addEventListener('click', async () => {
+      const btn = $('#data-calc');
+      const btnBuy = $('#data-send');
+      const originalHtml = btn.innerHTML;
 
-    try {
+      try {
         // Pre-checks
         if (typeof ethers === 'undefined') {
-            throw new Error('Ethers.js library not loaded');
+          throw new Error('Ethers.js library not loaded');
         }
-        
+
         if (!window.availableTokens || window.availableTokens.length === 0) {
-            throw new Error('Tokens not loaded yet');
+          throw new Error('Tokens not loaded yet');
         }
 
         // Loading State
@@ -3196,58 +3426,58 @@ $('#data-calc').addEventListener('click', async () => {
         if (!ngn) throw new Error('Failed to fetch plan price');
 
         const wei = ngn ? await calcWeiFromNairaBySelector('data-token', ngn) : '';
-        
+
         // SAFE assignment to data-nano
         const nanoEl = $('#data-nano');
         if (nanoEl) {
-            nanoEl.value = wei;
+          nanoEl.value = wei;
         }
 
         if (!wei) {
-            throw new Error('Failed to calculate token amount (swap or token unavailable)');
+          throw new Error('Failed to calculate token amount (swap or token unavailable)');
         } else {
-            const sel = document.getElementById('data-token');
-            const dec = Number(sel?.selectedOptions[0]?.getAttribute('data-decimals') || 6);
-            const name = sel?.selectedOptions[0]?.text || '';
-            const formatted = formatTokenAmount(wei, dec, name);
-            // showStatus($('#data-status'), `Amount: ${formatted}`, true);
-            
-            // SAFE assignment to data-display
-            const displayEl = $('#data-display');
-            if (displayEl) {
-                displayEl.value = formatted;
-            }
+          const sel = document.getElementById('data-token');
+          const dec = Number(sel?.selectedOptions[0]?.getAttribute('data-decimals') || 6);
+          const name = sel?.selectedOptions[0]?.text || '';
+          const formatted = formatTokenAmount(wei, dec, name);
+          // showStatus($('#data-status'), `Amount: ${formatted}`, true);
 
-            // Success Transition
-            btn.style.display = 'none';
-            btn.innerHTML = originalHtml;
-            btn.disabled = false;
+          // SAFE assignment to data-display
+          const displayEl = $('#data-display');
+          if (displayEl) {
+            displayEl.value = formatted;
+          }
 
-            btnBuy.style.display = 'inline-block';
-            btnBuy.disabled = false;
+          // Success Transition
+          btn.style.display = 'none';
+          btn.innerHTML = originalHtml;
+          btn.disabled = false;
 
-            // 10s Timer
-            if (btnBuy.dataset.timer) clearTimeout(Number(btnBuy.dataset.timer));
-            btnBuy.dataset.timer = setTimeout(() => {
-                btnBuy.style.display = 'none';
-                btnBuy.disabled = true;
-                btn.style.display = 'inline-block';
-            }, 10000);
+          btnBuy.style.display = 'inline-block';
+          btnBuy.disabled = false;
+
+          // 10s Timer
+          if (btnBuy.dataset.timer) clearTimeout(Number(btnBuy.dataset.timer));
+          btnBuy.dataset.timer = setTimeout(() => {
+            btnBuy.style.display = 'none';
+            btnBuy.disabled = true;
+            btn.style.display = 'inline-block';
+          }, 10000);
         }
-    } catch (e) {
+      } catch (e) {
         showStatus($('#data-status'), e.message, false);
-        
+
         // SAFE clearing of values
         const displayEl = $('#data-display');
         if (displayEl) displayEl.value = '';
-        
+
         const nanoEl = $('#data-nano');
         if (nanoEl) nanoEl.value = '';
-        
+
         btn.disabled = false;
         btn.innerHTML = originalHtml;
-    }
-});
+      }
+    });
     function prepareTransactionDataDex(data) {
       const txHash = data.hash || data.in_msg?.hash;
       const value = data.out_msgs?.[0]?.value || data.in_msg?.value || 0;
@@ -3422,7 +3652,7 @@ $('#data-calc').addEventListener('click', async () => {
           return;
         }
 
-        const selected = document.getElementById('wallet-select')?.value || window.currentWalletName || 'MetaMask';
+        const selected = localStorage.getItem('dex_last_wallet') || window.currentWalletName || 'MetaMask';
         const ethProvider = window.currentProvider || resolveProviderBySelection(selected);
         if (!ethProvider || typeof ethProvider.request !== 'function') {
           showStatus(statusEl, `${selected} wallet not installed or unavailable.`, false);
@@ -3610,7 +3840,7 @@ $('#data-calc').addEventListener('click', async () => {
         } else {
           notify('error', 'Transaction failed.');
         }
-        
+
         // Always reset ref
         if (service === 'airtime') {
           $('#airtime-ref').value = randRef();
@@ -3654,7 +3884,7 @@ $('#data-calc').addEventListener('click', async () => {
           });
         } catch (_) { }
         showAlert('Error', e && e.message ? e.message : 'Unknown error occurred.', { okText: 'OK' });
-        
+
         // Always reset ref on error too
         if (service === 'airtime') {
           $('#airtime-ref').value = randRef();

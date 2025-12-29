@@ -95,9 +95,19 @@ try {
         case 'checkNativePrice':
             // Convert NGN amount to Native (AssetChain/EVM) Wei using server price
             $amount = isset($_GET['amount']) ? (float)$_GET['amount'] : 0;
-            $priceNgn = $api->getSiteSettings()->tonamount ?? null; // fallback if exists (using tonamount column as generic native price)
+            $chain = isset($_GET['chain']) ? strtolower(trim($_GET['chain'])) : 'assetchain';
+            
+            // Map chain to CoinGecko ID
+            $coinId = 'ethereum'; // default
+            if ($chain === 'bnb' || $chain === 'bsc') { $coinId = 'binancecoin'; }
+            elseif ($chain === 'base') { $coinId = 'ethereum'; }
+            elseif ($chain === 'assetchain') { $coinId = 'ethereum'; } // AssetChain uses ETH or its own ID if listed
+
+            $priceNgn = $api->getSiteSettings()->tonamount ?? null; // fallback if exists
             $apiModel = new ApiModel();
-            $ngnPerNative = $apiModel->checkNativePrice();
+            
+            // Pass mapped coinId
+            $ngnPerNative = $apiModel->checkNativePrice($coinId);
             
             // Fallback logic if API returns 0 or fails but we have a DB price
             if ((!is_numeric($ngnPerNative) || $ngnPerNative <= 0) && $priceNgn > 0) {
@@ -190,13 +200,47 @@ try {
             ];
             break;
 
+        case 'getTokenPrice':
+            $address = $_GET['address'] ?? '';
+            $chain = $_GET['chain'] ?? 'assetchain';
+            if ($chain === 'base' || $chain === 'bnb' || $chain === 'bsc' || $chain === 'arbitrum') {
+                 $moralis = new MoralisModel();
+                 $priceData = $moralis->getTokenPrice($address, $chain);
+                 if ($priceData && !isset($priceData['status'])) {
+                     $out = ['status' => 'success', 'price' => $priceData['usdPrice'] ?? 0, 'data' => $priceData];
+                 } else {
+                     $out = ['status' => 'fail', 'msg' => 'Price unavailable'];
+                 }
+            } else {
+                $out = ['status' => 'fail', 'msg' => 'Not implemented for this chain'];
+            }
+            break;
+
         case 'getTokens':
+            $chain = isset($_GET['chain']) ? strtolower(trim($_GET['chain'])) : 'assetchain';
             $dbh = AdminModel::connect();
-            $sql = "SELECT token_name, token_contract, token_decimals FROM tokens WHERE is_active=1 ORDER BY token_name ASC";
+            
+            // Join tokens with blockchain to get tokens for specific chain
+            $sql = "SELECT t.token_name, t.token_contract, t.token_decimals 
+                    FROM tokens t
+                    JOIN blockchain b ON t.chain_id = b.id
+                    WHERE b.chain_key = :chain AND t.is_active = 1 AND b.is_active = 1
+                    ORDER BY t.token_name ASC";
             $q = $dbh->prepare($sql);
-            $q->execute();
+            $q->execute([':chain' => $chain]);
             $rows = $q->fetchAll(PDO::FETCH_ASSOC);
+            
             $out = [ 'status' => 'success', 'tokens' => $rows, 'data' => $rows ];
+            break;
+
+        case 'getBlockchains':
+            $dbh = AdminModel::connect();
+            $sql = "SELECT id, chain_key, name, rpc_url, chain_id, chain_id_hex, explorer_url, native_symbol, site_address 
+                    FROM blockchain 
+                    WHERE is_active = 1 
+                    ORDER BY id ASC";
+            $rows = $dbh->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+            $out = [ 'status' => 'success', 'chains' => $rows, 'data' => $rows ];
             break;
         
         case 'getP2PCoins':
@@ -230,6 +274,8 @@ try {
             $address = isset($_GET['address']) ? trim($_GET['address']) : '';
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+            $chain = isset($_GET['chain']) ? strtolower(trim($_GET['chain'])) : 'assetchain';
+
             // Basic address validation (EVM or TON/Base64)
             // Allow 0x hex (42 chars) or longer strings (TON addresses ~48 chars)
             $isValid = (strlen($address) >= 40 && strlen($address) <= 100);
@@ -238,6 +284,13 @@ try {
                 $out = [ 'status' => 'fail', 'msg' => 'Invalid address' ];
                 break;
             }
+
+            if ($chain === 'base' || $chain === 'bnb' || $chain === 'bsc' || $chain === 'arbitrum') {
+                $moralis = new MoralisModel();
+                $out = $moralis->getWalletTransactions($address, $chain, $page, $limit);
+                break;
+            }
+
             $page = max(0, $page); $limit = max(1, min(50, $limit));
             $result = $admin->getTransactionsByAddress($address, $page, $limit);
             $pages = $result['perPage'] > 0 ? (int)ceil($result['total'] / $result['perPage']) : 0;
