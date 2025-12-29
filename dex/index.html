@@ -2630,33 +2630,90 @@
     fetchNetworks().then(fetchDataPlans).then(fetchSiteSettings).then(fetchTokens);
     initTabs();
 
+    // CNGN contract addresses per chain
+    const CNGN_CONTRACTS = {
+      assetchain: '0x7923C0f6FA3d1BA6EAFCAedAaD93e737Fd22FC4F',
+      base: '0x46C85152bFe9f96829aA94755D9f915F9B10EF5F',
+      bsc: '0xa8AEA66B361a8d53e8865c62D142167Af28Af058',
+      arbitrum: null // CNGN not available on Arbitrum, use Base price
+    };
+
+    const CNGN_DECIMALS = 6;
+
     // Calculate CNGN amount in wei for airtime
     async function calcWeiFromNaira(naira) {
       try {
         const ngnInt = Math.floor(Number(naira || 0));
         if (!ngnInt || ngnInt <= 0) return '';
+
+        const chain = getSelectedChain();
         const sel = document.getElementById('airtime-token');
         const selectedContract = sel?.value || '';
         const selectedName = sel?.selectedOptions[0]?.text || '';
-        const cngn = (window.tokenByName && window.tokenByName['CNGN']) || { token_decimals: 6, token_contract: '0x7923C0f6FA3d1BA6EAFCAedAaD93e737Fd22FC4F' };
-        // Desired cNGN amount (wei)
-        const cngnWei = ethers.BigNumber.from(ngnInt.toString()).mul(ethers.BigNumber.from('1' + '0'.repeat(Number(cngn.token_decimals || 6))));
+        const selectedDecimals = Number(sel?.selectedOptions[0]?.getAttribute('data-decimals') || 18);
+
+        // Get CNGN contract for this chain
+        let cngnContract = CNGN_CONTRACTS[chain];
+        let priceChain = chain;
+
+        // For Arbitrum, use Base price since CNGN is not on Arbitrum
+        if (chain === 'arbitrum') {
+          cngnContract = CNGN_CONTRACTS.base;
+          priceChain = 'base';
+        }
+
+        // Calculate CNGN amount in wei (CNGN has 6 decimals)
+        const cngnWei = ethers.BigNumber.from(ngnInt.toString()).mul(ethers.BigNumber.from('1' + '0'.repeat(CNGN_DECIMALS)));
+
         // If selected token is CNGN, return cngnWei
-        if ((selectedName || '').toUpperCase() === 'CNGN' || selectedContract.toLowerCase() === (cngn.token_contract || '').toLowerCase()) {
+        if ((selectedName || '').toUpperCase() === 'CNGN' || selectedContract.toLowerCase() === (cngnContract || '').toLowerCase()) {
           return cngnWei.toString();
         }
-        // Otherwise, fetch swap routes to convert cNGN -> selected token for amountIn=cngnWei
-        const tokenOut = selectedContract;
-        const tokenIn = cngn.token_contract;
-        const url = `https://liquidity-pool-api.assetchain.org/swaps/routes?tokenIn=${encodeURIComponent(tokenIn)}&tokenOut=${encodeURIComponent(tokenOut)}&amountIn=${cngnWei.toString()}&maxHops=2&includeAlternatives=true&slippageTolerance=1&includeLowLiquidityPools=true`;
+
+        // For AssetChain, use liquidity pool API
+        if (chain === 'assetchain') {
+          const tokenOut = selectedContract;
+          const tokenIn = cngnContract;
+          const url = `https://liquidity-pool-api.assetchain.org/swaps/routes?tokenIn=${encodeURIComponent(tokenIn)}&tokenOut=${encodeURIComponent(tokenOut)}&amountIn=${cngnWei.toString()}&maxHops=2&includeAlternatives=true&slippageTolerance=1&includeLowLiquidityPools=true`;
+          try {
+            const resp = await fetch(url);
+            const data = await resp.json();
+            const routes = data.routes || [];
+            if (!routes.length || !routes[0].amountOut) return '';
+            return String(routes[0].amountOut);
+          } catch (_) { return ''; }
+        }
+
+        // For BSC, Base, Arbitrum - use Moralis API to get token prices
         try {
-          const resp = await fetch(url);
-          const data = await resp.json();
-          const routes = data.routes || [];
-          if (!routes.length || !routes[0].amountOut) return '';
-          return String(routes[0].amountOut);
-        } catch (_) { return ''; }
+          // Get CNGN price in USD
+          const cngnPriceRes = await fetch(`${apiBase}/access.php?action=getTokenPrice&address=${cngnContract}&chain=${priceChain}`);
+          const cngnPriceData = await cngnPriceRes.json();
+          const cngnPriceUsd = cngnPriceData?.usdPrice || cngnPriceData?.priceNgn / 1600 || 0.000625; // Default ~1 CNGN = $0.000625
+
+          // Get selected token price in USD
+          const tokenPriceRes = await fetch(`${apiBase}/access.php?action=getTokenPrice&address=${selectedContract}&chain=${chain}`);
+          const tokenPriceData = await tokenPriceRes.json();
+          const tokenPriceUsd = tokenPriceData?.usdPrice || 0;
+
+          if (!tokenPriceUsd || tokenPriceUsd <= 0) {
+            console.warn('Could not get token price for', selectedName);
+            return '';
+          }
+
+          // Calculate: CNGN value in USD / Token price in USD = amount of tokens needed
+          const cngnValueUsd = ngnInt * cngnPriceUsd;
+          const tokenAmount = cngnValueUsd / tokenPriceUsd;
+
+          // Convert to wei based on token decimals
+          const tokenWei = ethers.utils.parseUnits(tokenAmount.toFixed(selectedDecimals), selectedDecimals);
+          return tokenWei.toString();
+        } catch (e) {
+          console.warn('Moralis price calculation failed:', e);
+          return '';
+        }
       } catch (e) {
+        console.warn('calcWeiFromNaira error:', e);
         return '';
       }
     }
@@ -2665,24 +2722,73 @@
       try {
         const ngnInt = Math.floor(Number(naira || 0));
         if (!ngnInt || ngnInt <= 0) return '';
+
+        const chain = getSelectedChain();
         const sel = document.getElementById(selectorId);
         const selectedContract = sel?.value || '';
         const selectedName = sel?.selectedOptions[0]?.text || '';
-        const cngn = (window.tokenByName && window.tokenByName['CNGN']) || { token_decimals: 6, token_contract: '0x7923C0f6FA3d1BA6EAFCAedAaD93e737Fd22FC4F' };
-        const cngnWei = ethers.BigNumber.from(ngnInt.toString()).mul(ethers.BigNumber.from('1' + '0'.repeat(Number(cngn.token_decimals || 6))));
-        if ((selectedName || '').toUpperCase() === 'CNGN' || selectedContract.toLowerCase() === (cngn.token_contract || '').toLowerCase()) {
+        const selectedDecimals = Number(sel?.selectedOptions[0]?.getAttribute('data-decimals') || 18);
+
+        // Get CNGN contract for this chain
+        let cngnContract = CNGN_CONTRACTS[chain];
+        let priceChain = chain;
+
+        // For Arbitrum, use Base price since CNGN is not on Arbitrum
+        if (chain === 'arbitrum') {
+          cngnContract = CNGN_CONTRACTS.base;
+          priceChain = 'base';
+        }
+
+        // Calculate CNGN amount in wei
+        const cngnWei = ethers.BigNumber.from(ngnInt.toString()).mul(ethers.BigNumber.from('1' + '0'.repeat(CNGN_DECIMALS)));
+
+        // If selected token is CNGN, return cngnWei
+        if ((selectedName || '').toUpperCase() === 'CNGN' || selectedContract.toLowerCase() === (cngnContract || '').toLowerCase()) {
           return cngnWei.toString();
         }
-        const tokenOut = selectedContract;
-        const tokenIn = cngn.token_contract;
-        const url = `https://liquidity-pool-api.assetchain.org/swaps/routes?tokenIn=${encodeURIComponent(tokenIn)}&tokenOut=${encodeURIComponent(tokenOut)}&amountIn=${cngnWei.toString()}&maxHops=2&includeAlternatives=true&slippageTolerance=1&includeLowLiquidityPools=true`;
+
+        // For AssetChain, use liquidity pool API
+        if (chain === 'assetchain') {
+          const tokenOut = selectedContract;
+          const tokenIn = cngnContract;
+          const url = `https://liquidity-pool-api.assetchain.org/swaps/routes?tokenIn=${encodeURIComponent(tokenIn)}&tokenOut=${encodeURIComponent(tokenOut)}&amountIn=${cngnWei.toString()}&maxHops=2&includeAlternatives=true&slippageTolerance=1&includeLowLiquidityPools=true`;
+          try {
+            const resp = await fetch(url);
+            const data = await resp.json();
+            const routes = data.routes || [];
+            if (!routes.length || !routes[0].amountOut) return '';
+            return String(routes[0].amountOut);
+          } catch (_) { return ''; }
+        }
+
+        // For BSC, Base, Arbitrum - use Moralis API to get token prices
         try {
-          const resp = await fetch(url);
-          const data = await resp.json();
-          const routes = data.routes || [];
-          if (!routes.length || !routes[0].amountOut) return '';
-          return String(routes[0].amountOut);
-        } catch (_) { return ''; }
+          // Get CNGN price in USD
+          const cngnPriceRes = await fetch(`${apiBase}/access.php?action=getTokenPrice&address=${cngnContract}&chain=${priceChain}`);
+          const cngnPriceData = await cngnPriceRes.json();
+          const cngnPriceUsd = cngnPriceData?.usdPrice || cngnPriceData?.priceNgn / 1600 || 0.000625;
+
+          // Get selected token price in USD
+          const tokenPriceRes = await fetch(`${apiBase}/access.php?action=getTokenPrice&address=${selectedContract}&chain=${chain}`);
+          const tokenPriceData = await tokenPriceRes.json();
+          const tokenPriceUsd = tokenPriceData?.usdPrice || 0;
+
+          if (!tokenPriceUsd || tokenPriceUsd <= 0) {
+            console.warn('Could not get token price for', selectedName);
+            return '';
+          }
+
+          // Calculate token amount needed
+          const cngnValueUsd = ngnInt * cngnPriceUsd;
+          const tokenAmount = cngnValueUsd / tokenPriceUsd;
+
+          // Convert to wei
+          const tokenWei = ethers.utils.parseUnits(tokenAmount.toFixed(selectedDecimals), selectedDecimals);
+          return tokenWei.toString();
+        } catch (e) {
+          console.warn('Moralis price calculation failed:', e);
+          return '';
+        }
       } catch (e) { return ''; }
     }
 
