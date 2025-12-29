@@ -187,9 +187,9 @@ class MoralisModel extends Model {
             // But for native, we might need a different approach.
             // Let's use the known wrapped addresses for each chain if it's native.
             $wrapped = [
-                '0x2105' => '0x4200000000000000000000000000000000000006', // WETH on Base
-                '0x38'   => '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', // WBNB on BSC
-                '0xa4b1' => '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1'  // WETH on Arbitrum
+                'base'     => '0x4200000000000000000000000000000000000006', // WETH on Base
+                'bsc'      => '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', // WBNB on BSC
+                'arbitrum' => '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1'  // WETH on Arbitrum
             ];
             $tokenAddress = $wrapped[$moralisChain] ?? $tokenAddress;
         }
