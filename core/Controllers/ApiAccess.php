@@ -649,9 +649,21 @@ class ApiAccess extends Controller
         }
 
         $moralis = new MoralisModel();
-        $tx = $moralis->getTransactionByHash($tx_hash, $chainKey);
+        
+        // Multi-chain indexing can take a few seconds, retry up to 5 times
+        $tx = null;
+        $maxAttempts = 3;
+        for ($i = 0; $i < $maxAttempts; $i++) {
+            $tx = $moralis->getTransactionByHash($tx_hash, $chainKey);
+            if (isset($tx['hash'])) {
+                break;
+            }
+            if ($i < $maxAttempts - 1) {
+                sleep(2); // Wait 2 seconds before next attempt
+            }
+        }
 
-        if (!isset($tx['hash'])) {
+        if (!$tx || !isset($tx['hash'])) {
             return ['status' => 'fail', 'msg' => 'transaction_not_found_on_chain'];
         }
 
