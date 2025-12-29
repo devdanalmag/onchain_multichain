@@ -2077,7 +2077,9 @@
       const ts = new Date().toISOString();
       const nonce = Math.random().toString(36).slice(2);
       const domain = 'onchain-dex-v1';
-      return `Sign in to Assetchain DEX\nAddress: ${address}\nTime: ${ts}\nNonce: ${nonce}\nDomain: ${domain}`;
+      const chain = getSelectedChain();
+      const chainName = CHAINS[chain]?.chainName || 'DEX';
+      return `Sign in to ${chainName}\nAddress: ${address}\nTime: ${ts}\nNonce: ${nonce}\nDomain: ${domain}`;
     }
 
     async function promptSignIn() {
@@ -2172,12 +2174,14 @@
         }
         window.authState = { ...(window.authState || {}), connected: true };
         updateAuthIndicators();
-        // 2) Confirm network change to Assetchain
+        // 2) Confirm network change to selected chain
         const netOk = await ensureNetwork(provider);
         window.authState = { ...(window.authState || {}), networkOk: !!netOk };
         updateAuthIndicators();
         if (!netOk) {
-          notify('error', 'Please switch to Assetchain to proceed.');
+          const chain = getSelectedChain();
+          const chainName = CHAINS[chain]?.chainName || 'selected network';
+          notify('error', `Please switch to ${chainName} to proceed.`);
           return false;
         }
         // 3) Prompt sign-in if not already signed
@@ -2630,15 +2634,35 @@
     fetchNetworks().then(fetchDataPlans).then(fetchSiteSettings).then(fetchTokens);
     initTabs();
 
-    // CNGN contract addresses per chain
-    const CNGN_CONTRACTS = {
-      assetchain: '0x7923C0f6FA3d1BA6EAFCAedAaD93e737Fd22FC4F',
-      base: '0x46C85152bFe9f96829aA94755D9f915F9B10EF5F',
-      bsc: '0xa8AEA66B361a8d53e8865c62D142167Af28Af058',
-      arbitrum: null // CNGN not available on Arbitrum, use Base price
-    };
-
+    // Cache for CNGN tokens per chain
+    const cngnCache = {};
     const CNGN_DECIMALS = 6;
+
+    // Fetch CNGN contract from database for a specific chain
+    async function getCngnForChain(chain) {
+      // Check cache first
+      if (cngnCache[chain]) return cngnCache[chain];
+
+      try {
+        const res = await fetch(`${apiBase}/access.php?action=getCngnToken&chain=${chain}`);
+        const data = await res.json();
+        if (data.status === 'success' && data.token) {
+          cngnCache[chain] = {
+            contract: data.token.token_contract,
+            decimals: Number(data.token.token_decimals) || 6
+          };
+          return cngnCache[chain];
+        }
+      } catch (e) {
+        console.warn('Failed to fetch CNGN for chain:', chain, e);
+      }
+
+      // Fallback for AssetChain
+      if (chain === 'assetchain') {
+        return { contract: '0x7923C0f6FA3d1BA6EAFCAedAaD93e737Fd22FC4F', decimals: 6 };
+      }
+      return null;
+    }
 
     // Calculate CNGN amount in wei for airtime
     async function calcWeiFromNaira(naira) {
@@ -2652,21 +2676,27 @@
         const selectedName = sel?.selectedOptions[0]?.text || '';
         const selectedDecimals = Number(sel?.selectedOptions[0]?.getAttribute('data-decimals') || 18);
 
-        // Get CNGN contract for this chain
-        let cngnContract = CNGN_CONTRACTS[chain];
+        // Get CNGN contract for this chain from database
         let priceChain = chain;
 
-        // For Arbitrum, use Base price since CNGN is not on Arbitrum
+        // For Arbitrum, use Base CNGN since not available on Arbitrum
         if (chain === 'arbitrum') {
-          cngnContract = CNGN_CONTRACTS.base;
           priceChain = 'base';
         }
 
-        // Calculate CNGN amount in wei (CNGN has 6 decimals)
-        const cngnWei = ethers.BigNumber.from(ngnInt.toString()).mul(ethers.BigNumber.from('1' + '0'.repeat(CNGN_DECIMALS)));
+        const cngnData = await getCngnForChain(priceChain);
+        if (!cngnData || !cngnData.contract) {
+          console.warn('CNGN not found for chain:', priceChain);
+          return '';
+        }
+        const cngnContract = cngnData.contract;
+        const cngnDecimals = cngnData.decimals || CNGN_DECIMALS;
+
+        // Calculate CNGN amount in wei
+        const cngnWei = ethers.BigNumber.from(ngnInt.toString()).mul(ethers.BigNumber.from('1' + '0'.repeat(cngnDecimals)));
 
         // If selected token is CNGN, return cngnWei
-        if ((selectedName || '').toUpperCase() === 'CNGN' || selectedContract.toLowerCase() === (cngnContract || '').toLowerCase()) {
+        if ((selectedName || '').toUpperCase() === 'CNGN' || selectedContract.toLowerCase() === cngnContract.toLowerCase()) {
           return cngnWei.toString();
         }
 
@@ -2689,15 +2719,18 @@
           // Get CNGN price in USD
           const cngnPriceRes = await fetch(`${apiBase}/access.php?action=getTokenPrice&address=${cngnContract}&chain=${priceChain}`);
           const cngnPriceData = await cngnPriceRes.json();
-          const cngnPriceUsd = cngnPriceData?.usdPrice || cngnPriceData?.priceNgn / 1600 || 0.000625; // Default ~1 CNGN = $0.000625
+          const cngnPriceUsd = cngnPriceData?.price || cngnPriceData?.usdPrice || cngnPriceData?.priceNgn / 1600 || 0.000625;
 
           // Get selected token price in USD
-          const tokenPriceRes = await fetch(`${apiBase}/access.php?action=getTokenPrice&address=${selectedContract}&chain=${chain}`);
+          let addr = selectedContract;
+          if (!addr || !addr.startsWith('0x')) addr = 'native';
+
+          const tokenPriceRes = await fetch(`${apiBase}/access.php?action=getTokenPrice&address=${addr}&chain=${chain}`);
           const tokenPriceData = await tokenPriceRes.json();
-          const tokenPriceUsd = tokenPriceData?.usdPrice || 0;
+          const tokenPriceUsd = tokenPriceData?.price || tokenPriceData?.usdPrice || 0;
 
           if (!tokenPriceUsd || tokenPriceUsd <= 0) {
-            console.warn('Could not get token price for', selectedName);
+            console.warn('Could not get token price for', selectedName, 'at address', addr);
             return '';
           }
 
@@ -2729,21 +2762,27 @@
         const selectedName = sel?.selectedOptions[0]?.text || '';
         const selectedDecimals = Number(sel?.selectedOptions[0]?.getAttribute('data-decimals') || 18);
 
-        // Get CNGN contract for this chain
-        let cngnContract = CNGN_CONTRACTS[chain];
+        // Get CNGN contract for this chain from database
         let priceChain = chain;
 
-        // For Arbitrum, use Base price since CNGN is not on Arbitrum
+        // For Arbitrum, use Base CNGN since not available on Arbitrum
         if (chain === 'arbitrum') {
-          cngnContract = CNGN_CONTRACTS.base;
           priceChain = 'base';
         }
 
+        const cngnData = await getCngnForChain(priceChain);
+        if (!cngnData || !cngnData.contract) {
+          console.warn('CNGN not found for chain:', priceChain);
+          return '';
+        }
+        const cngnContract = cngnData.contract;
+        const cngnDecimals = cngnData.decimals || CNGN_DECIMALS;
+
         // Calculate CNGN amount in wei
-        const cngnWei = ethers.BigNumber.from(ngnInt.toString()).mul(ethers.BigNumber.from('1' + '0'.repeat(CNGN_DECIMALS)));
+        const cngnWei = ethers.BigNumber.from(ngnInt.toString()).mul(ethers.BigNumber.from('1' + '0'.repeat(cngnDecimals)));
 
         // If selected token is CNGN, return cngnWei
-        if ((selectedName || '').toUpperCase() === 'CNGN' || selectedContract.toLowerCase() === (cngnContract || '').toLowerCase()) {
+        if ((selectedName || '').toUpperCase() === 'CNGN' || selectedContract.toLowerCase() === cngnContract.toLowerCase()) {
           return cngnWei.toString();
         }
 
@@ -2766,15 +2805,18 @@
           // Get CNGN price in USD
           const cngnPriceRes = await fetch(`${apiBase}/access.php?action=getTokenPrice&address=${cngnContract}&chain=${priceChain}`);
           const cngnPriceData = await cngnPriceRes.json();
-          const cngnPriceUsd = cngnPriceData?.usdPrice || cngnPriceData?.priceNgn / 1600 || 0.000625;
+          const cngnPriceUsd = cngnPriceData?.price || cngnPriceData?.usdPrice || cngnPriceData?.priceNgn / 1600 || 0.000625;
 
           // Get selected token price in USD
-          const tokenPriceRes = await fetch(`${apiBase}/access.php?action=getTokenPrice&address=${selectedContract}&chain=${chain}`);
+          let addr = selectedContract;
+          if (!addr || !addr.startsWith('0x')) addr = 'native';
+
+          const tokenPriceRes = await fetch(`${apiBase}/access.php?action=getTokenPrice&address=${addr}&chain=${chain}`);
           const tokenPriceData = await tokenPriceRes.json();
-          const tokenPriceUsd = tokenPriceData?.usdPrice || 0;
+          const tokenPriceUsd = tokenPriceData?.price || tokenPriceData?.usdPrice || 0;
 
           if (!tokenPriceUsd || tokenPriceUsd <= 0) {
-            console.warn('Could not get token price for', selectedName);
+            console.warn('Could not get token price for', selectedName, 'at address', addr);
             return '';
           }
 
@@ -2856,7 +2898,7 @@
       try { const d = new Date(s); if (isNaN(d.getTime())) return s; return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`; }
       catch (_) { return s; }
     }
-    function renderHistoryItems(items, userAddr, chainIdHex) {
+    async function renderHistoryItems(items, userAddr, chainIdHex) {
       const list = document.getElementById('history-list');
       if (!list) return;
       list.innerHTML = '';
@@ -2864,13 +2906,17 @@
         list.innerHTML = '<div class="history-item">No transactions found for this address.</div>';
         return;
       }
-      items.forEach(item => {
+
+      const provider = window.currentProvider || window.ethereum;
+      const currentChainId = provider ? await provider.request({ method: 'eth_chainId' }) : ASSETCHAIN_ID_HEX;
+
+      for (const item of items) {
         const row = document.createElement('div'); row.className = 'history-item';
         row.setAttribute('tabindex', '0');
         const top = document.createElement('div'); top.className = 'history-row';
         const hashEl = document.createElement('div'); hashEl.className = 'history-hash';
         const h = item.txhash || '';
-        const url = h ? buildExplorerUrl('tx', chainIdHex || ASSETCHAIN_ID_HEX, h) : null;
+        const url = h ? buildExplorerUrl('tx', chainIdHex || currentChainId || ASSETCHAIN_ID_HEX, h) : null;
         const displayHash = h ? truncateCenter(h, 7, 5) : '—';
         if (url) { const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = displayHash; a.title = h; hashEl.appendChild(a); }
         else { const span = document.createElement('span'); span.textContent = displayHash; span.title = h; hashEl.appendChild(span); }
@@ -2903,20 +2949,28 @@
         row.addEventListener('click', onOpen);
         row.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); onOpen(); } });
         list.appendChild(row);
-      });
+      }
     }
     async function fetchGasFee(hash) {
       try {
+        const chain = getSelectedChain();
+        const conf = CHAINS[chain];
         let provider;
-        if (window.ethereum) { const p = new ethers.providers.Web3Provider(window.ethereum, 'any'); provider = p; }
-        else { provider = new ethers.providers.JsonRpcProvider('https://mainnet-rpc.assetchain.org/'); }
+        if (window.ethereum) {
+          provider = new ethers.providers.Web3Provider(window.ethereum, 'any');
+        } else {
+          const rpc = conf?.rpcUrls?.[0] || 'https://mainnet-rpc.assetchain.org/';
+          provider = new ethers.providers.JsonRpcProvider(rpc);
+        }
         const receipt = await provider.getTransactionReceipt(hash);
         if (!receipt) return 'N/A';
         return computeGasFee(receipt);
       } catch (_) { return 'N/A'; }
     }
     function openTxModal(item) {
-      const chainIdHex = window.ethereum ? (window.authState?.networkOk ? ASSETCHAIN_ID_HEX : ASSETCHAIN_ID_HEX) : ASSETCHAIN_ID_HEX;
+      const chain = getSelectedChain() || 'assetchain';
+      const conf = CHAINS[chain];
+      const chainIdHex = window.authState?.networkOk ? (conf?.chainId || ASSETCHAIN_ID_HEX) : (conf?.chainId || ASSETCHAIN_ID_HEX);
       const st = statusLabel(item.status);
       const parsedProvider = parseProviderFromDescription(item.servicedesc || item.servicedescription || '');
       const parsedPhone = parsePhoneFromDescription(item.servicedesc || item.servicedescription || '');
@@ -2928,14 +2982,14 @@
         reference: item.txref || '',
         from: item.senderaddress,
         to: item.targetaddress,
-        amountDisplay: item.token_amount + ' ' + item.token_name || '0.00',
+        amountDisplay: item.token_amount + ' ' + (item.token_name || 'CNGN'),
         tokenAmount: item.token_amount,
         gasFee: 'Loading...',
-        networkName: 'Assetchain Mainnet',
+        networkName: conf?.chainName || 'Assetchain Mainnet',
         chainId: chainIdHex,
         chainIdHex,
         symbol: item.token_name || 'CNGN',
-        decimals: 6,
+        decimals: Number(item.token_decimals) || 6,
         message: null,
         service: (item.servicename || item.service || (item.data_plan ? 'Data Purchase' : 'Airtime Purchase')),
         purchaseValue: (item.data_plan ? ((item.plan_label || item.plan_name || item.data_plan) + ' Data') : ((item.amount ? `${item.amount}N` : `N${item.amount || '0.00'} Airtime`))),
@@ -2985,7 +3039,9 @@
         const next = document.getElementById('history-next');
 
         if (status) status.textContent = 'Loading history...';
-        let network = ASSETCHAIN_ID_HEX;
+        const chain = getSelectedChain();
+        const conf = CHAINS[chain];
+        let network = conf?.chainId || ASSETCHAIN_ID_HEX;
         try {
           const cid = await getChainId();
           if (cid) network = cid;
@@ -3777,10 +3833,19 @@
           return;
         }
 
-        // Ensure Assetchain
-        setButtonState(btnId, 'loading', 'Switching Network...');
+        const selectedChainKey = getSelectedChain();
+        const chainConfig = CHAINS[selectedChainKey];
+        if (!chainConfig) {
+          showStatus(statusEl, 'Invalid chain selection.', false);
+          hideGlobalLoader();
+          setButtonState(btnId, 'idle');
+          return;
+        }
+
+        // Ensure Correct Network
+        setButtonState(btnId, 'loading', `Switching to ${chainConfig.chainName}...`);
         try {
-          await ethProvider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: ASSETCHAIN_ID_HEX }] });
+          await ethProvider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: chainConfig.chainId }] });
         } catch (switchErr) {
           const code = switchErr?.code;
           if (code === 4902 || code === -4902 || code === -32603) {
@@ -3788,16 +3853,16 @@
               await ethProvider.request({
                 method: 'wallet_addEthereumChain',
                 params: [{
-                  chainId: ASSETCHAIN_ID_HEX,
-                  chainName: 'Assetchain Mainnet',
-                  nativeCurrency: { name: 'ASET', symbol: 'ASET', decimals: 18 },
-                  rpcUrls: ['https://mainnet-rpc.assetchain.org/'],
-                  blockExplorerUrls: ['https://explorer.assetchain.org']
+                  chainId: chainConfig.chainId,
+                  chainName: chainConfig.chainName,
+                  nativeCurrency: chainConfig.nativeCurrency,
+                  rpcUrls: chainConfig.rpcUrls,
+                  blockExplorerUrls: chainConfig.blockExplorerUrls
                 }]
               });
             } catch (_) { }
           } else {
-            showStatus(statusEl, 'Please switch to Assetchain Mainnet.', false);
+            showStatus(statusEl, `Please switch to ${chainConfig.chainName}.`, false);
             hideGlobalLoader();
             setButtonState(btnId, 'idle');
             return;
@@ -3829,19 +3894,41 @@
           return;
         }
 
-        const erc20 = getErc20Contract(tokenContract, signer);
-        const balance = await erc20.balanceOf(userAddress);
-        if (balance.lt(amountWeiBN)) {
-          showStatus(statusEl, 'Insufficient token balance for this transfer.', false);
-          hideGlobalLoader();
-          setButtonState(btnId, 'idle');
-          return;
+        // Handle Native vs ERC20 Balance Check and Transfer
+        const isNative = !tokenContract || !tokenContract.startsWith('0x') || tokenContract.toLowerCase() === 'native' || tokenContract === '0x0000000000000000000000000000000000000000';
+
+        if (isNative) {
+          const balance = await signer.getBalance();
+          if (balance.lt(amountWeiBN)) {
+            showStatus(statusEl, 'Insufficient native balance for this transfer.', false);
+            hideGlobalLoader();
+            setButtonState(btnId, 'idle');
+            return;
+          }
+        } else {
+          const erc20 = getErc20Contract(tokenContract, signer);
+          const balance = await erc20.balanceOf(userAddress);
+          if (balance.lt(amountWeiBN)) {
+            showStatus(statusEl, 'Insufficient token balance for this transfer.', false);
+            hideGlobalLoader();
+            setButtonState(btnId, 'idle');
+            return;
+          }
         }
 
         showStatus(statusEl, 'Sending transaction...', true);
         setButtonState(btnId, 'loading', 'Confirm in Wallet...');
 
-        const receipt = await sendTokenTransfer(signer, tokenContract, target, amountWeiBN);
+        let receipt;
+        if (isNative) {
+          const tx = await signer.sendTransaction({
+            to: target,
+            value: amountWeiBN
+          });
+          receipt = await tx.wait();
+        } else {
+          receipt = await sendTokenTransfer(signer, tokenContract, target, amountWeiBN);
+        }
 
         showStatus(statusEl, 'Transaction sent. Verifying on-chain...', true);
         setButtonState(btnId, 'loading', 'Verifying...');
@@ -3858,7 +3945,7 @@
           amountWei: amountWeiBN.toString(),
           decimals: tokenDecimals,
           symbol: (tokenSel?.selectedOptions[0]?.text || '').toUpperCase(),
-          networkName: 'Assetchain Mainnet',
+          networkName: chainConfig.chainName,
           chainId: chainIdHex,
           chainIdHex,
           providerDisplay: await resolveProviderDisplay(service),

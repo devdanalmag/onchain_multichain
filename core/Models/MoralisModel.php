@@ -154,6 +154,21 @@ class MoralisModel extends Model {
         $moralisChain = $chainMap[strtolower($chain)] ?? null;
         if (!$moralisChain) return null;
 
+        // If address is empty, null, or 'native', it's the native token (ETH, BNB, etc.)
+        if (empty($tokenAddress) || strtolower($tokenAddress) === 'native' || $tokenAddress === '0x0000000000000000000000000000000000000000') {
+            // Wait, Moralis native price is usually /wallets/{address}/tokens/{token_address}/price?
+            // Actually Moralis has a specific native price endpoint or we can use the wrapped version address
+            // For convenience, Moralis /erc20/{address}/price works for wrapped tokens.
+            // But for native, we might need a different approach.
+            // Let's use the known wrapped addresses for each chain if it's native.
+            $wrapped = [
+                '0x2105' => '0x4200000000000000000000000000000000000006', // WETH on Base
+                '0x38'   => '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', // WBNB on BSC
+                '0xa4b1' => '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1'  // WETH on Arbitrum
+            ];
+            $tokenAddress = $wrapped[$moralisChain] ?? $tokenAddress;
+        }
+
         return $this->request("/erc20/$tokenAddress/price", ['chain' => $moralisChain]);
     }
     

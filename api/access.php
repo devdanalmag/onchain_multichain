@@ -242,6 +242,27 @@ try {
             $rows = $dbh->query($sql)->fetchAll(PDO::FETCH_ASSOC);
             $out = [ 'status' => 'success', 'chains' => $rows, 'data' => $rows ];
             break;
+
+        case 'getCngnToken':
+            $chain = isset($_GET['chain']) ? strtolower(trim($_GET['chain'])) : 'assetchain';
+            $dbh = AdminModel::connect();
+            
+            // Fetch CNGN token by name and chain
+            $sql = "SELECT t.token_name, t.token_contract, t.token_decimals, b.chain_key, b.chain_id_hex
+                    FROM tokens t
+                    JOIN blockchain b ON t.chain_id = b.id
+                    WHERE UPPER(t.token_name) = 'CNGN' AND b.chain_key = :chain AND t.is_active = 1 AND b.is_active = 1
+                    LIMIT 1";
+            $q = $dbh->prepare($sql);
+            $q->execute([':chain' => $chain]);
+            $row = $q->fetch(PDO::FETCH_ASSOC);
+            
+            if ($row) {
+                $out = [ 'status' => 'success', 'token' => $row, 'data' => $row ];
+            } else {
+                $out = [ 'status' => 'fail', 'msg' => 'CNGN token not found for chain: ' . $chain ];
+            }
+            break;
         
         case 'getP2PCoins':
             // Merge p2pcoins with token metadata if contracts exist
