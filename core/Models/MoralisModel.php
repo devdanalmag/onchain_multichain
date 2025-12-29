@@ -144,6 +144,20 @@ class MoralisModel extends Model {
         ];
     }
 
+    public function getTransactionByHash($tx_hash, $chain) {
+        $chainMap = [
+            'base' => '0x2105',
+            'bsc' => '0x38',
+            'bnb' => '0x38',
+            'arbitrum' => '0xa4b1'
+        ];
+
+        $moralisChain = $chainMap[strtolower($chain)] ?? null;
+        if (!$moralisChain) return null;
+
+        return $this->request("/transaction/$tx_hash", ['chain' => $moralisChain]);
+    }
+
     public function getTokenPrice($tokenAddress, $chain) {
         $chainMap = [
             'base' => '0x2105',

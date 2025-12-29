@@ -278,9 +278,9 @@ if ($result["status"] == "fail") {
 }
 
 // -------------------------------------------------------------------
-//  Verify Assetchain Transaction (CNGN ERC-20)
-// -------------------------------------------------------------------
-$chainresult = $controller->verifyAssetTransaction($target_address, $tx_hash, $user_address, $amount_wei, $token_contract);
+// IMPORTANT: BOTH DEX and APP transactions need blockchain verification
+// If verification fails, we just return error without refund
+$chainresult = $controller->verifyBlockchainTransaction($target_address, $tx_hash, $user_address, $amount_wei, $token_contract, $blockchain_id);
 if ($chainresult["status"] == "fail") {
     header('HTTP/1.0 400 Bad Request');
     $response['status'] = "fail";

@@ -409,14 +409,12 @@ class ApiAccess extends Controller
     //Update Transaction Status
     public function updateTransactionStatus($userid, $ref, $amountopay, $status)
     {
-        $response = array();
-        $result = $this->model->updateTransactionStatus($userid, $ref, $amountopay, $status);
+        $this->model->updateTransactionStatus($userid, $ref, $amountopay, $status);
     }
 
     public function updateFailedTransactionStatus($userid, $servicedesc, $ref, $amountopay, $status)
     {
-        $response = array();
-        $result = $this->model->updateFailedTransactionStatus($userid, $servicedesc, $ref, $amountopay, $status);
+        $this->model->updateFailedTransactionStatus($userid, $servicedesc, $ref, $amountopay, $status);
     }
 
     //----------------------------------------------------------------------------------------------------------------
@@ -542,8 +540,9 @@ class ApiAccess extends Controller
         
         // Attempt to get token contract from request
         $token_contract = $_REQUEST['token_contract'] ?? null;
+        $blockchain_id = $_REQUEST['blockchain_id'] ?? 1;
         
-        return $this->verifyAssetTransaction($target_address, $tx_hash, $user_address, $nanoamount, $token_contract);
+        return $this->verifyBlockchainTransaction($target_address, $tx_hash, $user_address, $nanoamount, $token_contract, $blockchain_id);
     }
 
     public function convertWeiToEther($wei_amount)
@@ -626,6 +625,113 @@ class ApiAccess extends Controller
         ];
     }
 
+    /**
+     * Unified Blockchain Transaction Verification
+     * Handles AssetChain (via scanner) and Base/BSC/Arbitrum (via Moralis)
+     */
+    public function verifyBlockchainTransaction($target_address, $tx_hash, $user_address, $amount_wei, $token_contract = null, $blockchain_id = 1)
+    {
+        // 1) Handle AssetChain
+        if ($blockchain_id == 1) {
+            return $this->verifyAssetTransaction($target_address, $tx_hash, $user_address, $amount_wei, $token_contract);
+        }
+
+        // 2) Handle Multi-Chain via Moralis
+        $chainMap = [
+            2 => 'base',
+            3 => 'arbitrum',
+            4 => 'bsc'
+        ];
+
+        $chainKey = $chainMap[$blockchain_id] ?? null;
+        if (!$chainKey) {
+            return ['status' => 'fail', 'msg' => 'unsupported_blockchain_id: ' . $blockchain_id];
+        }
+
+        $moralis = new MoralisModel();
+        $tx = $moralis->getTransactionByHash($tx_hash, $chainKey);
+
+        if (!isset($tx['hash'])) {
+            return ['status' => 'fail', 'msg' => 'transaction_not_found_on_chain'];
+        }
+
+        // Check status
+        if (!($tx['receipt_status'] ?? null) && ($tx['status'] ?? '') !== 'ok') {
+            // Some chains use status: ok, others use receipt_status: 1
+            if (isset($tx['receipt_status']) && (int)$tx['receipt_status'] !== 1) {
+                return ['status' => 'fail', 'msg' => 'transaction_reverted'];
+            }
+        }
+
+        $txTo = strtolower($tx['to_address'] ?? '');
+        $txFrom = strtolower($tx['from_address'] ?? '');
+        $txValue = (string)($tx['value'] ?? '0');
+        
+        $wantTo = strtolower($target_address);
+        $wantFrom = strtolower($user_address);
+        $wantValue = (string)$amount_wei;
+
+        $isNative = empty($token_contract) || strtolower($token_contract) === 'native' || $token_contract === '0x0000000000000000000000000000000000000000';
+
+        if ($isNative) {
+            // Verify native transfer
+            if ($txTo === $wantTo && $txFrom === $wantFrom && $txValue === $wantValue) {
+                return [
+                    'status' => 'success',
+                    'msg' => 'verified',
+                    'transfer_value' => $txValue
+                ];
+            }
+            return [
+                'status' => 'fail', 
+                'msg' => 'native_transfer_mismatch',
+                'expected_value' => $wantValue,
+                'transfer_value' => $txValue
+            ];
+        } else {
+            // Verify ERC20 transfer
+            // Moralis getTransactionByHash doesn't always show full token transfers in basic response
+            // We might need to check logs or used dedicated endpoint
+            // However, base Moralis response often has logs. 
+            // Better to use getWalletTransactions or similar if we want to be sure, 
+            // but let's see if we can use the logs in the response.
+            
+            $wantToken = strtolower($token_contract);
+            $matched = false;
+            $foundValue = 'N/A';
+
+            if (isset($tx['logs']) && is_array($tx['logs'])) {
+                foreach ($tx['logs'] as $log) {
+                    // ERC20 Transfer event: Topic0 = 0xddf252ad...
+                    if (($log['address'] ?? '') === $wantToken && ($log['topic0'] ?? '') === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef') {
+                        // Topic1 is From, Topic2 is To
+                        $logFrom = strtolower('0x' . substr($log['topic1'] ?? '', 26));
+                        $logTo = strtolower('0x' . substr($log['topic2'] ?? '', 26));
+                        $logValue = (string)hexdec($log['data'] ?? '0');
+
+                        if ($logValue !== '0') $foundValue = $logValue;
+
+                        if ($logFrom === $wantFrom && $logTo === $wantTo && $logValue === $wantValue) {
+                            $matched = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if ($matched) {
+                return ['status' => 'success', 'msg' => 'verified', 'transfer_value' => $wantValue];
+            }
+            return [
+                'status' => 'fail', 
+                'msg' => 'token_transfer_mismatch',
+                'token' => $wantToken,
+                'expected_value' => $wantValue,
+                'transfer_value' => $foundValue
+            ];
+        }
+    }
+
     // Verify Assetchain transaction via public scanner API
     // Strategy:
     // 1) Check base transaction details at /transactions/<hash> for status ok
@@ -647,10 +753,16 @@ class ApiAccess extends Controller
                 $resp['msg'] = 'missing_tx_hash';
                 return $resp;
             }
-            $wantToken = $this->normalizeEvmAddress($token_contract);
-            if (!$wantToken || !preg_match('/^0x[a-fA-F0-9]{40}$/', $wantToken)) {
-                $resp['msg'] = 'invalid_token_contract';
-                return $resp;
+
+            $isNative = empty($token_contract) || strtolower($token_contract) === 'native' || $token_contract === '0x0000000000000000000000000000000000000000';
+            $wantToken = null;
+            
+            if (!$isNative) {
+                $wantToken = $this->normalizeEvmAddress($token_contract);
+                if (!$wantToken || !preg_match('/^0x[a-fA-F0-9]{40}$/', $wantToken)) {
+                    $resp['msg'] = 'invalid_token_contract';
+                    return $resp;
+                }
             }
 
             // Step 1: base transaction details
@@ -659,10 +771,8 @@ class ApiAccess extends Controller
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_TIMEOUT, 15);
             curl_setopt($ch, CURLOPT_HTTPHEADER, ['accept: application/json']);
-            // Robustness: Disable SSL verify to avoid common cert issues in dev/local envs
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
-            // Retry logic (up to 2 retries)
             $maxRetries = 2;
             $retryCount = 0;
             $result = false;
@@ -670,14 +780,10 @@ class ApiAccess extends Controller
 
             while ($retryCount <= $maxRetries) {
                 $result = curl_exec($ch);
-                if ($result !== false) {
-                    break;
-                }
+                if ($result !== false) break;
                 $cErr = curl_error($ch);
                 $retryCount++;
-                if ($retryCount <= $maxRetries) {
-                    sleep(1); 
-                }
+                if ($retryCount <= $maxRetries) sleep(1); 
             }
 
             if ($result === false) {
@@ -702,6 +808,7 @@ class ApiAccess extends Controller
             $baseTo = $this->normalizeEvmAddress($data['to']['hash'] ?? $data['to'] ?? '');
             $baseFrom = $this->normalizeEvmAddress($data['from']['hash'] ?? $data['from'] ?? '');
             $diVal = '';
+            
             if (isset($data['decoded_input']) && is_array($data['decoded_input'])) {
                 $methodId = (string)($data['decoded_input']['method_id'] ?? '');
                 $params = $data['decoded_input']['parameters'] ?? [];
@@ -713,82 +820,71 @@ class ApiAccess extends Controller
                 }
             }
 
-            // Capture base token_transfers (fallback if dedicated endpoint returns none)
-            $baseTransfers = [];
-            if (isset($data['token_transfers']) && is_array($data['token_transfers'])) {
-                $baseTransfers = $data['token_transfers'];
-            }
-
-            // Optional check: coin transfers have no token_transfers; still proceed to token-transfers endpoint
-            // Step 2: fetch token transfers for this transaction
-            $ttUrl = 'https://scan.assetchain.org/api/v2/transactions/' . $hash . '/token-transfers?type=ERC-20%2CERC-721%2CERC-1155';
-            $ch2 = curl_init($ttUrl);
-            curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch2, CURLOPT_TIMEOUT, 15);
-            curl_setopt($ch2, CURLOPT_HTTPHEADER, ['accept: application/json']);
-            curl_setopt($ch2, CURLOPT_SSL_VERIFYPEER, false);
-
-            // Retry logic for token transfers
-            $retryCount = 0;
-            $ttRaw = false;
-            while ($retryCount <= $maxRetries) {
-                $ttRaw = curl_exec($ch2);
-                if ($ttRaw !== false) {
-                    break;
-                }
-                $retryCount++;
-                if ($retryCount <= $maxRetries) sleep(1);
-            }
-
             $items = [];
-            if ($ttRaw !== false) {
-                $code2 = curl_getinfo($ch2, CURLINFO_HTTP_CODE);
-                curl_close($ch2);
-                if ($code2 >= 200 && $code2 < 300) {
-                    $ttData = json_decode($ttRaw, true);
-                    if (is_array($ttData)) {
-                        $items = $ttData['items'] ?? [];
-                    }
-                }
-            } else {
-                curl_close($ch2);
+            if (isset($data['token_transfers']) && is_array($data['token_transfers'])) {
+                $items = $data['token_transfers'];
             }
-            if (!is_array($items) || count($items) === 0) {
-                $items = $baseTransfers;
+
+            if (!$isNative) {
+                $ttUrl = 'https://scan.assetchain.org/api/v2/transactions/' . $hash . '/token-transfers?type=ERC-20%2CERC-721%2CERC-1155';
+                $ch2 = curl_init($ttUrl);
+                curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch2, CURLOPT_TIMEOUT, 15);
+                curl_setopt($ch2, CURLOPT_HTTPHEADER, ['accept: application/json']);
+                curl_setopt($ch2, CURLOPT_SSL_VERIFYPEER, false);
+
+                $retryCount = 0;
+                $ttRaw = false;
+                while ($retryCount <= $maxRetries) {
+                    $ttRaw = curl_exec($ch2);
+                    if ($ttRaw !== false) break;
+                    $retryCount++;
+                    if ($retryCount <= $maxRetries) sleep(1);
+                }
+
+                if ($ttRaw !== false) {
+                    $code2 = curl_getinfo($ch2, CURLINFO_HTTP_CODE);
+                    curl_close($ch2);
+                    if ($code2 >= 200 && $code2 < 300) {
+                        $ttData = json_decode($ttRaw, true);
+                        if (is_array($ttData)) {
+                            $items = array_merge($items, $ttData['items'] ?? []);
+                        }
+                    }
+                } else {
+                    curl_close($ch2);
+                }
             }
 
             $wantFrom = $this->normalizeEvmAddress($user_address);
             $wantTo = $this->normalizeEvmAddress($target_address);
-            // $wantToken already validated above
-
             $matched = false;
             $transferValue = null;
-            foreach ($items as $tt) {
-                // Normalize fields across both endpoint formats
-                $ttTo = $this->normalizeEvmAddress($tt['to']['hash'] ?? $tt['to'] ?? '');
-                $ttFrom = $this->normalizeEvmAddress($tt['from']['hash'] ?? $tt['from'] ?? '');
-                $ttToken = $this->normalizeEvmAddress($tt['token']['address'] ?? $tt['token']['hash'] ?? $tt['token'] ?? '');
-                $ttValue = (string)($tt['total']['value'] ?? $tt['value'] ?? $tt['amount'] ?? '');
-                if ($ttValue === '' && isset($tt['total']) && is_array($tt['total']) && isset($tt['total']['value'])) {
-                    $ttValue = (string)$tt['total']['value'];
-                }
 
-                if ($ttToken === $wantToken) {
-                    if ($transferValue === null && $ttValue !== '') {
-                        $transferValue = $ttValue;
-                    }
-                    if ($ttFrom === $wantFrom && (string)$amount_wei === (string)$ttValue) {
-                        $matched = true;
-                        break;
-                    }
-                    if ($ttTo === $wantTo && $ttFrom === $wantFrom && (string)$amount_wei === (string)$ttValue) {
-                        $matched = true;
-                        break;
+            if ($isNative) {
+                $txValue = (string)($data['value'] ?? '');
+                if ($baseFrom === $wantFrom && $baseTo === $wantTo && (string)$amount_wei === $txValue) {
+                    $matched = true;
+                    $transferValue = $txValue;
+                }
+            } else {
+                foreach ($items as $tt) {
+                    $ttTo = $this->normalizeEvmAddress($tt['to']['hash'] ?? $tt['to'] ?? '');
+                    $ttFrom = $this->normalizeEvmAddress($tt['from']['hash'] ?? $tt['from'] ?? '');
+                    $ttToken = $this->normalizeEvmAddress($tt['token']['address'] ?? $tt['token']['hash'] ?? $tt['token'] ?? '');
+                    $ttValue = (string)($tt['total']['value'] ?? $tt['value'] ?? $tt['amount'] ?? '');
+                    
+                    if ($ttToken === $wantToken) {
+                        if ($transferValue === null && $ttValue !== '') { $transferValue = $ttValue; }
+                        if ($ttFrom === $wantFrom && ($ttTo === $wantTo || $wantTo === null) && (string)$amount_wei === (string)$ttValue) {
+                            $matched = true;
+                            break;
+                        }
                     }
                 }
             }
 
-            if (!$matched && $diVal !== '') {
+            if (!$matched && !$isNative && $diVal !== '') {
                 if ($transferValue === null) { $transferValue = (string)$diVal; }
                 if ($baseFrom === $wantFrom && $baseTo === $wantToken && (string)$amount_wei === (string)$diVal) {
                     $matched = true;
