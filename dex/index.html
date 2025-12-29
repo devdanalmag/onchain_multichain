@@ -833,6 +833,63 @@
       align-items: center;
       justify-content: center;
       font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .wallet-option.selected {
+      background: rgba(var(--primary-rgb), 0.15);
+      border-left: 3px solid var(--primary);
+      padding-left: 9px;
+    }
+
+    .wallet-option.connected {
+      background: rgba(var(--success-rgb), 0.12);
+      position: relative;
+    }
+
+    .wallet-option .status-badge {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 10px;
+      background: var(--success);
+      color: #052b1e;
+      display: none;
+    }
+
+    .wallet-option.connected .status-badge {
+      display: inline-block;
+    }
+
+    .wallet-option .connection-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      margin-left: auto;
+      display: none;
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    .wallet-option.connected .connection-dot {
+      display: block;
+      animation: pulse-green 2s infinite;
+    }
+
+    @keyframes pulse-green {
+      0% {
+        box-shadow: 0 0 0 0 rgba(var(--success-rgb), 0.4);
+      }
+
+      70% {
+        box-shadow: 0 0 0 6px rgba(var(--success-rgb), 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(var(--success-rgb), 0);
+      }
     }
 
     .btn.connected {
@@ -1335,24 +1392,28 @@
                     onerror="this.style.display='none'">
                 </span>
                 <span>AssetChain</span>
+                <span class="connection-dot" title="Selected"></span>
               </div>
               <div class="wallet-option chain-option" data-chain="base">
                 <span class="icon" style="background: linear-gradient(135deg, #0052FF, #0066FF);">
                   <img src="https://avatars.githubusercontent.com/u/108554348?s=200&v=4" width="18">
                 </span>
                 <span>Base</span>
+                <span class="connection-dot" title="Selected"></span>
               </div>
               <div class="wallet-option chain-option" data-chain="arbitrum">
                 <span class="icon" style="background: linear-gradient(135deg, #28A0F0, #1C7ED6);">
                   <img src="https://cryptologos.cc/logos/arbitrum-arb-logo.png" width="18">
                 </span>
                 <span>Arbitrum</span>
+                <span class="connection-dot" title="Selected"></span>
               </div>
               <div class="wallet-option chain-option" data-chain="bsc">
                 <span class="icon" style="background: linear-gradient(135deg, #F3BA2F, #E6A800);">
                   <img src="https://cryptologos.cc/logos/bnb-bnb-logo.png" width="18">
                 </span>
                 <span>BNB Chain</span>
+                <span class="connection-dot" title="Selected"></span>
               </div>
               <div class="wallet-option" id="chain-back-btn"
                 style="display:none; border-top:1px solid rgba(255,255,255,0.1);">
@@ -1369,18 +1430,21 @@
                     src="https://images.ctfassets.net/clixtyxoaeas/4rnpEzy1ATWRKVBOLxZ1Fm/a74dc1eed36d23d7ea6030383a4d5163/MetaMask-icon-fox.svg"
                     width="18"></span>
                 <span>MetaMask</span>
+                <span class="status-badge">Connected</span>
               </div>
               <div class="wallet-option" data-wallet="Bitget">
                 <span class="icon"><img
                     src="https://play-lh.googleusercontent.com/QbNP8A9GE_UM1s3RFNF8i599yWm_F37iwL4viYCueD9XhJaIZ2yZjMnEwsegeTaHa7Q=w240-h480-rw"
                     width="18"></span>
                 <span>Bitget Wallet</span>
+                <span class="status-badge">Connected</span>
               </div>
               <div class="wallet-option" data-wallet="OKX">
                 <span class="icon"><img
                     src="https://play-lh.googleusercontent.com/N00SbjLJJrhg4hbdnkk3Llk2oedNNgCU29DvR9cpep7Lr0VkzvBkmLqajWNgFb0d7IOO"
                     width="18"></span>
                 <span>OKX Wallet</span>
+                <span class="status-badge">Connected</span>
               </div>
               <div class="wallet-option" id="wallet-back-btn" style="border-top:1px solid rgba(255,255,255,0.1);">
                 <span class="icon" style="background: var(--gray);"><i class="fas fa-arrow-left"></i></span>
@@ -1733,6 +1797,11 @@
       if (chainSelect) chainSelect.value = chainKey;
       localStorage.setItem('dex_selected_chain', chainKey);
       window.selectedChain = chainKey;
+
+      // Update UI feedback for chains
+      document.querySelectorAll('.chain-option').forEach(opt => {
+        opt.classList.toggle('selected', opt.getAttribute('data-chain') === chainKey);
+      });
     }
 
 
@@ -1970,6 +2039,13 @@
       if (disconnectOpt) {
         disconnectOpt.style.display = 'flex';
       }
+
+      // Update wallet selection highlighting
+      document.querySelectorAll('#wallet-selection .wallet-option[data-wallet]').forEach(opt => {
+        const isCurrent = opt.getAttribute('data-wallet') === walletName;
+        opt.classList.toggle('connected', isCurrent);
+      });
+
       window.authState = {
         ...(window.authState || {}),
         connected: true,
@@ -1992,6 +2068,12 @@
       if (disconnectOpt) {
         disconnectOpt.style.display = 'none';
       }
+
+      // Clear highlights
+      document.querySelectorAll('#wallet-selection .wallet-option[data-wallet]').forEach(opt => {
+        opt.classList.remove('connected');
+      });
+
       window.authState = { connected: false, networkOk: false, signedIn: false, address: null, wallet: null };
       updateAuthIndicators();
     }
@@ -2419,6 +2501,7 @@
 
         // Initialize UI and attempt auto-reconnect
         setDisconnectedUI();
+        setSelectedChain(getSelectedChain());
         autoReconnect();
         // Adjust wallet button display on resize (mobile vs desktop)
         window.addEventListener('resize', () => {
