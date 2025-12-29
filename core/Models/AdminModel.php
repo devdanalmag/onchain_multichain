@@ -1498,8 +1498,8 @@ class AdminModel extends Model
 		return $results;
 	}
 
-	// Fetch transactions by EVM wallet address with pagination
-	public function getTransactionsByAddress($address, $page = 0, $perPage = 10)
+	// Fetch transactions by EVM wallet address with pagination and blockchain filter
+	public function getTransactionsByAddress($address, $page = 0, $perPage = 10, $blockchain_id = null)
 	{
 		$dbh = self::connect();
 		$address = trim((string)$address);
@@ -1513,27 +1513,34 @@ class AdminModel extends Model
 		$page = max(0, (int)$page);
 		$perPage = max(1, (int)$perPage);
 		$offset = $page * $perPage;
+        
+        $chainFilter = "";
+        if ($blockchain_id !== null) {
+            $chainFilter = " AND b.blockchain_id = :bid ";
+        }
 
 		// Count total
         if ($isEvm) {
-		    $sqlC = "SELECT COUNT(*) AS cnt FROM transactions b WHERE (LOWER(b.senderaddress)=LOWER(:addr) OR LOWER(b.targetaddress)=LOWER(:addr))";
+		    $sqlC = "SELECT COUNT(*) AS cnt FROM transactions b WHERE (LOWER(b.senderaddress)=LOWER(:addr) OR LOWER(b.targetaddress)=LOWER(:addr))" . $chainFilter;
         } else {
             // Case-sensitive match for non-EVM
-            $sqlC = "SELECT COUNT(*) AS cnt FROM transactions b WHERE (b.senderaddress=:addr OR b.targetaddress=:addr)";
+            $sqlC = "SELECT COUNT(*) AS cnt FROM transactions b WHERE (b.senderaddress=:addr OR b.targetaddress=:addr)" . $chainFilter;
         }
 		$qC = $dbh->prepare($sqlC);
 		$qC->bindParam(':addr', $addrParam, PDO::PARAM_STR);
+        if ($blockchain_id !== null) { $qC->bindValue(':bid', $blockchain_id, PDO::PARAM_INT); }
 		$qC->execute();
 		$total = (int)($qC->fetch(PDO::FETCH_ASSOC)['cnt'] ?? 0);
 
 		// Fetch items
         if ($isEvm) {
-		    $sql = "SELECT a.sEmail,a.sPhone,a.sType,b.* FROM transactions b LEFT JOIN subscribers a ON a.sId=b.sId WHERE (LOWER(b.senderaddress)=LOWER(:addr) OR LOWER(b.targetaddress)=LOWER(:addr)) ORDER BY b.date DESC LIMIT $offset, $perPage";
+		    $sql = "SELECT a.sEmail,a.sPhone,a.sType,b.* FROM transactions b LEFT JOIN subscribers a ON a.sId=b.sId WHERE (LOWER(b.senderaddress)=LOWER(:addr) OR LOWER(b.targetaddress)=LOWER(:addr)) " . $chainFilter . " ORDER BY b.date DESC LIMIT $offset, $perPage";
         } else {
-            $sql = "SELECT a.sEmail,a.sPhone,a.sType,b.* FROM transactions b LEFT JOIN subscribers a ON a.sId=b.sId WHERE (b.senderaddress=:addr OR b.targetaddress=:addr) ORDER BY b.date DESC LIMIT $offset, $perPage";
+            $sql = "SELECT a.sEmail,a.sPhone,a.sType,b.* FROM transactions b LEFT JOIN subscribers a ON a.sId=b.sId WHERE (b.senderaddress=:addr OR b.targetaddress=:addr) " . $chainFilter . " ORDER BY b.date DESC LIMIT $offset, $perPage";
         }
 		$q = $dbh->prepare($sql);
 		$q->bindParam(':addr', $addrParam, PDO::PARAM_STR);
+        if ($blockchain_id !== null) { $q->bindValue(':bid', $blockchain_id, PDO::PARAM_INT); }
 		$q->execute();
 		$items = $q->fetchAll(PDO::FETCH_OBJ);
 

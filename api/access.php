@@ -306,22 +306,25 @@ try {
                 break;
             }
 
-            if ($chain === 'base' || $chain === 'bnb' || $chain === 'bsc' || $chain === 'arbitrum') {
-                $moralis = new MoralisModel();
-                $out = $moralis->getWalletTransactions($address, $chain, $page, $limit);
-                break;
-            }
+            if ($chain === 'base' || $chain === 'bnb' || $chain === 'bsc' || $chain === 'arbitrum' || $chain === 'assetchain') {
+                // Determine blockchain_id from chain_key
+                $dbh = AdminModel::connect();
+                $sqlB = "SELECT id FROM blockchain WHERE chain_key = :key LIMIT 1";
+                $qB = $dbh->prepare($sqlB);
+                $qB->execute([':key' => $chain]);
+                $bRow = $qB->fetch(PDO::FETCH_ASSOC);
+                $blockchain_id = $bRow ? (int)$bRow['id'] : 1;
 
-            $page = max(0, $page); $limit = max(1, min(50, $limit));
-            $result = $admin->getTransactionsByAddress($address, $page, $limit);
-            $pages = $result['perPage'] > 0 ? (int)ceil($result['total'] / $result['perPage']) : 0;
-            $out = [
-                'status' => 'success',
-                'total' => $result['total'],
-                'page' => $result['page'],
-                'perPage' => $result['perPage'],
-                'pages' => $pages,
-                'items' => array_map(function($r){
+                $page = max(0, $page); $limit = max(1, min(50, $limit));
+                $result = $admin->getTransactionsByAddress($address, $page, $limit, $blockchain_id);
+                $pages = $result['perPage'] > 0 ? (int)ceil($result['total'] / $result['perPage']) : 0;
+                $out = [
+                    'status' => 'success',
+                    'total' => $result['total'],
+                    'page' => $result['page'],
+                    'perPage' => $result['perPage'],
+                    'pages' => $pages,
+                    'items' => array_map(function($r){
                     return [
                         'txhash' => $r->txhash ?? null,
                         'txref' => $r->transref ?? null,
@@ -339,6 +342,7 @@ try {
                     ];
                 }, $result['items'] ?? [])
             ];
+                }
             break;
 
         default:

@@ -59,7 +59,8 @@ function handleTransactionFailure($controller, $params)
         "1", // Failed status
         $transaction_type, 
         $token_name, 
-        $normTokenContract
+        $normTokenContract,
+        $blockchain_id
     );
     
     // ALWAYS attempt refund if we got this far (blockchain verified)
@@ -93,7 +94,8 @@ function handleTransactionFailure($controller, $params)
             "9", // Refunded status
             $transaction_type, 
             $token_name, 
-            $normTokenContract
+            $normTokenContract,
+            $blockchain_id
         );
     }
     
@@ -245,6 +247,7 @@ $tx_hash = isset($body->tx_hash) ? trim($body->tx_hash) : "";
 $user_address = isset($body->user_address) ? trim($body->user_address) : "";
 $amount_wei = isset($body->amount_wei) ? trim($body->amount_wei) : "";
 $token_contract = isset($body->token_contract) ? trim($body->token_contract) : "";
+$blockchain_id = isset($body->blockchain_id) ? (int)$body->blockchain_id : 1;
 
 // -------------------------------------------------------------------
 //  Validate Input Parameters
@@ -430,7 +433,8 @@ if (!empty($refundingAddress) && !empty($token_contract) && !empty($amount_wei))
                 "1", 
                 $transaction_type, 
                 $token_name, 
-                $normTokenContract
+                $normTokenContract,
+                $blockchain_id
             );
             
             echo json_encode($response);
@@ -852,6 +856,7 @@ if (!$isDexToken && $ftarget_address != $fsite_address) {
         'isDexToken' => $isDexToken,
         'token_contract' => $token_contract,
         'token_decimals' => $token_decimals,
+        'blockchain_id' => $blockchain_id,
         'controller' => $controller
     ];
     
@@ -879,7 +884,8 @@ $transRecord = $controller->recordchainTransaction(
     "5", // Processing status
     $transaction_type, 
     $token_name, 
-    $normTokenContract
+    $normTokenContract,
+    $blockchain_id
 );
 
 if ($transRecord["status"] == "fail") {

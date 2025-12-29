@@ -1683,6 +1683,7 @@
 
     const CHAINS = {
       assetchain: {
+        blockchainId: 1,
         chainId: '0xa5b4',
         chainName: 'AssetChain Mainnet',
         nativeCurrency: { name: 'ASET', symbol: 'ASET', decimals: 18 },
@@ -1691,6 +1692,7 @@
         useMoralis: false
       },
       base: {
+        blockchainId: 2,
         chainId: '0x2105',
         chainName: 'Base Mainnet',
         nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
@@ -1699,6 +1701,7 @@
         useMoralis: true
       },
       arbitrum: {
+        blockchainId: 3,
         chainId: '0xa4b1',
         chainName: 'Arbitrum One',
         nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
@@ -1707,6 +1710,7 @@
         useMoralis: true
       },
       bsc: {
+        blockchainId: 4,
         chainId: '0x38',
         chainName: 'BNB Smart Chain',
         nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
@@ -3960,7 +3964,8 @@
           tx_hash: receipt.transactionHash,
           user_address: userAddress,
           amount_wei: amountWeiBN.toString(),
-          token_contract: tokenContract
+          token_contract: tokenContract,
+          blockchain_id: selectedChainConfig.blockchainId
         };
 
         let payload;

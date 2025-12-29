@@ -59,7 +59,8 @@ function handleTransactionFailure($controller, $params)
         "1", // Failed status
         $transaction_type, 
         $token_name, 
-        $normTokenContract
+        $normTokenContract,
+        $blockchain_id
     );
     
     // ALWAYS attempt refund if we got this far (blockchain verified)
@@ -93,7 +94,8 @@ function handleTransactionFailure($controller, $params)
             "9", // Refunded status
             $transaction_type, 
             $token_name, 
-            $normTokenContract
+            $normTokenContract,
+            $blockchain_id
         );
     } else {
         // Record failed refund
@@ -115,7 +117,8 @@ function handleTransactionFailure($controller, $params)
             "1", // Failed refund status
             $transaction_type, 
             $token_name, 
-            $normTokenContract
+            $normTokenContract,
+            $blockchain_id
         );
     }
     
@@ -251,6 +254,7 @@ $tx_hash = isset($body->tx_hash) ? trim($body->tx_hash) : "";
 $user_address = isset($body->user_address) ? trim($body->user_address) : "";
 $amount_wei = isset($body->amount_wei) ? trim($body->amount_wei) : "";
 $token_contract = isset($body->token_contract) ? trim($body->token_contract) : "";
+$blockchain_id = isset($body->blockchain_id) ? (int)$body->blockchain_id : 1;
 
 // -------------------------------------------------------------------
 //  Validate Input Parameters
@@ -365,6 +369,7 @@ if ($ftarget_address == $fuser_address) {
         'isDexToken' => $isDexToken,
         'token_contract' => $token_contract,
         'token_decimals' => $token_decimals,
+        'blockchain_id' => $blockchain_id,
         'controller' => $controller
     ];
     
@@ -395,6 +400,7 @@ if ($fuser_address == $fsite_address) {
         'isDexToken' => $isDexToken,
         'token_contract' => $token_contract,
         'token_decimals' => $token_decimals,
+        'blockchain_id' => $blockchain_id,
         'controller' => $controller
     ];
     
@@ -428,7 +434,8 @@ if (!empty($refundingAddress) && !empty($token_contract) && !empty($amount_wei))
                 "1", 
                 $transaction_type, 
                 $token_name, 
-                $normTokenContract
+                $normTokenContract,
+                $blockchain_id
             );
             
             echo json_encode($response);
@@ -470,6 +477,7 @@ if ($result["status"] == "fail") {
         'isDexToken' => $isDexToken,
         'token_contract' => $token_contract,
         'token_decimals' => $token_decimals,
+        'blockchain_id' => $blockchain_id,
         'controller' => $controller
     ];
     
@@ -505,6 +513,7 @@ if ($networkDetails["networkStatus"] <> "On") {
         'isDexToken' => $isDexToken,
         'token_contract' => $token_contract,
         'token_decimals' => $token_decimals,
+        'blockchain_id' => $blockchain_id,
         'controller' => $controller
     ];
     
@@ -539,6 +548,7 @@ if ($result["status"] == "fail") {
         'isDexToken' => $isDexToken,
         'token_contract' => $token_contract,
         'token_decimals' => $token_decimals,
+        'blockchain_id' => $blockchain_id,
         'controller' => $controller
     ];
     
@@ -589,6 +599,7 @@ if ($datagroupmessage <> "") {
         'isDexToken' => $isDexToken,
         'token_contract' => $token_contract,
         'token_decimals' => $token_decimals,
+        'blockchain_id' => $blockchain_id,
         'controller' => $controller
     ];
     
@@ -624,6 +635,7 @@ if ($ported_number == "false") {
             'isDexToken' => $isDexToken,
             'token_contract' => $token_contract,
             'token_decimals' => $token_decimals,
+            'blockchain_id' => $blockchain_id,
             'controller' => $controller
         ];
         
@@ -646,7 +658,7 @@ if ($result["status"] == "fail") {
     exit();
 }
 
-$transRecord = $controller->recordchainTransaction($userid, "Data", $plandesc, $amountopay, $ref, $ftarget_address, $tx_hash, $fuser_address, $tokenamount, "5", $transaction_type, $token_name, $normTokenContract);
+$transRecord = $controller->recordchainTransaction($userid, "Data", $plandesc, $amountopay, $ref, $ftarget_address, $tx_hash, $fuser_address, $tokenamount, "5", $transaction_type, $token_name, $normTokenContract, $blockchain_id);
 if ($transRecord["status"] == "fail") {
     header('HTTP/1.0 400 Bad Request');
     $response['status'] = "fail";
@@ -672,14 +684,14 @@ if ($checkprice['status'] == 'fail') {
     if ($refund["status"] == "fail") {
         $servicedesc = "Refund Failed For {$ref} (Price Impact)";
         $reference = crc32($ref . "REFFAIL");
-        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $fuser_address, "N/A", $siteaddress, $tokenamount, "1", $transaction_type, $token_name, $normTokenContract);
+        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $fuser_address, "N/A", $siteaddress, $tokenamount, "1", $transaction_type, $token_name, $normTokenContract, $blockchain_id);
     } else {
         $servicedesc = "Refund For {$ref} Transactions ". ($refund['msg']?? " - ");
         $reference = crc32($ref);
         $refundwallet = $refund["sender"] ?? $siteaddress;
         $targetwallet = $refund["receiver"] ?? $fuser_address;
         $refund_hash = $refund["hash"] ?? " - ";
-        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tokenamount, "9", $transaction_type, $token_name, $normTokenContract);
+        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tokenamount, "9", $transaction_type, $token_name, $normTokenContract, $blockchain_id);
     }
     
     echo json_encode($response);
@@ -718,14 +730,14 @@ if ($result["status"] == "success") {
     if ($refund["status"] == "fail") {
         $servicedesc = "Refund Failed For {$ref} (Transaction Failed)";
         $reference = crc32($ref . "REFFAIL");
-        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $fuser_address, "N/A", $siteaddress, $tokenamount, "1", $transaction_type, $token_name, $normTokenContract);
+        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $fuser_address, "N/A", $siteaddress, $tokenamount, "1", $transaction_type, $token_name, $normTokenContract, $blockchain_id);
     } else {
         $servicedesc = "Refund For {$ref} Transactions" . " " . ($refund['msg'] ?? "N/A");
         $reference = crc32($ref);
         $refundwallet = $refund["sender"] ?? $siteaddress;
         $targetwallet = $refund["receiver"] ?? $fuser_address;
         $refund_hash = $refund["hash"] ?? "N/A";
-        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tokenamount, "9", $transaction_type, $token_name, $normTokenContract);
+        $controller->recordrefundchainTransaction($userid, "Refund", $servicedesc, "0.00", $reference, $targetwallet, $refund_hash, $refundwallet, $tokenamount, "9", $transaction_type, $token_name, $normTokenContract, $blockchain_id);
     }
     
     echo json_encode($response);

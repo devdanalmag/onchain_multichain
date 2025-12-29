@@ -536,7 +536,7 @@ class ApiModel extends Model
     {
         $dbh = self::connect();
         try {
-            $checkSql = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='transactions' AND COLUMN_NAME IN ('transaction_type','token_name','token_contract','token_amount')";
+            $checkSql = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='transactions' AND COLUMN_NAME IN ('transaction_type','token_name','token_contract','token_amount','blockchain_id')";
             $q = $dbh->prepare($checkSql);
             $q->execute();
             $found = array_map(function ($r) { return $r['COLUMN_NAME']; }, $q->fetchAll(PDO::FETCH_ASSOC));
@@ -544,6 +544,7 @@ class ApiModel extends Model
             $needName = !in_array('token_name', $found);
             $needContract = !in_array('token_contract', $found);
             $needAmount = !in_array('token_amount', $found);
+            $needChainId = !in_array('blockchain_id', $found);
 
             if ($needAmount) {
                 $dbh->exec("ALTER TABLE transactions ADD COLUMN token_amount VARCHAR(64) NULL");
@@ -557,12 +558,15 @@ class ApiModel extends Model
             if ($needContract) {
                 $dbh->exec("ALTER TABLE transactions ADD COLUMN token_contract VARCHAR(66) NULL");
             }
+            if ($needChainId) {
+                $dbh->exec("ALTER TABLE transactions ADD COLUMN blockchain_id INT DEFAULT 1 AFTER `date` ");
+            }
         } catch (\Throwable $e) {
             // Ignore migration errors to avoid breaking runtime
         }
     }
 
-    public function recordchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status, $transaction_type = 'app', $token_name = null, $token_contract = null)
+    public function recordchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status, $transaction_type = 'app', $token_name = null, $token_contract = null, $blockchain_id = 1)
     {
         $dbh = self::connect();
         
@@ -579,10 +583,11 @@ class ApiModel extends Model
         $date = date("Y-m-d H:i:s");
         $oldbalance = '0';
         $newbalance = '0';
+        $blockchain_id = (int) $blockchain_id;
         $this->ensureTransactionsTokenColumns();
         //Record Transaction
-        $sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, token_amount, date, transaction_type, token_name, token_contract) 
-        VALUES (:user, :ref, :sn, :sd, :a, :s, :ob, :nb, :txh, :taddy, :uaddy, :token_amount, :d, :ttype, :tname, :tcontract)";
+        $sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, token_amount, date, transaction_type, token_name, token_contract, blockchain_id) 
+        VALUES (:user, :ref, :sn, :sd, :a, :s, :ob, :nb, :txh, :taddy, :uaddy, :token_amount, :d, :ttype, :tname, :tcontract, :bid)";
         $query = $dbh->prepare($sql);
         $query->bindParam(':user', $userid, PDO::PARAM_INT);
         $query->bindParam(':ref', $ref, PDO::PARAM_STR);
@@ -600,6 +605,7 @@ class ApiModel extends Model
         $query->bindParam(':ttype', $transaction_type, PDO::PARAM_STR);
         $query->bindParam(':tname', $token_name, PDO::PARAM_STR);
         $query->bindParam(':tcontract', $token_contract, PDO::PARAM_STR);
+        $query->bindParam(':bid', $blockchain_id, PDO::PARAM_INT);
         $query->execute();
 
 
@@ -611,7 +617,7 @@ class ApiModel extends Model
         }
     }
     // Record Refund Transaction
-    public function recordrefundchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status, $transaction_type = 'app', $token_name = null, $token_contract = null)
+    public function recordrefundchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status, $transaction_type = 'app', $token_name = null, $token_contract = null, $blockchain_id = 1)
     {
         $dbh = self::connect();
         
@@ -632,10 +638,11 @@ class ApiModel extends Model
         $date = date("Y-m-d H:i:s");
         $oldbalance = '0';
         $newbalance = '0';
+        $blockchain_id = (int)$blockchain_id;
         $this->ensureTransactionsTokenColumns();
         //Record Transaction
-        $sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, token_amount, date, transaction_type, token_name, token_contract) 
-    VALUES (:user, :ref, :sn, :sd, :a, :s, :ob, :nb, :txh, :taddy, :uaddy, :token_amount, :d, :ttype, :tname, :tcontract)";
+        $sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, token_amount, date, transaction_type, token_name, token_contract, blockchain_id) 
+    VALUES (:user, :ref, :sn, :sd, :a, :s, :ob, :nb, :txh, :taddy, :uaddy, :token_amount, :d, :ttype, :tname, :tcontract, :bid)";
         $query = $dbh->prepare($sql);
         $query->bindParam(':user', $userid, PDO::PARAM_INT);
         $query->bindParam(':ref', $ref, PDO::PARAM_STR);
@@ -653,6 +660,7 @@ class ApiModel extends Model
         $query->bindParam(':ttype', $transaction_type, PDO::PARAM_STR);
         $query->bindParam(':tname', $token_name, PDO::PARAM_STR);
         $query->bindParam(':tcontract', $token_contract, PDO::PARAM_STR);
+        $query->bindParam(':bid', $blockchain_id, PDO::PARAM_INT);
         $query->execute();
 
 
