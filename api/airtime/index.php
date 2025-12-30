@@ -979,7 +979,7 @@ if ($checkprice['status'] == 'fail') {
 //  Purchase Airtime
 // -------------------------------------------------------------------
 $result = $airtimeController->purchaseMyAirtime($body, $networkDetails);
-// $result["status"] = "success";
+// $result = ["status" => "success", "msg" => "Transaction Successful"]; 
 // -------------------------------------------------------------------
 //  Process Result
 // -------------------------------------------------------------------

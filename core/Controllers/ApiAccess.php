@@ -631,6 +631,7 @@ class ApiAccess extends Controller
      */
     public function verifyBlockchainTransaction($target_address, $tx_hash, $user_address, $amount_wei, $token_contract = null, $blockchain_id = 1)
     {
+        $tx_hash = trim((string)$tx_hash);
         // 1) Handle AssetChain
         if ($blockchain_id == 1) {
             return $this->verifyAssetTransaction($target_address, $tx_hash, $user_address, $amount_wei, $token_contract);
@@ -667,7 +668,7 @@ class ApiAccess extends Controller
         if (!$tx || !isset($tx['hash'])) {
             $errorDetail = 'transaction_not_found_on_chain';
             if (isset($tx['status']) && $tx['status'] === 'fail') {
-                $errorDetail = 'moralis_error: ' . ($tx['msg'] ?? 'unknown');
+                $errorDetail = 'moralis_error: ' . ($tx['msg'] ?? 'unknown') . " | Hash: $tx_hash | Chain: $chainKey";
             }
             return ['status' => 'fail', 'msg' => $errorDetail];
         }
