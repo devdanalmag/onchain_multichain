@@ -1035,7 +1035,7 @@ if ($result["status"] == "success") {
     $erroresult = $controller->checkIfError();
     
     // ALWAYS attempt refund since blockchain is verified
-    $refundResult = $controller->refundTransaction($ref, $fuser_address, $tokenamount, $token_contract, $token_name, $token_decimals);
+    $refundResult = $controller->refundTransaction($ref, $fuser_address, $tokenamount, $token_contract, $token_name, $token_decimals, $blockchain_id);
     
     if ($refundResult["status"] == "fail") {
         header('HTTP/1.0 400 Bad Request');
@@ -1063,8 +1063,8 @@ if ($result["status"] == "success") {
         $userid, 
         "Refund", 
         $refundDesc, 
-        "0.00", 
         $reference, 
+        "0.00", 
         $targetwallet, 
         $refund_hash, 
         $refundwallet, 
@@ -1072,7 +1072,8 @@ if ($result["status"] == "success") {
         "9", 
         $transaction_type, 
         $token_name, 
-        $normTokenContract
+        $normTokenContract,
+        $blockchain_id
     );
     
     header('HTTP/1.0 400 Bad Request');
