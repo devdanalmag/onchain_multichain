@@ -411,7 +411,7 @@ if ($fuser_address == $fsite_address) {
 
 // Refunding Address Balance Check
 if (!empty($refundingAddress) && !empty($token_contract) && !empty($amount_wei)) {
-    $balanceCheck = $controller->checkERC20Balance($refundingAddress, $token_contract);
+    $balanceCheck = $controller->checkERC20Balance($refundingAddress, $token_contract, $blockchain_id);
     if ($balanceCheck['status'] === 'success') {
         $hexBal = $balanceCheck['balance_hex'];
         $decBal = hexdec($hexBal); 

@@ -955,8 +955,8 @@ class ApiAccess extends Controller
     }
 
     // Check ERC20 Balance
-    public function checkERC20Balance($address, $tokenContract)
+    public function checkERC20Balance($address, $tokenContract, $blockchain_id = null)
     {
-        return $this->model->checkERC20Balance($address, $tokenContract);
+        return $this->model->checkERC20Balance($address, $tokenContract, $blockchain_id);
     }
 }

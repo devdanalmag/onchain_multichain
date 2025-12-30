@@ -1022,12 +1022,18 @@ class ApiModel extends Model
         ];
     }
 
-    // Get Blockchain Config from DB
-    public function getBlockchainConfig($name = 'AssetChain') {
+    // Get Blockchain Config from DB by name or ID
+    public function getBlockchainConfig($identifier = 'AssetChain') {
         $dbh = self::connect();
-        $sql = "SELECT * FROM blockchain WHERE name = :name LIMIT 1";
-        $query = $dbh->prepare($sql);
-        $query->bindParam(':name', $name, PDO::PARAM_STR);
+        if (is_numeric($identifier)) {
+            $sql = "SELECT * FROM blockchain WHERE id = :id LIMIT 1";
+            $query = $dbh->prepare($sql);
+            $query->bindParam(':id', $identifier, PDO::PARAM_INT);
+        } else {
+            $sql = "SELECT * FROM blockchain WHERE name = :name LIMIT 1";
+            $query = $dbh->prepare($sql);
+            $query->bindParam(':name', $identifier, PDO::PARAM_STR);
+        }
         $query->execute();
         $result = $query->fetch(PDO::FETCH_ASSOC);
         
@@ -1054,27 +1060,30 @@ class ApiModel extends Model
         return $query->fetch(PDO::FETCH_ASSOC);
     }
 
-    // Check ERC20 Token Balance
-    public function checkERC20Balance($address, $tokenContract) {
-        // ABI for balanceOf: 0x70a08231 + address padded to 32 bytes
-        $methodId = '0x70a08231';
-        // Remove 0x if present
-        $cleanAddress = str_replace('0x', '', $address);
-        $paddedAddress = str_pad($cleanAddress, 64, '0', STR_PAD_LEFT);
-        $data = $methodId . $paddedAddress;
+    // Check ERC20 or Native Token Balance
+    public function checkERC20Balance($address, $tokenContract, $blockchain_id = null) {
+        $config = $this->getBlockchainConfig($blockchain_id ?? 'AssetChain');
         
-        $response = $this->callJsonRpc('eth_call', [
-            ['to' => $tokenContract, 'data' => $data],
-            'latest'
-        ]);
+        $isNative = empty($tokenContract) || strtolower($tokenContract) === 'native' || $tokenContract === '0x0000000000000000000000000000000000000000';
+        
+        if ($isNative) {
+            $response = $this->callJsonRpc('eth_getBalance', [$address, 'latest'], $config);
+        } else {
+            // ABI for balanceOf: 0x70a08231 + address padded to 32 bytes
+            $methodId = '0x70a08231';
+            // Remove 0x if present
+            $cleanAddress = str_replace('0x', '', $address);
+            $paddedAddress = str_pad($cleanAddress, 64, '0', STR_PAD_LEFT);
+            $data = $methodId . $paddedAddress;
+            
+            $response = $this->callJsonRpc('eth_call', [
+                ['to' => $tokenContract, 'data' => $data],
+                'latest'
+            ], $config);
+        }
         
         if (isset($response['result'])) {
             $hexBalance = $response['result'];
-            // Convert hex to decimal string using helper or built-in
-            // Since PHP hexdec can lose precision for uint256, we return hex or string
-            // But for comparison, we might need a BigInt library. 
-            // For now, we'll return the hex and let the controller/logic handle comparison or use a simple conversion if small enough.
-            // Or implementing a simple hexToDec string converter.
             return [
                 'status' => 'success',
                 'balance_hex' => $hexBalance,
