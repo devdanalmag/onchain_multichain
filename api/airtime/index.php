@@ -70,7 +70,8 @@ function handleTransactionFailure($controller, $params)
         $tokenamount, 
         $token_contract, 
         $token_name, 
-        $token_decimals
+        $token_decimals,
+        $blockchain_id
     );
     
     // Record successful refund
@@ -378,6 +379,7 @@ if ($ftarget_address == $fuser_address) {
         'isDexToken' => $isDexToken,
         'token_contract' => $token_contract,
         'token_decimals' => $token_decimals,
+        'blockchain_id' => $blockchain_id,
         'controller' => $controller
     ];
     
@@ -412,6 +414,7 @@ if ($fuser_address == $fsite_address) {
         'isDexToken' => $isDexToken,
         'token_contract' => $token_contract,
         'token_decimals' => $token_decimals,
+        'blockchain_id' => $blockchain_id,
         'controller' => $controller
     ];
     
@@ -495,6 +498,7 @@ if ($result["status"] == "fail") {
         'isDexToken' => $isDexToken,
         'token_contract' => $token_contract,
         'token_decimals' => $token_decimals,
+        'blockchain_id' => $blockchain_id,
         'controller' => $controller
     ];
     
@@ -555,6 +559,7 @@ if (!$networkAvailable) {
         'isDexToken' => $isDexToken,
         'token_contract' => $token_contract,
         'token_decimals' => $token_decimals,
+        'blockchain_id' => $blockchain_id,
         'controller' => $controller
     ];
     
@@ -636,6 +641,7 @@ if ($amount < $airtimemin) {
         'isDexToken' => $isDexToken,
         'token_contract' => $token_contract,
         'token_decimals' => $token_decimals,
+        'blockchain_id' => $blockchain_id,
         'controller' => $controller
     ];
     
@@ -670,6 +676,7 @@ if ($amount > $airtimemax) {
         'isDexToken' => $isDexToken,
         'token_contract' => $token_contract,
         'token_decimals' => $token_decimals,
+        'blockchain_id' => $blockchain_id,
         'controller' => $controller
     ];
     
@@ -725,6 +732,7 @@ if ($result["status"] == "fail") {
         'isDexToken' => $isDexToken,
         'token_contract' => $token_contract,
         'token_decimals' => $token_decimals,
+        'blockchain_id' => $blockchain_id,
         'controller' => $controller
     ];
     
@@ -927,6 +935,7 @@ if ($transRecord["status"] == "fail") {
         'isDexToken' => $isDexToken,
         'token_contract' => $token_contract,
         'token_decimals' => $token_decimals,
+        'blockchain_id' => $blockchain_id,
         'controller' => $controller
     ];
     
@@ -955,7 +964,7 @@ if ($checkprice['status'] == 'fail') {
     }
     
     // ALWAYS attempt refund since blockchain is verified
-    $refundResult = $controller->refundTransaction($ref, $fuser_address, $tokenamount, $token_contract, $token_name, $token_decimals);
+    $refundResult = $controller->refundTransaction($ref, $fuser_address, $tokenamount, $token_contract, $token_name, $token_decimals, $blockchain_id);
     if ($refundResult["status"] == "fail") {
         $controller->logError($refundResult['msg'] ?? "Unknown", "Api :: Airtime Index", $userid);
         if ($erroresult) {

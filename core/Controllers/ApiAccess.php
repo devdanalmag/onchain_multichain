@@ -362,10 +362,10 @@ class ApiAccess extends Controller
         file_put_contents($logFile, $logMessage, FILE_APPEND | LOCK_EX);
     }
     // Refund Transaction
-    public function refundTransaction($ref, $fuser_address, $tonamount, $token_contract = null, $token_symbol = null, $token_decimals = 18)
+    public function refundTransaction($ref, $fuser_address, $tonamount, $token_contract = null, $token_symbol = null, $token_decimals = 18, $blockchain_id = 1)
     {
         $response = array();
-        $response = $this->model->refundTransaction($ref, $fuser_address, $tonamount, $token_contract, $token_symbol, $token_decimals);
+        $response = $this->model->refundTransaction($ref, $fuser_address, $tonamount, $token_contract, $token_symbol, $token_decimals, $blockchain_id);
         // if (!$result) {
         //     $response["status"] = "fail";
         //     $response["msg"] = "Failed To Record Transaction";

@@ -70,7 +70,8 @@ function handleTransactionFailure($controller, $params)
         $tokenamount, 
         $token_contract, 
         $token_name, 
-        $token_decimals
+        $token_decimals,
+        $blockchain_id
     );
     
     // Record successful refund
@@ -709,7 +710,7 @@ if ($checkprice['status'] == 'fail') {
     $response['msg'] = $checkprice['msg'] ?? "Price Maybe Higher or Lower, Please Try Again Later";
     
     // Manual refund
-    $refund = $controller->refundTransaction($ref, $fuser_address, $tokenamount, $token_contract, $token_name, $token_decimals);
+    $refund = $controller->refundTransaction($ref, $fuser_address, $tokenamount, $token_contract, $token_name, $token_decimals, $blockchain_id);
     
     if ($refund["status"] == "fail") {
         $servicedesc = "Refund Failed For {$ref} (Price Impact)";
@@ -755,7 +756,7 @@ if ($result["status"] == "success") {
     $controller->updateFailedTransactionStatus($userid, $servicedesc, $ref, $amountopay, "1");
     
     // Refund
-    $refund = $controller->refundTransaction($ref, $fuser_address, $tokenamount, $token_contract, $token_name, $token_decimals);
+    $refund = $controller->refundTransaction($ref, $fuser_address, $tokenamount, $token_contract, $token_name, $token_decimals, $blockchain_id);
     
     if ($refund["status"] == "fail") {
         $servicedesc = "Refund Failed For {$ref} (Transaction Failed)";

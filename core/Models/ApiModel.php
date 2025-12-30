@@ -361,7 +361,7 @@ class ApiModel extends Model
             return 1;
         }
     }
-    public function refundTransaction($ref, $fuser_address, $amount, $token_contract = null, $token_symbol = null, $token_decimals = 18)
+    public function refundTransaction($ref, $fuser_address, $amount, $token_contract = null, $token_symbol = null, $token_decimals = 18, $blockchain_id = 1)
     {
 
 
@@ -398,12 +398,17 @@ class ApiModel extends Model
         }
 
         try {
+            // Get RPC URL for the blockchain
+            $blockchainConfig = $this->getBlockchainConfig($blockchain_id);
+            $rpcUrl = $blockchainConfig['rpc_url'] ?? '';
+
             // Prepare input data
             $input = [
                 'address' => $fuser_address,
                 'amount' => $amount,
                 'token_contract' => $token_contract,
                 'token_decimals' => $token_decimals,
+                'rpc_url' => $rpcUrl,
                 'msgs' => "Refund for transaction: " . $ref
             ];
             // Validate input data
