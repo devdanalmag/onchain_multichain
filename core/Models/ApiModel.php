@@ -384,7 +384,7 @@ class ApiModel extends Model
         } //Refund Not Allowed
 
         // Token Verification
-        if ($token_contract && $token_contract !== '0x0000000000000000000000000000000000000000') {
+        if ($token_contract && $token_contract !== '0x0000000000000000000000000000000000000000' && strtolower($token_contract) !== 'native') {
             $dbh = self::connect();
             $sql = "SELECT token_id FROM tokens WHERE LOWER(token_contract) = LOWER(:contract) AND is_active = 1 LIMIT 1";
             $stmt = $dbh->prepare($sql);
@@ -406,9 +406,12 @@ class ApiModel extends Model
             $input = [
                 'address' => $fuser_address,
                 'amount' => $amount,
-                'token_contract' => $token_contract,
+                'token_contract' => (strtolower($token_contract ?? '') === 'native') ? '0x0000000000000000000000000000000000000000' : $token_contract,
                 'token_decimals' => $token_decimals,
                 'rpc_url' => $rpcUrl,
+                'rpcURL' => $rpcUrl, // Compatibility
+                'rpc' => $rpcUrl,    // Compatibility
+                'chainId' => (int)($blockchainConfig['chain_id'] ?? 0),
                 'msgs' => "Refund for transaction: " . $ref
             ];
             // Validate input data
