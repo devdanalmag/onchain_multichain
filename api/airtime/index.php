@@ -50,8 +50,8 @@ function handleTransactionFailure($controller, $params)
         $userid, 
         $servicename, 
         $servicedesc, 
-        $amount, 
         $ref, 
+        $amount, 
         $ftarget_address, 
         $tx_hash, 
         $fuser_address, 
@@ -85,8 +85,8 @@ function handleTransactionFailure($controller, $params)
             $userid, 
             "Refund", 
             $refundDesc, 
-            "0.00", 
             $reference, 
+            "0.00", 
             $targetwallet, 
             $refund_hash, 
             $refundwallet, 
@@ -299,22 +299,37 @@ if ($chainresult["status"] == "fail") {
 //  Token Validation
 // -------------------------------------------------------------------
 $dbh = AdminModel::connect();
-$decQ = $dbh->prepare("SELECT token_decimals, token_name, token_contract FROM tokens WHERE LOWER(token_contract)=LOWER(:c) AND is_active=1 LIMIT 1");
-$decQ->bindParam(':c', $token_contract, PDO::PARAM_STR);
-$decQ->execute();
-$trow = $decQ->fetch(PDO::FETCH_ASSOC);
+$isNative = empty($token_contract) || strtolower($token_contract) === 'native' || $token_contract === '0x0000000000000000000000000000000000000000';
 
-if (!$trow) {
-    header('HTTP/1.0 400 Bad Request');
-    $response['status'] = "fail";
-    $response['msg'] = "Token Not Found or Disabled";
-    echo json_encode($response);
-    exit();
+if ($isNative) {
+    // Get native symbol from blockchain table
+    $bcQ = $dbh->prepare("SELECT native_symbol FROM blockchain WHERE id = :id LIMIT 1");
+    $bcQ->execute([':id' => $blockchain_id]);
+    $bcRow = $bcQ->fetch(PDO::FETCH_ASSOC);
+    
+    $token_decimals = 18;
+    $token_name = $bcRow['native_symbol'] ?? 'Native';
+    $token_contract = 'native';
+} else {
+    $decQ = $dbh->prepare("SELECT token_decimals, token_name, token_contract FROM tokens WHERE LOWER(token_contract)=LOWER(:c) AND chain_id=:chain AND is_active=1 LIMIT 1");
+    $decQ->bindParam(':c', $token_contract, PDO::PARAM_STR);
+    $decQ->bindParam(':chain', $blockchain_id, PDO::PARAM_INT);
+    $decQ->execute();
+    $trow = $decQ->fetch(PDO::FETCH_ASSOC);
+
+    if (!$trow) {
+        header('HTTP/1.0 400 Bad Request');
+        $response['status'] = "fail";
+        $response['msg'] = "Token Not Found or Disabled on this Chain ($blockchain_id)";
+        echo json_encode($response);
+        exit();
+    }
+
+    $token_decimals = (int)($trow['token_decimals'] ?? 18);
+    $token_name = $trow['token_name'] ?? 'Unknown';
 }
 
-$token_decimals = (int)($trow['token_decimals'] ?? 6);
-$token_name = $trow['token_name'] ?? 'Unknown';
-$tokenamount = number_format($controller->convertWeiToToken($amount_wei, $token_decimals), 4, '.', '');
+$tokenamount = number_format($controller->convertWeiToToken($amount_wei, $token_decimals), 8, '.', '');
 // -------------------------------------------------------------------
 //  Address Normalization and Validation
 // -------------------------------------------------------------------
@@ -322,7 +337,7 @@ $ftarget_address = $controller->normalizeEvmAddress($target_address);
 $fuser_address = $controller->normalizeEvmAddress($user_address);
 
 // Get blockchain configuration
-$blockchainConfig = $controller->getBlockchainConfig('AssetChain');
+$blockchainConfig = $controller->getBlockchainConfig($blockchain_id);
 $siteaddress = $blockchainConfig['site_address'] ?? '';
 $refundingAddress = $blockchainConfig['refunding_address'] ?? $siteaddress;
 
@@ -424,8 +439,8 @@ if (!empty($refundingAddress) && !empty($token_contract) && !empty($amount_wei))
                 $userid, 
                 "Airtime",
                 "Failed {$network} Airtime purchase of N{$amount} for {$phone} (Insufficient Refund Balance)",
-                $amount, 
                 $ref, 
+                $amount, 
                 $ftarget_address, 
                 $tx_hash, 
                 $fuser_address, 
@@ -875,8 +890,8 @@ $transRecord = $controller->recordchainTransaction(
     $userid, 
     $servicename, 
     $servicedesc, 
-    $amountopay, 
     $ref, 
+    $amountopay, 
     $ftarget_address, 
     $tx_hash, 
     $fuser_address, 
@@ -958,8 +973,8 @@ if ($checkprice['status'] == 'fail') {
             $userid, 
             "Refund", 
             $refundDesc, 
-            "0.00", 
             $reference, 
+            "0.00", 
             $targetwallet, 
             $refund_hash, 
             $refundwallet, 
@@ -967,7 +982,8 @@ if ($checkprice['status'] == 'fail') {
             "9", 
             $transaction_type, 
             $token_name, 
-            $normTokenContract
+            $normTokenContract,
+            $blockchain_id
         );
     }
     

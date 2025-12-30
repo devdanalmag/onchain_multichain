@@ -313,10 +313,10 @@ class ApiAccess extends Controller
     }
 
     //   Record Onchain Transaction
-    public function recordchainTransaction($userid, $servicename, $servicedesc, $amountopay, $ref, $target_address, $tx_hash, $user_address, $nanoamount, $status, $transaction_type = 'app', $token_name = null, $token_contract = null)
+    public function recordchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status, $transaction_type = 'app', $token_name = null, $token_contract = null, $blockchain_id = 1)
     {
         $response = array();
-        $result = $this->model->recordchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status, $transaction_type, $token_name, $token_contract);
+        $result = $this->model->recordchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status, $transaction_type, $token_name, $token_contract, $blockchain_id);
         if ($result !== 0) {
             $response["status"] = "fail";
             $response["msg"] = "Failed To Record Transaction";
@@ -324,15 +324,15 @@ class ApiAccess extends Controller
         }
         $response["status"] = "success";
         $response["amount"] = $amountopay;
-        $response["service"] = $servicename;
+            $response["service"] = $servicename;
         $response["description"] = $servicedesc;
         return $response;
     }
     // Record and Refund Transaction
-    public function recordrefundchainTransaction($userid, $servicename, $servicedesc, $amountopay, $reference, $target_address, $tx_hash, $sender_adress, $nanoamount, $status, $transaction_type = 'app', $token_name = null, $token_contract = null)
+    public function recordrefundchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status, $transaction_type = 'app', $token_name = null, $token_contract = null, $blockchain_id = 1)
     {
         $response = array();
-        $result = $this->model->recordrefundchainTransaction($userid, $servicename, $servicedesc, $reference, $amountopay, $target_address, $tx_hash, $sender_adress, $nanoamount, $status, $transaction_type, $token_name, $token_contract);
+        $result = $this->model->recordrefundchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status, $transaction_type, $token_name, $token_contract, $blockchain_id);
         if ($result !== 0) {
             $response["status"] = "fail";
             $response["msg"] = "Failed To Record Transaction";
