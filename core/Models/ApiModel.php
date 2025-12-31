@@ -366,7 +366,7 @@ class ApiModel extends Model
 
 
         $reference = crc32($ref);
-        $check =  $this->checkIfTransactionExist($reference);
+        $check = $this->checkIfTransactionExist($reference);
         if ($check == 0) {
             return [
                 'status' => "fail",
@@ -411,7 +411,7 @@ class ApiModel extends Model
                 'rpc_url' => $rpcUrl,
                 'rpcURL' => $rpcUrl, // Compatibility
                 'rpc' => $rpcUrl,    // Compatibility
-                'chainId' => (int)($blockchainConfig['chain_id'] ?? 0),
+                'chainId' => (int) ($blockchainConfig['chain_id'] ?? 0),
                 'msgs' => "Refund for transaction: " . $ref
             ];
             // Validate input data
@@ -455,7 +455,8 @@ class ApiModel extends Model
                 throw new Exception($data['message'] ?? 'Refund failed', 400);
             }
 
-            $checking =  $this->checktransactionbyhash($data['hash'] ?? null);
+            sleep(3);
+            $checking = $this->checktransactionbyhash($data['hash'] ?? null, $blockchain_id);
 
             if ($checking['status'] == 'fail') {
                 return [
@@ -547,7 +548,9 @@ class ApiModel extends Model
             $checkSql = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='transactions' AND COLUMN_NAME IN ('transaction_type','token_name','token_contract','token_amount','blockchain_id')";
             $q = $dbh->prepare($checkSql);
             $q->execute();
-            $found = array_map(function ($r) { return $r['COLUMN_NAME']; }, $q->fetchAll(PDO::FETCH_ASSOC));
+            $found = array_map(function ($r) {
+                return $r['COLUMN_NAME'];
+            }, $q->fetchAll(PDO::FETCH_ASSOC));
             $needType = !in_array('transaction_type', $found);
             $needName = !in_array('token_name', $found);
             $needContract = !in_array('token_contract', $found);
@@ -577,7 +580,7 @@ class ApiModel extends Model
     public function recordchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status, $transaction_type = 'app', $token_name = null, $token_contract = null, $blockchain_id = 1)
     {
         $dbh = self::connect();
-        
+
         // Check if transaction already exists by ref
         $checkSql = "SELECT sId FROM transactions WHERE transref = :ref LIMIT 1";
         $checkQuery = $dbh->prepare($checkSql);
@@ -628,7 +631,7 @@ class ApiModel extends Model
     public function recordrefundchainTransaction($userid, $servicename, $servicedesc, $ref, $amountopay, $target_address, $tx_hash, $user_address, $nanoamount, $status, $transaction_type = 'app', $token_name = null, $token_contract = null, $blockchain_id = 1)
     {
         $dbh = self::connect();
-        
+
         // Check for duplicate transaction by tx_hash
         if (!empty($tx_hash)) {
             $sqlCheck = "SELECT sId FROM transactions WHERE txhash = :txh LIMIT 1";
@@ -637,7 +640,7 @@ class ApiModel extends Model
             $qCheck->execute();
             if ($qCheck->rowCount() > 0) {
                 // Transaction already exists
-                return 0; 
+                return 0;
             }
         }
 
@@ -646,7 +649,7 @@ class ApiModel extends Model
         $date = date("Y-m-d H:i:s");
         $oldbalance = '0';
         $newbalance = '0';
-        $blockchain_id = (int)$blockchain_id;
+        $blockchain_id = (int) $blockchain_id;
         $this->ensureTransactionsTokenColumns();
         //Record Transaction
         $sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, token_amount, date, transaction_type, token_name, token_contract, blockchain_id) 
@@ -871,12 +874,12 @@ class ApiModel extends Model
         if (preg_match('/^0x[a-fA-F0-9]{40}$/', $address)) {
             $config = $this->getBlockchainConfig();
             $response = $this->callJsonRpc('eth_getBalance', [$address, 'latest']);
-            
+
             if (isset($response['result'])) {
                 // Convert Hex to Decimal
                 $wei = hexdec($response['result']);
                 $balance = $wei / 1e18; // Asset Chain uses 18 decimals
-                
+
                 return [
                     "status" => "success",
                     "balance" => $balance,
@@ -931,8 +934,8 @@ class ApiModel extends Model
             if (isset($data[$coinId]["ngn"])) {
                 return (float) $data[$coinId]["ngn"];
             } else {
-                 // Fallback to site settings price if API fails
-                 return (float) ($apikey->tonamount ?? 0);
+                // Fallback to site settings price if API fails
+                return (float) ($apikey->tonamount ?? 0);
             }
         }
     }
@@ -945,21 +948,21 @@ class ApiModel extends Model
         // EVM Transaction Check (Asset Chain)
         if (preg_match('/^0x[a-fA-F0-9]{64}$/', $tx_hash)) {
             $response = $this->callJsonRpc('eth_getTransactionByHash', [$tx_hash]);
-            
+
             if (isset($response['result'])) {
                 $tx = $response['result'];
-                
+
                 // Normalize for comparison
                 $txTo = strtolower($tx['to']);
                 $txFrom = strtolower($tx['from']);
                 $target = strtolower($target_address);
                 $user = strtolower($user_address);
-                $txValue = (string)hexdec($tx['value']); // Wei
-                $expectedAmount = (string)$weiamount;
+                $txValue = (string) hexdec($tx['value']); // Wei
+                $expectedAmount = (string) $weiamount;
 
                 // Basic Verification
                 if ($txTo === $target && $txFrom === $user && $txValue === $expectedAmount) {
-                     return [
+                    return [
                         "status" => "success",
                         "msg" => "Transaction verified successfully.",
                         "code" => "verified",
@@ -990,12 +993,13 @@ class ApiModel extends Model
             "msg" => "Invalid Transaction Hash or Chain not supported"
         ];
     }
-    public function checktransactionbyhash($tx_hash)
+    public function checktransactionbyhash($tx_hash, $blockchain_id = 1)
     {
         // EVM Transaction Check (Asset Chain)
         if (preg_match('/^0x[a-fA-F0-9]{64}$/', $tx_hash)) {
-            $response = $this->callJsonRpc('eth_getTransactionReceipt', [$tx_hash]);
-            
+            $config = $this->getBlockchainConfig($blockchain_id);
+            $response = $this->callJsonRpc('eth_getTransactionReceipt', [$tx_hash], $config);
+
             if (isset($response['result'])) {
                 $receipt = $response['result'];
                 if ($receipt['status'] == '0x1') { // 1 = Success
@@ -1007,20 +1011,20 @@ class ApiModel extends Model
                         'target_address' => $receipt['to']
                     ];
                 } else {
-                     return [
+                    return [
                         'status' => "fail",
                         'msg' => "Transaction failed on chain",
                         'code' => "failed"
                     ];
                 }
             }
-            
+
             // If receipt not found, check if it exists (pending)
-             $txResp = $this->callJsonRpc('eth_getTransactionByHash', [$tx_hash]);
-             if (isset($txResp['result']) && $txResp['result']) {
-                 return ['status' => 'fail', 'msg' => 'Transaction pending or not confirmed'];
-             }
-             
+            $txResp = $this->callJsonRpc('eth_getTransactionByHash', [$tx_hash], $config);
+            if (isset($txResp['result']) && $txResp['result']) {
+                return ['status' => 'fail', 'msg' => 'Transaction pending or not confirmed'];
+            }
+
             return ['status' => 'fail', 'msg' => 'Transaction not found on EVM chain'];
         }
 
@@ -1031,7 +1035,8 @@ class ApiModel extends Model
     }
 
     // Get Blockchain Config from DB by name or ID
-    public function getBlockchainConfig($identifier = 'AssetChain') {
+    public function getBlockchainConfig($identifier = 'AssetChain')
+    {
         $dbh = self::connect();
         if (is_numeric($identifier)) {
             $sql = "SELECT * FROM blockchain WHERE id = :id LIMIT 1";
@@ -1044,22 +1049,23 @@ class ApiModel extends Model
         }
         $query->execute();
         $result = $query->fetch(PDO::FETCH_ASSOC);
-        
+
         if ($result) {
             return $result;
         }
-        
+
         // Fallback default
         return [
             "rpc_url" => "https://mainnet-rpc.assetchain.org/",
             "chain_id" => 42420,
-            "site_address" => "", 
+            "site_address" => "",
             "refunding_address" => ""
         ];
     }
 
     // Get Token Info from DB
-    public function getTokenInfo($name) {
+    public function getTokenInfo($name)
+    {
         $dbh = self::connect();
         $sql = "SELECT * FROM tokens WHERE token_name = :name LIMIT 1";
         $query = $dbh->prepare($sql);
@@ -1069,11 +1075,12 @@ class ApiModel extends Model
     }
 
     // Check ERC20 or Native Token Balance
-    public function checkERC20Balance($address, $tokenContract, $blockchain_id = null) {
+    public function checkERC20Balance($address, $tokenContract, $blockchain_id = null)
+    {
         $config = $this->getBlockchainConfig($blockchain_id ?? 'AssetChain');
-        
+
         $isNative = empty($tokenContract) || strtolower($tokenContract) === 'native' || $tokenContract === '0x0000000000000000000000000000000000000000';
-        
+
         if ($isNative) {
             $response = $this->callJsonRpc('eth_getBalance', [$address, 'latest'], $config);
         } else {
@@ -1083,13 +1090,13 @@ class ApiModel extends Model
             $cleanAddress = str_replace('0x', '', $address);
             $paddedAddress = str_pad($cleanAddress, 64, '0', STR_PAD_LEFT);
             $data = $methodId . $paddedAddress;
-            
+
             $response = $this->callJsonRpc('eth_call', [
                 ['to' => $tokenContract, 'data' => $data],
                 'latest'
             ], $config);
         }
-        
+
         if (isset($response['result'])) {
             $hexBalance = $response['result'];
             return [
@@ -1098,20 +1105,21 @@ class ApiModel extends Model
                 'msg' => 'Balance retrieved'
             ];
         }
-        
+
         return [
-            'status' => 'fail', 
+            'status' => 'fail',
             'msg' => isset($response['error']) ? $response['error']['message'] : 'RPC Error'
         ];
     }
 
     // Helper for JSON-RPC
-    private function callJsonRpc($method, $params = [], $config = null) {
+    private function callJsonRpc($method, $params = [], $config = null)
+    {
         if (!$config) {
             $config = $this->getBlockchainConfig();
         }
         $url = $config['rpc_url'];
-        
+
         $data = [
             'jsonrpc' => '2.0',
             'method' => $method,
@@ -1124,11 +1132,11 @@ class ApiModel extends Model
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-        
+
         $response = curl_exec($ch);
         $err = curl_error($ch);
         curl_close($ch);
-        
+
         if ($err) {
             return ['error' => ['message' => "cURL Error: $err"]];
         }
