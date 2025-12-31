@@ -3,27 +3,36 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { ethers } from "https://esm.sh/ethers@5.7.2";
 
 const PRIVATE_KEY = Deno.env.get("PRIVATE_KEY")?.trim();
-const RPC_URL = Deno.env.get("RPC_URL")?.trim();
+const DEFAULT_RPC_URL = Deno.env.get("RPC_URL")?.trim();
 
-if (!PRIVATE_KEY || !RPC_URL) {
-  console.log(JSON.stringify({ success: false, message: "Missing .env variables!" }));
+if (!PRIVATE_KEY) {
+  console.log(JSON.stringify({ success: false, message: "Missing PRIVATE_KEY env variable!" }));
 }
-
-const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
-const wallet = new ethers.Wallet(PRIVATE_KEY!, provider);
 
 serve(async (req) => {
   try {
     if (req.method !== "POST") return new Response("Method Not Allowed", { status: 405 });
 
-    const { address, amount, token_contract, token_decimals, msgs } = await req.json();
-    
+    const body = await req.json();
+    const { address, amount, token_contract, token_decimals, msgs, rpc_url, rpcURL, rpc } = body;
+
     if (!address || !amount) throw new Error("Missing address or amount");
 
-    console.log(`Processing refund: ${amount} to ${address} (Token: ${token_contract || 'Native'})`);
+    // Determine RPC URL: use payload provided first, then fallback to env
+    const targetRpc = rpc_url || rpcURL || rpc || DEFAULT_RPC_URL;
+
+    if (!targetRpc) {
+      throw new Error("Missing RPC URL in request and no default RPC_URL set");
+    }
+
+    console.log(`Processing refund: ${amount} to ${address} (Token: ${token_contract || 'Native'}) on RPC: ${targetRpc}`);
+
+    // Initialize provider and wallet dynamically for this request
+    const provider = new ethers.providers.JsonRpcProvider(targetRpc);
+    const wallet = new ethers.Wallet(PRIVATE_KEY!, provider);
 
     let txResponse;
-    
+
     if (token_contract && token_contract !== '0x0000000000000000000000000000000000000000') {
       // ERC20 Token Transfer
       const abi = [
@@ -31,15 +40,15 @@ serve(async (req) => {
         "function decimals() view returns (uint8)"
       ];
       const contract = new ethers.Contract(token_contract, abi, wallet);
-      
+
       // Parse amount with correct decimals
       const decimals = token_decimals || await contract.decimals();
       const amountWei = ethers.utils.parseUnits(String(amount), decimals);
-      
+
       // Gas estimation
       const gasLimit = await contract.estimateGas.transfer(address, amountWei);
       const gasPrice = await provider.getGasPrice();
-      
+
       txResponse = await contract.transfer(address, amountWei, {
         gasLimit: gasLimit.mul(120).div(100), // +20% buffer
         gasPrice
@@ -47,7 +56,7 @@ serve(async (req) => {
     } else {
       // Native Asset Transfer
       const amountWei = ethers.utils.parseEther(String(amount));
-      
+
       const gasLimit = await provider.estimateGas({
         to: address,
         value: amountWei
@@ -63,7 +72,7 @@ serve(async (req) => {
     }
 
     console.log(`Transaction sent: ${txResponse.hash}`);
-    
+
     // Wait for 1 confirmation
     const receipt = await txResponse.wait(1);
 
@@ -74,7 +83,8 @@ serve(async (req) => {
         address: address,
         amount: amount,
         msgs: msgs,
-        hash: receipt.transactionHash
+        hash: receipt.transactionHash,
+        chainId: (await provider.getNetwork()).chainId
       })
     );
 
