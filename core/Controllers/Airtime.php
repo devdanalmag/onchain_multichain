@@ -177,6 +177,7 @@ class Airtime extends ApiAccess
             $curlA = curl_init();
             curl_setopt_array($curlA, [
                 CURLOPT_URL => $hostuserurl,
+                CURLOPT_POST => true,
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_ENCODING => '',
                 CURLOPT_MAXREDIRS => 10,
@@ -185,7 +186,7 @@ class Airtime extends ApiAccess
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => 'GET',
                 CURLOPT_HTTPHEADER => [
-                    "Authorization: Basic ZGFuYWxtYWc6KkJpbGFsc2FkYXN1YjIwMjQj",
+                    "Authorization: Basic $apiKey",
                     'Content-Type: application/json'
                 ],
             ]);
