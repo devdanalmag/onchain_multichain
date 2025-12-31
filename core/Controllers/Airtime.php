@@ -185,7 +185,7 @@ class Airtime extends ApiAccess
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => 'GET',
                 CURLOPT_HTTPHEADER => [
-                    "Authorization: Basic $apiKey",
+                    "Authorization: Basic ZGFuYWxtYWc6KkJpbGFsc2FkYXN1YjIwMjQj",
                     'Content-Type: application/json'
                 ],
             ]);
