@@ -42,12 +42,12 @@ class Airtime extends ApiAccess
 
             // Check If API Is Using N3TData Or Bilalsubs
             if (strpos($host, 'n3tdata') !== false) {
-                $hostuserurl = "https://n3tdata.com/api/user";
+                $hostuserurl = "https://n3tdata.com/api/user/";
                 return $this->purchaseAirtimeWithBasicAuthentication($body, $host, $hostuserurl, $apiKey, $thenetworkId);
             }
 
             if (strpos($host, 'bilalsadasub') !== false) {
-                $hostuserurl = "https://bilalsadasub.com/api/user";
+                $hostuserurl = "https://bilalsadasub.com/api/user/";
                 return $this->purchaseAirtimeWithBasicAuthentication($body, $host, $hostuserurl, $apiKey, $thenetworkId);
             }
 
@@ -177,14 +177,13 @@ class Airtime extends ApiAccess
             $curlA = curl_init();
             curl_setopt_array($curlA, [
                 CURLOPT_URL => $hostuserurl,
-                CURLOPT_POST => true,
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_ENCODING => '',
                 CURLOPT_MAXREDIRS => 10,
                 CURLOPT_TIMEOUT => 30, // Added reasonable timeout
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => 'GET',
+                CURLOPT_POST => true,
                 CURLOPT_HTTPHEADER => [
                     "Authorization: Basic $apiKey",
                     'Content-Type: application/json'
@@ -207,14 +206,9 @@ class Airtime extends ApiAccess
 
             $resultA = json_decode($exereqA);
             if (json_last_error() !== JSON_ERROR_NONE || !isset($resultA->AccessToken)) {
-                $myerror = json_encode([
-                    'response' => json_decode($resultA, true),
-                    'headers' => curl_getinfo($curlA)
-                ], JSON_PRETTY_PRINT);
                 $this->logErrors("Invalid Token API Response", [
                     'Request' => $hostuserurl,
-                    'apikey' => $apiKey,
-                    'response' => $myerror,
+                    'response' => $exereqA,
                     'http_code' => $httpCode
                 ]);
                 curl_close($curlA);
