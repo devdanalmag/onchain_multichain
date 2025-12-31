@@ -17,7 +17,10 @@ $response = curl_exec($ch);
 if ($response === false) {
     echo 'cURL Error: ' . curl_error($ch);
 } else {
-    echo $response; // API response
+    echo json_encode([
+        'response' => json_decode($response, true),
+        'headers' => curl_getinfo($ch)
+    ], JSON_PRETTY_PRINT);
 }
 
 curl_close($ch);

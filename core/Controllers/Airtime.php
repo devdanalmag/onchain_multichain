@@ -207,10 +207,14 @@ class Airtime extends ApiAccess
 
             $resultA = json_decode($exereqA);
             if (json_last_error() !== JSON_ERROR_NONE || !isset($resultA->AccessToken)) {
+                $myerror = json_encode([
+                    'response' => json_decode($resultA, true),
+                    'headers' => curl_getinfo($curlA)
+                ], JSON_PRETTY_PRINT);
                 $this->logErrors("Invalid Token API Response", [
                     'Request' => $hostuserurl,
                     'apikey' => $apiKey,
-                    'response' => $exereqA,
+                    'response' => $myerror,
                     'http_code' => $httpCode
                 ]);
                 curl_close($curlA);
