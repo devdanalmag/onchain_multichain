@@ -42,12 +42,12 @@ class Airtime extends ApiAccess
 
             // Check If API Is Using N3TData Or Bilalsubs
             if (strpos($host, 'n3tdata') !== false) {
-                $hostuserurl = "https://n3tdata.com/api/user/";
+                $hostuserurl = "https://n3tdata.com/api/user";
                 return $this->purchaseAirtimeWithBasicAuthentication($body, $host, $hostuserurl, $apiKey, $thenetworkId);
             }
 
             if (strpos($host, 'bilalsadasub') !== false) {
-                $hostuserurl = "https://bilalsadasub.com/api/user/";
+                $hostuserurl = "https://bilalsadasub.com/api/user";
                 return $this->purchaseAirtimeWithBasicAuthentication($body, $host, $hostuserurl, $apiKey, $thenetworkId);
             }
 
