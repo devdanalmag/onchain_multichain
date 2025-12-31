@@ -1,10 +1,12 @@
 <?php
 
-class MoralisModel extends Model {
+class MoralisModel extends Model
+{
     private $apiKey;
     private $baseUrl = 'https://deep-index.moralis.io/api/v2.2';
 
-    public function __construct() {
+    public function __construct()
+    {
         $configFile = __DIR__ . '/../../config/moralis.json';
         if (file_exists($configFile)) {
             $config = json_decode(file_get_contents($configFile), true);
@@ -12,7 +14,8 @@ class MoralisModel extends Model {
         }
     }
 
-    private function request($endpoint, $params = []) {
+    private function request($endpoint, $params = [])
+    {
         if (!$this->apiKey || $this->apiKey === 'YOUR_MORALIS_API_KEY_HERE') {
             return ['status' => 'fail', 'msg' => 'Moralis API key not configured'];
         }
@@ -41,7 +44,7 @@ class MoralisModel extends Model {
         }
 
         if ($httpCode >= 400) {
-             return ['status' => 'fail', 'msg' => 'Moralis API error: ' . $httpCode, 'data' => json_decode($result, true)];
+            return ['status' => 'fail', 'msg' => 'Moralis API error: ' . $httpCode, 'data' => json_decode($result, true)];
         }
 
         $decoded = json_decode($result, true);
@@ -52,17 +55,18 @@ class MoralisModel extends Model {
         return $decoded;
     }
 
-    public function getWalletTransactions($address, $chain, $page = 0, $limit = 10) {
+    public function getWalletTransactions($address, $chain, $page = 0, $limit = 10)
+    {
         $chainMap = [
-            'base' => 'base',
-            'bsc' => 'bsc',
-            'bnb' => 'bsc',
-            'arbitrum' => 'arbitrum'
+            'base' => '0x2105',
+            'bsc' => '0x38',
+            'bnb' => '0x38',
+            'arbitrum' => '0xa4b1'
         ];
 
         $moralisChain = $chainMap[strtolower($chain)] ?? null;
         if (!$moralisChain) {
-             return ['status' => 'fail', 'msg' => 'Unsupported chain'];
+            return ['status' => 'fail', 'msg' => 'Unsupported chain'];
         }
 
         // Fetch Native Transactions
@@ -87,8 +91,12 @@ class MoralisModel extends Model {
         if (isset($nativeResp['result'])) {
             foreach ($nativeResp['result'] as $tx) {
                 $dateStr = $tx['block_timestamp'];
-                try { $dt = new DateTime($dateStr); $dateStr = $dt->format('Y-m-d H:i:s'); } catch (Exception $e) {}
-                
+                try {
+                    $dt = new DateTime($dateStr);
+                    $dateStr = $dt->format('Y-m-d H:i:s');
+                } catch (Exception $e) {
+                }
+
                 $items[] = [
                     'txhash' => $tx['hash'],
                     'txref' => substr($tx['hash'], 0, 10) . '...',
@@ -96,7 +104,7 @@ class MoralisModel extends Model {
                     'timestamp' => strtotime($tx['block_timestamp']),
                     'servicename' => 'Native Transfer',
                     'servicedesc' => 'Native Transaction',
-                    'amount' => isset($tx['value']) ? number_format((float)$tx['value'] / 1e18, 6, '.', '') : 0,
+                    'amount' => isset($tx['value']) ? number_format((float) $tx['value'] / 1e18, 6, '.', '') : 0,
                     'status' => 1,
                     'senderaddress' => $tx['from_address'],
                     'targetaddress' => $tx['to_address'],
@@ -112,10 +120,14 @@ class MoralisModel extends Model {
         if (isset($tokenResp['result'])) {
             foreach ($tokenResp['result'] as $tx) {
                 $dateStr = $tx['block_timestamp'];
-                try { $dt = new DateTime($dateStr); $dateStr = $dt->format('Y-m-d H:i:s'); } catch (Exception $e) {}
+                try {
+                    $dt = new DateTime($dateStr);
+                    $dateStr = $dt->format('Y-m-d H:i:s');
+                } catch (Exception $e) {
+                }
 
-                $decimals = isset($tx['token_decimals']) ? (int)$tx['token_decimals'] : 18;
-                $val = isset($tx['value']) ? (float)$tx['value'] : 0;
+                $decimals = isset($tx['token_decimals']) ? (int) $tx['token_decimals'] : 18;
+                $val = isset($tx['value']) ? (float) $tx['value'] : 0;
                 $amt = $val / pow(10, $decimals);
 
                 $items[] = [
@@ -138,7 +150,7 @@ class MoralisModel extends Model {
         }
 
         // Sort by timestamp DESC
-        usort($items, function($a, $b) {
+        usort($items, function ($a, $b) {
             return $b['timestamp'] - $a['timestamp'];
         });
 
@@ -150,34 +162,38 @@ class MoralisModel extends Model {
             'total' => count($items), // Approximation since we merged
             'page' => 0,
             'perPage' => $limit,
-            'pages' => 1, 
+            'pages' => 1,
             'items' => $items
         ];
     }
 
-    public function getTransactionByHash($tx_hash, $chain) {
+    public function getTransactionByHash($tx_hash, $chain)
+    {
         $chainMap = [
-            'base' => 'base',
-            'bsc' => 'bsc',
-            'bnb' => 'bsc',
-            'arbitrum' => 'arbitrum'
+            'base' => '0x2105',
+            'bsc' => '0x38',
+            'bnb' => '0x38',
+            'arbitrum' => '0xa4b1'
         ];
 
         $moralisChain = $chainMap[strtolower($chain)] ?? null;
-        if (!$moralisChain) return null;
+        if (!$moralisChain)
+            return null;
 
         return $this->request("/transaction/$tx_hash", ['chain' => $moralisChain]);
     }
 
-    public function getTokenPrice($tokenAddress, $chain) {
+    public function getTokenPrice($tokenAddress, $chain)
+    {
         $chainMap = [
-            'base' => 'base',
-            'bsc' => 'bsc',
-            'bnb' => 'bsc',
-            'arbitrum' => 'arbitrum'
+            'base' => '0x2105',
+            'bsc' => '0x38',
+            'bnb' => '0x38',
+            'arbitrum' => '0xa4b1'
         ];
         $moralisChain = $chainMap[strtolower($chain)] ?? null;
-        if (!$moralisChain) return null;
+        if (!$moralisChain)
+            return null;
 
         // If address is empty, null, or 'native', it's the native token (ETH, BNB, etc.)
         if (empty($tokenAddress) || strtolower($tokenAddress) === 'native' || $tokenAddress === '0x0000000000000000000000000000000000000000') {
@@ -187,25 +203,27 @@ class MoralisModel extends Model {
             // But for native, we might need a different approach.
             // Let's use the known wrapped addresses for each chain if it's native.
             $wrapped = [
-                'base'     => '0x4200000000000000000000000000000000000006', // WETH on Base
-                'bsc'      => '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', // WBNB on BSC
-                'arbitrum' => '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1'  // WETH on Arbitrum
+                '0x2105' => '0x4200000000000000000000000000000000000006', // WETH on Base
+                '0x38' => '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', // WBNB on BSC
+                '0xa4b1' => '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1'  // WETH on Arbitrum
             ];
             $tokenAddress = $wrapped[$moralisChain] ?? $tokenAddress;
         }
 
         return $this->request("/erc20/$tokenAddress/price", ['chain' => $moralisChain]);
     }
-    
-    public function getNativeBalance($address, $chain) {
+
+    public function getNativeBalance($address, $chain)
+    {
         $chainMap = [
-            'base' => 'base',
-            'bsc' => 'bsc',
-            'bnb' => 'bsc',
-            'arbitrum' => 'arbitrum'
+            'base' => '0x2105',
+            'bsc' => '0x38',
+            'bnb' => '0x38',
+            'arbitrum' => '0xa4b1'
         ];
         $moralisChain = $chainMap[strtolower($chain)] ?? null;
-        if (!$moralisChain) return null;
+        if (!$moralisChain)
+            return null;
 
         return $this->request("/$address/balance", ['chain' => $moralisChain]);
     }
