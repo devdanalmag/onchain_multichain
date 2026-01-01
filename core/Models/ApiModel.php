@@ -1113,7 +1113,7 @@ class ApiModel extends Model
     }
 
     // Helper for JSON-RPC
-    private function callJsonRpc($method, $params = [], $config = null)
+    public function callJsonRpc($method, $params = [], $config = null)
     {
         if (!$config) {
             $config = $this->getBlockchainConfig();

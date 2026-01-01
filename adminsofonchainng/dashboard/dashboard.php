@@ -13,7 +13,8 @@
 							<div>
 								<h2 class="text-info my-0 text-right">N<?php echo $data[1]["walletOneBalance"]; ?></h2>
 								<p class="mb-0 text-muted text-right">Wallet Balance</p>
-								<p class="mb-0 text-dark text-right">(<b><?php echo $data[1]["walletOneProvider"]; ?></b>)</p>
+								<p class="mb-0 text-dark text-right">
+									(<b><?php echo $data[1]["walletOneProvider"]; ?></b>)</p>
 							</div>
 						</div>
 					</div>
@@ -28,7 +29,8 @@
 							<div>
 								<h2 class="text-info my-0 text-right">N<?php echo $data[1]["walletTwoBalance"]; ?> </h2>
 								<p class="mb-0 text-muted text-right">Wallet Balance</p>
-								<p class="mb-0 text-dark text-right">(<b><?php echo $data[1]["walletTwoProvider"]; ?></b>)</p>
+								<p class="mb-0 text-dark text-right">
+									(<b><?php echo $data[1]["walletTwoProvider"]; ?></b>)</p>
 							</div>
 						</div>
 					</div>
@@ -41,9 +43,11 @@
 								<i class="fa fa-chain text-info font-size-50"></i><br>
 							</div>
 							<div>
-								<h2 class="text-info my-0 text-right">N<?php echo $data[1]["walletThreeBalance"]; ?> </h2>
+								<h2 class="text-info my-0 text-right">N<?php echo $data[1]["walletThreeBalance"]; ?>
+								</h2>
 								<p class="mb-0 text-muted text-right">Wallet Balance</p>
-								<p class="mb-0 text-dark text-right">(<b><?php echo $data[1]["walletThreeProvider"]; ?></b>)</p>
+								<p class="mb-0 text-dark text-right">
+									(<b><?php echo $data[1]["walletThreeProvider"]; ?></b>)</p>
 							</div>
 						</div>
 					</div>
@@ -65,10 +69,10 @@
 							</div>
 							<div>
 								<h2 class="text-success my-0 text-right">N<?php if ($data[0]["uwCount"] <> NULL || $data[0]["uwCount"] != "") {
-																				echo number_format($data[0]["uwCount"]);
-																			} else {
-																				echo 0;
-																			} ?></h2>
+									echo number_format($data[0]["uwCount"]);
+								} else {
+									echo 0;
+								} ?></h2>
 
 								<p class="mb-0 text-muted text-right">User</p>
 								<p class="mb-0 text-dark text-right">(Wallet)</p>
@@ -85,12 +89,12 @@
 							</div>
 							<div>
 								<h2 class="text-success my-0 text-right">N<?php
-																			if ($data[0]["awCount"] <> NULL || $data[0]["awCount"] != "") {
-																				echo number_format($data[0]["awCount"]);
-																			} else {
-																				echo 0;
-																			}
-																			?></h2>
+								if ($data[0]["awCount"] <> NULL || $data[0]["awCount"] != "") {
+									echo number_format($data[0]["awCount"]);
+								} else {
+									echo 0;
+								}
+								?></h2>
 								<p class="mb-0 text-muted text-right">Agent</p>
 								<p class="mb-0 text-dark text-right">(Wallet)</p>
 							</div>
@@ -106,12 +110,12 @@
 							</div>
 							<div>
 								<h2 class="text-success my-0 text-right">N<?php
-																			if ($data[0]["vwCount"] <> NULL || $data[0]["vwCount"] != "") {
-																				echo number_format($data[0]["vwCount"]);
-																			} else {
-																				echo 0;
-																			}
-																			?></h2>
+								if ($data[0]["vwCount"] <> NULL || $data[0]["vwCount"] != "") {
+									echo number_format($data[0]["vwCount"]);
+								} else {
+									echo 0;
+								}
+								?></h2>
 								<p class="mb-0 text-muted text-right">Vendors</p>
 								<p class="mb-0 text-dark text-right">(Wallet)</p>
 							</div>
@@ -127,11 +131,11 @@
 							</div>
 							<div>
 								<h2 class="text-success my-0 text-right">N<?php
-																			if ($data[0]["rwCount"] <> NULL || $data[0]["rwCount"] != "") {
-																				echo number_format($data[0]["rwCount"]);
-																			} else {
-																				echo 0;
-																			} ?></h2>
+								if ($data[0]["rwCount"] <> NULL || $data[0]["rwCount"] != "") {
+									echo number_format($data[0]["rwCount"]);
+								} else {
+									echo 0;
+								} ?></h2>
 								<p class="mb-0 text-muted text-right">Referrals</p>
 								<p class="mb-0 text-dark text-right">(Wallet)</p>
 							</div>
@@ -141,163 +145,216 @@
 
 			</div>
 		</div>
-	</div>
+		<div class="col-12">
+			<div class="box">
+				<div class="row no-gutters py-2">
 
-	<div class="col-md-3">
-		<div class="box">
-			<div class="box-body">
-				<div class="d-flex align-items-center justify-content-between">
-					<div class="">
-						<h2 class="mb-2"> <?php echo $data[0]["sCount"]; ?> <small>Subscribers</small></h2>
-						<p class="text-muted mb-0"><span class="badge badge-primary">Users</span></p>
+					<div class="box-header with-border">
+						<h4 class="box-title">Blockchain & Token Balances</h4>
 					</div>
-					<div class="fa fa-user text-primary font-size-30"></div>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<div class="col-md-3">
-		<div class="box">
-			<div class="box-body">
-				<div class="d-flex align-items-center justify-content-between">
-					<div class="">
-						<h2 class="mb-2"><?php echo $data[0]["aCount"]; ?> <small>Agents</small></h2>
-						<p class="text-muted mb-0"><span class="badge badge-primary">Users</span></p>
+					<div class="box-body row">
+						<?php if (isset($data[0]["blockchainBalances"]) && !empty($data[0]["blockchainBalances"])): ?>
+							<?php foreach ($data[0]["blockchainBalances"] as $chain): ?>
+								<div class="col-12 col-md-6 col-lg-3">
+									<div class="box box-body pull-up bg-hex-white">
+										<div class="flexbox align-items-end">
+											<div>
+												<span
+													class="font-size-30"><?php echo number_format($chain['native_balance'], 4); ?></span>
+												<h5 class="text-uppercase text-muted"><?php echo $chain['native_symbol']; ?>
+												</h5>
+											</div>
+											<div class="text-right">
+												<p class="font-weight-600"><?php echo $chain['chain_name']; ?></p>
+												<span
+													class="text-muted font-size-12"><?php echo substr($chain['address'], 0, 6) . '...' . substr($chain['address'], -4); ?></span>
+											</div>
+										</div>
+										<div class="mt-2">
+											<?php foreach ($chain['tokens'] as $token): ?>
+												<div class="d-flex justify-content-between align-items-center mt-1 border-top pt-1">
+													<span class="text-muted font-size-12"><?php echo $token['name']; ?>:</span>
+													<span
+														class="font-weight-600 font-size-12"><?php echo number_format($token['balance'], 4); ?></span>
+												</div>
+											<?php endforeach; ?>
+										</div>
+									</div>
+								</div>
+							<?php endforeach; ?>
+						<?php else: ?>
+							<div class="col-12 text-center text-muted">No active blockchain balances found.</div>
+						<?php endif; ?>
 					</div>
-					<div class="fa fa-users text-primary font-size-30"></div>
 				</div>
 			</div>
 		</div>
-	</div>
-
-	<div class="col-md-3">
-		<div class="box">
-			<div class="box-body">
-				<div class="d-flex align-items-center justify-content-between">
-					<div class="">
-						<h2 class="mb-2"><?php echo $data[0]["vCount"]; ?> <small>Vendors</small></h2>
-						<p class="text-muted mb-0"><span class="badge badge-primary">Users</span></p>
+		<div class="col-12">
+			<div class="box">
+				<div class="row no-gutters py-2">
+					<div class="col-12 col-lg-3">
+						<div class="box">
+							<div class="box-body">
+								<div class="d-flex align-items-center justify-content-between">
+									<div class="">
+										<h2 class="mb-2"> <?php echo $data[0]["sCount"]; ?> <small>Subscribers</small>
+										</h2>
+										<p class="text-muted mb-0"><span class="badge badge-primary">Users</span></p>
+									</div>
+									<div class="fa fa-user text-primary font-size-30"></div>
+								</div>
+							</div>
+						</div>
 					</div>
-					<div class="fa fa-users text-primary font-size-30"></div>
-				</div>
-			</div>
-		</div>
-	</div>
 
-	<div class="col-md-3">
-		<div class="box">
-			<div class="box-body">
-				<div class="d-flex align-items-center justify-content-between">
-					<div class="">
-						<h2 class="mb-2"> <?php echo $data[0]["rCount"]; ?> <small>Referrals</small></h2>
-						<p class="text-muted mb-0"><span class="badge badge-primary">Referrals</span></p>
+					<div class="col-12 col-lg-3">
+						<div class="box">
+							<div class="box-body">
+								<div class="d-flex align-items-center justify-content-between">
+									<div class="">
+										<h2 class="mb-2"><?php echo $data[0]["aCount"]; ?> <small>Agents</small></h2>
+										<p class="text-muted mb-0"><span class="badge badge-primary">Users</span></p>
+									</div>
+									<div class="fa fa-users text-primary font-size-30"></div>
+								</div>
+							</div>
+						</div>
 					</div>
-					<div class="fa fa-group text-primary font-size-30"></div>
-				</div>
-			</div>
-		</div>
-	</div>
 
-
-
-
-	<div class="col-12 col-lg-4">
-		<div class="box">
-			<div class="box-body">
-				<div class="d-flex align-items-center justify-content-between">
-					<div class="">
-						<h2 class="mb-2"> <?php echo $data[0]["tCount"]; ?> <small>Tran</small></h2>
-						<p class="text-muted mb-0"><span class="badge badge-danger">Transactions</span></p>
+					<div class="col-12 col-lg-3">
+						<div class="box">
+							<div class="box-body">
+								<div class="d-flex align-items-center justify-content-between">
+									<div class="">
+										<h2 class="mb-2"><?php echo $data[0]["vCount"]; ?> <small>Vendors</small></h2>
+										<p class="text-muted mb-0"><span class="badge badge-primary">Users</span></p>
+									</div>
+									<div class="fa fa-users text-primary font-size-30"></div>
+								</div>
+							</div>
+						</div>
 					</div>
-					<div class="fa fa-list-alt text-danger font-size-30"></div>
-				</div>
-			</div>
-		</div>
-	</div>
 
-	<!-- Traffic Sta -->
-	<div class="col-12 col-lg-4">
-		<div class="box">
-			<div class="box-body">
-				<div class="d-flex align-items-center justify-content-between">
-					<div class="">
-						<h2 class="mb-2"> <b><?php echo $data[0]["mCount"]; ?> <small>Unread</small> </b></h2>
-						<p class="text-muted mb-0"><span class="badge badge-danger">Message</span></p>
+					<div class="col-12 col-lg-3">
+						<div class="box">
+							<div class="box-body">
+								<div class="d-flex align-items-center justify-content-between">
+									<div class="">
+										<h2 class="mb-2"> <?php echo $data[0]["rCount"]; ?> <small>Referrals</small>
+										</h2>
+										<p class="text-muted mb-0"><span class="badge badge-primary">Referrals</span>
+										</p>
+									</div>
+									<div class="fa fa-group text-primary font-size-30"></div>
+								</div>
+							</div>
+						</div>
 					</div>
-					<div class="fa fa-envelope text-danger font-size-30"></div>
 				</div>
 			</div>
 		</div>
-	</div>
 
-	<div class="col-12 col-lg-4">
-		<div class="box">
-			<div class="box-body">
-				<div class="d-flex align-items-center justify-content-between">
-					<div class="">
-						<h2 class="mb-2"> <b><?php echo $data[0]["visitCount"]; ?> <small>Visit Today</small> </b></h2>
-						<p class="text-muted mb-0"><span class="badge badge-danger">Total Visit Today</span></p>
+
+
+		<div class="col-12 col-lg-4">
+			<div class="box">
+				<div class="box-body">
+					<div class="d-flex align-items-center justify-content-between">
+						<div class="">
+							<h2 class="mb-2"> <?php echo $data[0]["tCount"]; ?> <small>Tran</small></h2>
+							<p class="text-muted mb-0"><span class="badge badge-danger">Transactions</span></p>
+						</div>
+						<div class="fa fa-list-alt text-danger font-size-30"></div>
 					</div>
-					<div class="fa fa-eye text-danger font-size-30"></div>
 				</div>
 			</div>
 		</div>
-	</div>
 
-	<!-- Traffic Sta -->
-	<div class="col-md-12">
-		<div class="box">
-			<div class="box-body bg-info text-white">
-				<h5 class="box-title"><b>Last 50 Transactions</b></h5>
-			</div>
-			<!-- /.box-header -->
-			<div class="">
-				<div class="table-responsive">
-					<table id="example1" class="table table-sm table-bordered table-striped">
-						<thead>
-							<tr>
-								<th>#</th>
-								<th>Ref Id</th>
-								<th>User</th>
-								<th>User Type</th>
-								<th>Phone</th>
-								<th>Service</th>
-								<th>Description</th>
-								<th>Amount</th>
-								<th>Status</th>
-								<th>Date</th>
-							</tr>
-						</thead>
-						<tbody>
-
-							<?php
-							$cnt = 1;
-							$results = $data[0]["transactions"];
-							if ($results <> "" && $results <> 1) {
-								foreach ($results as $result) {   ?>
-									<tr>
-										<td><?php echo htmlentities($cnt); ?></td>
-										<td><a href="transaction-details?ref=<?php echo $result->transref; ?>" class="text-info"><b><?php echo $result->transref; ?></b></a></td>
-										<td><?php echo $result->sEmail; ?></td>
-										<td><?php echo $controller->formatUserType($result->sType); ?></td>
-										<td><?php echo $result->sPhone; ?></td>
-										<td><?php echo $result->servicename; ?></td>
-										<td><?php echo $result->servicedesc; ?></td>
-										<td>N<?php echo $result->amount; ?></td>
-										<td><?php echo $controller->formatTransStatus($result->status); ?></td>
-										<td><?php echo $controller->formatDate($result->date); ?></td>
-									</tr>
-							<?php $cnt = $cnt + 1;
-								}
-							} ?>
-
-						</tbody>
-					</table>
+		<!-- Traffic Sta -->
+		<div class="col-12 col-lg-4">
+			<div class="box">
+				<div class="box-body">
+					<div class="d-flex align-items-center justify-content-between">
+						<div class="">
+							<h2 class="mb-2"> <b><?php echo $data[0]["mCount"]; ?> <small>Unread</small> </b></h2>
+							<p class="text-muted mb-0"><span class="badge badge-danger">Message</span></p>
+						</div>
+						<div class="fa fa-envelope text-danger font-size-30"></div>
+					</div>
 				</div>
 			</div>
-			<!-- /.box-body -->
 		</div>
-		<!-- /.box -->
+
+		<div class="col-12 col-lg-4">
+			<div class="box">
+				<div class="box-body">
+					<div class="d-flex align-items-center justify-content-between">
+						<div class="">
+							<h2 class="mb-2"> <b><?php echo $data[0]["visitCount"]; ?> <small>Visit Today</small>
+								</b>
+							</h2>
+							<p class="text-muted mb-0"><span class="badge badge-danger">Total Visit Today</span></p>
+						</div>
+						<div class="fa fa-eye text-danger font-size-30"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Traffic Sta -->
+		<div class="col-md-12">
+			<div class="box">
+				<div class="box-body bg-info text-white">
+					<h5 class="box-title"><b>Last 50 Transactions</b></h5>
+				</div>
+				<!-- /.box-header -->
+				<div class="">
+					<div class="table-responsive">
+						<table id="example1" class="table table-sm table-bordered table-striped">
+							<thead>
+								<tr>
+									<th>#</th>
+									<th>Ref Id</th>
+									<th>User</th>
+									<th>User Type</th>
+									<th>Phone</th>
+									<th>Service</th>
+									<th>Description</th>
+									<th>Amount</th>
+									<th>Status</th>
+									<th>Date</th>
+								</tr>
+							</thead>
+							<tbody>
+
+								<?php
+								$cnt = 1;
+								$results = $data[0]["transactions"];
+								if ($results <> "" && $results <> 1) {
+									foreach ($results as $result) { ?>
+										<tr>
+											<td><?php echo htmlentities($cnt); ?></td>
+											<td><a href="transaction-details?ref=<?php echo $result->transref; ?>"
+													class="text-info"><b><?php echo $result->transref; ?></b></a></td>
+											<td><?php echo $result->sEmail; ?></td>
+											<td><?php echo $controller->formatUserType($result->sType); ?></td>
+											<td><?php echo $result->sPhone; ?></td>
+											<td><?php echo $result->servicename; ?></td>
+											<td><?php echo $result->servicedesc; ?></td>
+											<td>N<?php echo $result->amount; ?></td>
+											<td><?php echo $controller->formatTransStatus($result->status); ?></td>
+											<td><?php echo $controller->formatDate($result->date); ?></td>
+										</tr>
+										<?php $cnt = $cnt + 1;
+									}
+								} ?>
+
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<!-- /.box-body -->
+			</div>
+			<!-- /.box -->
+		</div>
 	</div>
-</div>

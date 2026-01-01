@@ -12,7 +12,7 @@
             processData: false,
             method: 'POST',
             type: 'POST',
-            success: function(resp) {
+            success: function (resp) {
                 console.log(resp);
                 if (resp == 1) {
                     alert(resp);
@@ -20,13 +20,13 @@
                     alert(resp);
                 }
             },
-            error: function(xhr, status, error) {
+            error: function (xhr, status, error) {
                 // Handle error
                 console.error('Error:', error);
             }
         });
     }
-    $("document").ready(function() {
+    $("document").ready(function () {
         const tg = window.Telegram.WebApp;
         tg.expand(); // Expands the mini app to full height
         console.log(tg.initDataUnsafe.user); // Access user info
@@ -46,7 +46,7 @@
             }
         }
         if (document.getElementById("walletdatainfo"))
-            $("#ton-connect").click(function() {
+            $("#ton-connect").click(function () {
                 // $("#airtimeForm").submit(function(e) {
                 //     e.preventDefault();
                 // });
@@ -67,23 +67,23 @@
         //Dispaly Home Notification
         <?php echo $homemsg; ?>
 
-        $("#thetranspin").val(null);
+            $("#thetranspin").val(null);
 
-        $("#hideEye").click(function() {
+        $("#hideEye").click(function () {
             $("#hideEyeDiv").show();
             $("#openEyeDiv").hide();
             $("#openEye").show();
             $("#hideEye").hide();
         });
 
-        $("#openEye").click(function() {
+        $("#openEye").click(function () {
             $("#openEyeDiv").show();
             $("#hideEyeDiv").hide();
             $("#hideEye").show();
             $("#openEye").hide();
         });
 
-        $(".the-submit-form").submit(function() {
+        $(".the-submit-form").submit(function () {
             $('.the-form-btn').removeClass("gradient-highlight");
             $('.the-form-btn').addClass("btn-secondary");
             $('.the-form-btn').html('<i class="fa fa-spinner fa-spin" aria-hidden="true"></i> Processing ...');
@@ -91,7 +91,7 @@
         });
 
         //Update Profile Password
-        $("#passForm").submit(function(e) {
+        $("#passForm").submit(function (e) {
             e.preventDefault();
 
             if ($("#new-pass").val() != $("#retype-pass").val()) {
@@ -112,7 +112,7 @@
                 processData: false,
                 method: 'POST',
                 type: 'POST',
-                success: function(resp) {
+                success: function (resp) {
                     console.log(resp);
                     if (resp == 0) {
                         swal('Alert!!', "Password Updated Successfully.", "success");
@@ -133,7 +133,7 @@
                     $('#update-pass-btn').html("Update Password");
 
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     swal('Alert!!', "Request Not Send", "error");
                     console.error(error);
                 }
@@ -142,7 +142,7 @@
         });
 
         //Update Transaction Pin
-        $("#pinForm").submit(function(e) {
+        $("#pinForm").submit(function (e) {
             e.preventDefault();
 
             if ($("#new-pin").val() != $("#retype-pin").val()) {
@@ -179,7 +179,7 @@
                 processData: false,
                 method: 'POST',
                 type: 'POST',
-                success: function(resp) {
+                success: function (resp) {
                     console.log(resp);
                     if (resp == 0) {
                         swal('Alert!!', "Pin Updated Successfully.", "success");
@@ -206,7 +206,7 @@
 
 
         // Update Profile Information
-        $("#profileForm").submit(function(e) {
+        $("#profileForm").submit(function (e) {
             e.preventDefault();
 
             if ($("#fname").val() == "" || $("#fname").val() == null) {
@@ -232,17 +232,17 @@
                 processData: false,
                 method: 'POST',
                 type: 'POST',
-                success: function(resp) {
+                success: function (resp) {
                     console.log(resp);
                     if (resp == 0) {
                         swal('Alert!!', "Profile Information Updated Successfully. You Are Now In Level 2", "success");
                         $("#login-pass").val("");
-                        setTimeout(function() {
+                        setTimeout(function () {
                             location.reload();
                         }, 1000)
                     } else if (resp == 22) {
                         swal('Alert!!', "Profile Name Updated Successfully.", "success");
-                        setTimeout(function() {
+                        setTimeout(function () {
                             location.reload();
                         }, 500)
                     } else if (resp == 1) {
@@ -270,7 +270,7 @@
 
 
         // ADD Wallet Wallet in Profile
-        $("#add-walletform").submit(function(e) {
+        $("#add-walletform").submit(function (e) {
             e.preventDefault();
             if ($("#wallet-add").val() == "" || $("#wallet-add").val() == null) {
                 swal("Error!", "Please Connect The Wallet.", "error");
@@ -303,7 +303,7 @@
                 processData: false,
                 method: 'POST',
                 type: 'POST',
-                success: function(resp) {
+                success: function (resp) {
                     console.log(resp);
                     if (resp == 0) {
                         if (walletsatus === "0") {
@@ -343,21 +343,21 @@
 
         });
 
-        $("#old-pin").on("keyup", function() {
+        $("#old-pin").on("keyup", function () {
             if (isNaN($(this).val())) {
                 $(this).val(null);
                 swal("Opps!!", "Please Enter A Numeric Value.", "info");
             }
         });
 
-        $("#new-pin").on("keyup", function() {
+        $("#new-pin").on("keyup", function () {
             if (isNaN($(this).val())) {
                 $(this).val(null);
                 swal("Opps!!", "Please Enter A Numeric Value.", "info");
             }
         });
 
-        $("#retype-pin").on("keyup", function() {
+        $("#retype-pin").on("keyup", function () {
             if (isNaN($(this).val())) {
                 $(this).val(null);
                 swal("Opps!!", "Please Enter A Numeric Value.", "info");
@@ -369,20 +369,20 @@
         // Airtime Management
         // ----------------------------------------------------------------------------
 
-        $("#transpinbtn").click(function(e) {
+        $("#transpinbtn").click(function (e) {
             let actionbtn = $(this).attr("action-btn");
             $("#transkey").val($("#thetranspin").val());
             $("#" + actionbtn).click();
             e.preventDefault();
         });
 
-        $("#networktype").on("change", function() {
+        $("#networktype").on("change", function () {
             $("#airtimeamount").val(null);
             $("#amounttopay").val(null);
             $("#discount").val(null);
         });
 
-        $("#airtimeamount").on("keyup", function() {
+        $("#airtimeamount").on("keyup", function () {
             var airtimediscount = '<?php echo (!empty($data2) && is_string($data2)) ? $data2 : ""; ?>';
             if (!airtimediscount == "") {
                 airtimediscount = JSON.parse(airtimediscount);
@@ -492,7 +492,7 @@
 
 
         //Purchase Airtime Using TON
-        $("#airtimeForm").submit(function(e) {
+        $("#airtimeForm").submit(function (e) {
 
             if ($("#walletdatainfo").attr("connection") == "1") {
                 if ($("#thetranspin").val() == null || $("#thetranspin").val() == '') {
@@ -524,7 +524,7 @@
         // ----------------------------------------------------------------------------
 
         //If provider selected, get plans
-        $("#cableid").on("change", function() {
+        $("#cableid").on("change", function () {
             if ($("#cableid").val() == '' || $("#cableid").val() == null) {
                 swal("Opps!!", "Please Select A Provider First.", "info");
             } else {
@@ -567,13 +567,13 @@
         });
 
         //If Cable Plan Is Selected, Get And Set The Price
-        $("#cableplan").on("change", function() {
+        $("#cableplan").on("change", function () {
             $("#amounttopay").val("N" + $('#cableplan').find(":selected").attr('cableprice'));
             $("#cabledetails").val($('#cableplan').find(":selected").attr('planname'));
         });
 
         //Verify cableplan
-        $("#verifycableplanForm").submit(function(e) {
+        $("#verifycableplanForm").submit(function (e) {
 
             $('#cable-btn').removeClass("gradient-highlight");
             $('#cable-btn').addClass("btn-secondary");
@@ -582,7 +582,7 @@
         });
 
         //Purchase Cable Plan
-        $("#cableplanForm").submit(function(e) {
+        $("#cableplanForm").submit(function (e) {
 
 
             if ($("#thetranspin").val() == null || $("#thetranspin").val() == '') {
@@ -609,12 +609,12 @@
         // ----------------------------------------------------------------------------
         // Recharge Card Pin Management
         // ----------------------------------------------------------------------------
-        $("#rechargepinamount").on("keyup", function() {
+        $("#rechargepinamount").on("keyup", function () {
             $("#amounttopay").val(null);
             $("#norechargepin").val(null);
         });
 
-        $("#norechargepin").on("keyup", function() {
+        $("#norechargepin").on("keyup", function () {
 
             if ($("#rechargepinamount").val() != null || $("#norechargepin").val() != null) {
                 var airtimediscount = '<?php echo (!empty($data2) && is_string($data2)) ? $data2 : ""; ?>';
@@ -670,7 +670,7 @@
         });
 
         //Purchase Exam Pin
-        $("#rechargepinForm").submit(function(e) {
+        $("#rechargepinForm").submit(function (e) {
 
             if ($("#thetranspin").val() == null || $("#thetranspin").val() == '') {
                 e.preventDefault();
@@ -697,12 +697,12 @@
         // Exam Pin Management
         // ----------------------------------------------------------------------------
 
-        $("#examid").on("change", function() {
+        $("#examid").on("change", function () {
             $("#amounttopay").val(null);
             $("#examquantity").val(null);
         });
 
-        $("#examquantity").on("keyup", function() {
+        $("#examquantity").on("keyup", function () {
 
             if ($("#examid").val() != null || $("#examquantity").val() != null) {
                 let price = parseInt($('#examid').find(":selected").attr('providerprice'));
@@ -726,7 +726,7 @@
         });
 
         //Purchase Exam Pin
-        $("#exampinForm").submit(function(e) {
+        $("#exampinForm").submit(function (e) {
 
             if ($("#thetranspin").val() == null || $("#thetranspin").val() == '') {
                 e.preventDefault();
@@ -756,7 +756,7 @@
         // ----------------------------------------------------------------------------
 
         //If Amount Input, Get And Set The Price
-        $("#meteramount").on("keyup", function() {
+        $("#meteramount").on("keyup", function () {
             let amount = parseInt($('#meteramount').val());
             let electricitycharges = parseInt($('#electricitycharges').text());
             let amounttopay = amount + electricitycharges;
@@ -764,7 +764,7 @@
             $("#electricitydetails").val($('#electricityid').find(":selected").attr('providername'));
         });
 
-        $("#verifyelectricityplanForm").submit(function(e) {
+        $("#verifyelectricityplanForm").submit(function (e) {
             let amount = parseInt($('#meteramount').val());
 
             if (amount < 1000) {
@@ -780,7 +780,7 @@
         });
 
         //Purchase Electricity Plan
-        $("#electricityForm").submit(function(e) {
+        $("#electricityForm").submit(function (e) {
 
 
             if ($("#thetranspin").val() == null || $("#thetranspin").val() == '') {
@@ -810,7 +810,7 @@
         // ----------------------------------------------------------------------------
 
         //If  notwork selected, empty data type, plan, amount
-        $("#networkid").on("change", function() {
+        $("#networkid").on("change", function () {
             $("#datagroup").val(null);
             $("#dataplan").val(null);
             $("#amounttopay").val(null);
@@ -856,7 +856,7 @@
         });
 
         //If data type selected, get plans
-        $("#datagroup").on("change", function() {
+        $("#datagroup").on("change", function () {
             if ($("#networkid").val() == '' || $("#networkid").val() == null) {
                 $("#datagroup").val(null);
                 swal("Opps!!", "Please Select A Network First.", "info");
@@ -903,7 +903,7 @@
         });
 
         //If Data Plan Is Selected, Get And Set The Price
-        $("#dataplan").on("change", function() {
+        $("#dataplan").on("change", function () {
             $("#amounttopay").val($('#dataplan').find(":selected").attr('dataprice'));
 
             if ($("#amounttopay").val() <= 0 || $("#amounttopay").val() == null) {
@@ -964,7 +964,7 @@
         });
 
         //Purchase Data
-        $("#dataplanForm").submit(function(e) {
+        $("#dataplanForm").submit(function (e) {
 
             if ($("#walletdatainfo").attr("connection") == "1") {
                 if ($("#thetranspin").val() == null || $("#thetranspin").val() == '') {
@@ -993,7 +993,7 @@
 
         });
         // Post Job Form
-        $("#postjobForm").submit(function(e) {
+        $("#postjobForm").submit(function (e) {
             // let jtype = "";
             if ($("#thetranspin").val() == null || $("#thetranspin").val() == '') {
                 e.preventDefault();
@@ -1072,7 +1072,7 @@
 
 
         // Create Giveaway Form
-        $("#creategiveawayForm").submit(function(e) {
+        $("#creategiveawayForm").submit(function (e) {
             // let jtype = "";
             if ($("#thetranspin").val() == null || $("#thetranspin").val() == '') {
                 e.preventDefault();
@@ -1156,7 +1156,7 @@
         // ----------------------------------------------------------------------------
 
         //If data type selected, get plans
-        $("#datapingroup").on("change", function() {
+        $("#datapingroup").on("change", function () {
 
             if ($("#datanetworkid").val() == '' || $("#datanetworkid").val() == null) {
                 swal("Opps!!", "Please Select A Network First.", "info");
@@ -1206,11 +1206,11 @@
         });
 
         //If Data Plan Is Selected, Get And Set The Price
-        $("#datapinplan").on("change", function() {
+        $("#datapinplan").on("change", function () {
             $("#amount").val($('#datapinplan').find(":selected").attr('dataprice'));
         });
 
-        $("#datapinquantity").on("change", function() {
+        $("#datapinquantity").on("change", function () {
 
             if ($("#datanetworkid").val() == '' || $("#datanetworkid").val() == null) {
                 swal("Opps!!", "Please Select A Network First.", "info");
@@ -1229,7 +1229,7 @@
         });
 
         //Purchase Data Pin
-        $("#datapinForm").submit(function(e) {
+        $("#datapinForm").submit(function (e) {
 
 
             if ($("#thetranspin").val() == null || $("#thetranspin").val() == '') {
@@ -1262,7 +1262,7 @@
         // ----------------------------------------------------------------------------
 
 
-        $("#transfertype").on("change", function() {
+        $("#transfertype").on("change", function () {
             if ($(this).val() == "wallet-wallet") {
                 $("#walletreceiver").show();
                 $("#walletreceiverinput").attr("required", "required");
@@ -1273,7 +1273,7 @@
             $("#amounttopay").val("N0.00");
         });
 
-        $("#wallettransferamount").on("keyup", function() {
+        $("#wallettransferamount").on("keyup", function () {
             let amount = parseInt($('#wallettransferamount').val());
             let charges = parseInt($('#wallettowalletcharges').text());
             if ($("#transfertype").val() == "wallet-wallet") {
@@ -1285,7 +1285,7 @@
         });
 
         //Submit Transfer Request
-        $("#transferForm").submit(function(e) {
+        $("#transferForm").submit(function (e) {
 
             if ($("#thetranspin").val() == null || $("#thetranspin").val() == '') {
                 e.preventDefault();
@@ -1322,7 +1322,7 @@
         // ----------------------------------------------------------------------------
 
         //Send Contact Message
-        $("#message-form").submit(function(e) {
+        $("#message-form").submit(function (e) {
             e.preventDefault();
 
             $('#message-btn').removeClass("gradient-highlight");
@@ -1338,7 +1338,7 @@
                 processData: false,
                 method: 'POST',
                 type: 'POST',
-                success: function(resp) {
+                success: function (resp) {
                     console.log(resp);
                     if (resp == 0) {
                         swal('Alert!!', "Message Sent Successfully, We Would Get Back To You Soon.", "success");
@@ -1361,7 +1361,7 @@
         // ----------------------------------------------------------------------------
 
         //If Alpha Plan Is Selected, Get And Set The Price
-        $("#alphaplan").on("change", function() {
+        $("#alphaplan").on("change", function () {
             let useraccount = getCookie("loginAccount");
             useraccount = useraccount.replace(/%3D/g, "=");
             useraccount = atob(useraccount);
@@ -1378,7 +1378,7 @@
         });
 
         //Purchase Alpha Plan
-        $("#alphaplanForm").submit(function(e) {
+        $("#alphaplanForm").submit(function (e) {
 
 
             if ($("#thetranspin").val() == null || $("#thetranspin").val() == '') {
@@ -1402,7 +1402,7 @@
 
         });
         // GIVEAWAY-section TYPE and OTHERS
-        $("#whattype").on("change", function() {
+        $("#whattype").on("change", function () {
             if ($("#giveawaytype").val() == "privategiveaway") {
                 // if($("#whattype").val() == "cash"){
                 //     // document.getElementById("uiddiv").style.display = "block";
@@ -1421,7 +1421,7 @@
                 swal("Oops!", "Select Giveaway Type Before", "info");
             }
         });
-        $("#giveawaytype").on("change", function() {
+        $("#giveawaytype").on("change", function () {
             $("#whattype").val("");
             // $("#useruid").val("");
             $("#numberInput").val("");
@@ -1526,8 +1526,8 @@
         }
 
         // Use MutationObserver to detect attribute changes
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
+        const observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'countdown') {
                     checkCountdown();
                 }
@@ -1586,7 +1586,7 @@
                 },
                 cache: false,
                 method: 'GET',
-                success: function(resp) {
+                success: function (resp) {
                     console.log(resp);
                     if (resp == 0) {
                         swal('Alert!!', "Resend Successfully.", "success");
@@ -1606,7 +1606,7 @@
                         document.getElementById("resendLink").addEventListener("click", handleResendClick);
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     swal('Alert!!', "Request Not Send", "error");
                     console.error(error);
                 }
@@ -1631,7 +1631,7 @@
             resendText.innerHTML = `Resend after <span id="countdown" style="color:green;">${COUNTDOWN_DURATION}</span> seconds`;
             const countdownSpan = document.getElementById("countdown");
 
-            timer = setInterval(function() {
+            timer = setInterval(function () {
                 timeLeft--;
                 if (timeLeft <= 0) {
                     clearInterval(timer);
@@ -1657,23 +1657,35 @@
         $('#fetch-price').removeClass("gradient-highlight");
         $('#fetch-price').addClass("btn-secondary");
         $('#fetch-price').html('<i class="fa fa-spinner fa-spin" aria-hidden="true"></i> Fetching price ...');
+        let blockchain_id = $("#blockchainselect").val(); // Get selected blockchain ID
         $.ajax({
             url: 'home/includes/route.php?check-native-price',
+            data: { blockchain_id: blockchain_id },
             cache: false,
-            contentType: false,
-            processData: false,
+            // contentType: false, // Remove - let jQuery handle content type for data object
+            // processData: false, // Remove - let jQuery process data object
             method: 'GET',
             type: 'GET',
-            dataType: 'json', // ADD THIS LINE!
-            success: function(resp) {
+            dataType: 'json',
+            success: function (resp) {
                 // json.enc
                 console.log(resp);
-                // Get the first coin's price (dynamic coin ID)
-                var coinPrice = Object.values(resp)[0].ngn;
+                // Get the first coin's price (dynamic coin ID based on backend logic)
+                var coinPrice = 0;
+                // Iterate to find the ngn price
+                for (let key in resp) {
+                    if (resp[key].ngn) {
+                        coinPrice = resp[key].ngn;
+                        break;
+                    }
+                }
+
+                if (!coinPrice) coinPrice = 1; // Fallback to avoid division by zero
+
                 var pricetopay = amounttopays / parseFloat(coinPrice);
-                pricetopay = Number(pricetopay.toFixed(4));
+                pricetopay = Number(pricetopay.toFixed(8)); // Increased precision for crypto
                 console.log(pricetopay);
-                pricetopay = Number(pricetopay.toFixed(4))
+                // pricetopay = Number(pricetopay.toFixed(4))
                 document.getElementById("amounttopayinton").innerHTML = pricetopay + " Native";
                 document.getElementById("amounttopay").setAttribute("nativepay", pricetopay);
                 document.getElementById("fetch-price").style.display = "none";
@@ -1703,7 +1715,7 @@
                 $("#" + purchase_btn).addClass("gradient-highlight");
                 $("#" + purchase_btn).html('Buy');
             },
-            error: function(xhr, status, error) {
+            error: function (xhr, status, error) {
                 // Handle error
                 console.error('Error:', error);
             }
@@ -2160,7 +2172,7 @@
     }
 
     function changeWallet() {
-        $("#change-wallet").click(function() {
+        $("#change-wallet").click(function () {
             var tonconnectdiv = document.getElementById("tonconn-div");
             var transpindiv = document.getElementById("transpin-div");
             let updatewallet_btn = document.getElementById("update-wallet-btn");
@@ -2219,37 +2231,42 @@
         let walletaddy = document.getElementById("Wbalance").getAttribute("address");
         if (!walletaddy || walletaddy === "") {
             console.error("Wallet address is empty or undefined.");
-            return "error"; // Return error for further handling
+            return "error";
         }
+        let blockchain_id = $("#blockchainselect").val(); // Get selected blockchain ID
+
         $.ajax({
-            url: 'home/includes/route.php?check-native-balance=1&address=' + walletaddy,
+            url: 'home/includes/route.php?check-native-balance=1&address=' + walletaddy + '&blockchain_id=' + blockchain_id,
             method: 'GET',
             dataType: 'json',
-            success: function(resp) {
+            success: function (resp) {
                 if (resp.error || resp.status === 'fail') {
                     console.error("Error:", resp.error || resp.msg);
                     return "error"; // Return error for further handling
                 } else {
                     const balance = resp.balance;
                     console.log("Wallet balance From check:", balance + " Native");
-                    // You can update your HTML here
-                    // document.getElementById('wallet-info').innerHTML += `Balance: ${balance} TON`;
+
+                    // Update TARGETADDRESS if provided by backend
+                    if (resp.target_address) {
+                        TARGETADDRESS = resp.target_address;
+                        console.log("Updated TARGETADDRESS:", TARGETADDRESS);
+                    }
+
                     // Set the balance attribute
                     if (document.getElementById("Wbalance")) {
-                        document.getElementById("Wbalance").setAttribute("amount", parseFloat(balance).toFixed(3));
+                        document.getElementById("Wbalance").setAttribute("amount", parseFloat(balance).toFixed(4));
                     }
-                    // Show the balance with 3 decimal places
-                    // document.getElementById("Wbalance").innerHTML = parseFloat(balance).toFixed(3);
-                    return balance; // Return the balance for further use
+                    return balance;
                 }
             },
-            error: function(xhr, status, error) {
+            error: function (xhr, status, error) {
                 console.error("AJAX Error:", error);
             }
         });
     }
 
-    window.Sendtransaction = function() {
+    window.Sendtransaction = function () {
         var amount = document.getElementById("amounttopay").getAttribute("nativepay");
         document.getElementById("native-to-pay").setAttribute("value", amount);
         // document.getElementById("continue-transaction-prompt").style.display = "none";
@@ -2259,10 +2276,7 @@
         // $('#transpinbtn').click();
         // $('#thetranspin').val(5);
     }
-    window.disconnectWallets = function() {
-        disconnectwallet();
-    }
-    window.sharereceipt = async function() {
+    window.sharereceipt = async function () {
         const shareBtn = document.getElementById('share-receipt-btn');
         console.log('Share button clicked'); // Debug log
         try {
@@ -2279,15 +2293,15 @@
                 backgroundColor: "white" // Transparent background
             });
 
-            canvas.toBlob(async function(blob) {
+            canvas.toBlob(async function (blob) {
                 try {
                     const file = new File([blob], 'receipt.png', {
                         type: 'image/png'
                     });
 
                     if (navigator.share && navigator.canShare && navigator.canShare({
-                            files: [file]
-                        })) {
+                        files: [file]
+                    })) {
                         await navigator.share({
                             files: [file],
                             title: 'Transaction Receipt',
@@ -2333,93 +2347,166 @@
 
     if (document.getElementById("blockchainselect")) {
         let chainselect = document.getElementById("blockchainselect");
-        checkchain(chainselect);
+        // checkchain(chainselect);
+        chainselect.addEventListener("change", function () {
+            handleChainChange(this.value);
+        });
     }
 
-    function checkchain(chainselect) {
-        if (chainselect.value === "ton") {
-            // Replaced with EVM connect
-             connectEVMWallet();
+    async function handleChainChange(blockchain_id) {
+        if (!blockchain_id) return;
+
+        // Fetch config
+        try {
+            const response = await fetch('home/includes/route.php?get-blockchain-config=1&blockchain_id=' + blockchain_id);
+            const config = await response.json();
+
+            if (config && config.chain_id_hex) {
+                if (window.reownAppKit) {
+                    try {
+                        // Use AppKit to switch network
+                        await window.reownAppKit.switchNetwork(config.chain_id); // AppKit usually takes decimal ID or network object
+                        // Or specific adapter method if exposed
+                    } catch (switchError) {
+                        console.error("Failed to switch chain via AppKit", switchError);
+                        // Fallback to direct provider if available (Ethers5Adapter might expose it)
+                        if (window.ethereum) {
+                            // ... old logic as fallback ...
+                            try {
+                                await window.ethereum.request({
+                                    method: 'wallet_switchEthereumChain',
+                                    params: [{ chainId: config.chain_id_hex }],
+                                });
+                            } catch (err) {
+                                // ... add chain logic ...
+                                if (err.code === 4902) {
+                                    try {
+                                        await window.ethereum.request({
+                                            method: 'wallet_addEthereumChain',
+                                            params: [{
+                                                chainId: config.chain_id_hex,
+                                                chainName: config.name,
+                                                rpcUrls: [config.rpc_url],
+                                                nativeCurrency: {
+                                                    name: config.native_symbol,
+                                                    symbol: config.native_symbol,
+                                                    decimals: 18,
+                                                },
+                                                blockExplorerUrls: [config.explorer_url],
+                                            }],
+                                        });
+                                    } catch (addError) {
+                                        console.error("Failed to add chain", addError);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    connectEVMWallet();
+                    return;
+                }
+            } else {
+                // Unknown chain or config missing
+                return;
+            }
+
+            // Update UI - Wait a bit for chain switch if happened
+            setTimeout(() => {
+                checkwalletbalance();
+                if (typeof getNativePrice === 'function') {
+                    getNativePrice();
+                }
+                // Re-connect to ensure address is correct for new chain
+                connectEVMWallet();
+            }, 1000);
+
+        } catch (e) {
+            console.error("Error handling chain change", e);
         }
     }
 
-    window.disconnectWallets = function() {
-        // For EVM, we can't strictly disconnect from the website side in the same way as TON Connect
-        // But we can clear our local state
+    function checkchain(chainselect) {
+        handleChainChange(chainselect.value);
+    }
+
+    window.disconnectWallets = function () {
+        // Disconnect using AppKit
+        if (window.reownAppKit) {
+            window.reownAppKit.disconnect();
+        }
+
         userAddress = null;
         // Update UI to reflect disconnection
-         var page_name = document.getElementById("page-file-name").getAttribute("page-name");
-         if (page_name === "buy-airtime" || page_name === "buy-data" || page_name === "buy-datapins" || page_name === "buy-alpha-plan" || page_name === "wallet-transfer") {
+        var page_name = document.getElementById("page-file-name").getAttribute("page-name");
+        if (page_name === "buy-airtime" || page_name === "buy-data" || page_name === "buy-datapins" || page_name === "buy-alpha-plan" || page_name === "wallet-transfer") {
             document.getElementById('walletdatainfo').setAttribute("connection", "0");
             document.getElementById('ton-connect-btn-div').style.display = 'block';
             document.getElementById('purchase-btn-div').style.display = 'none';
-             if(document.getElementById("disconnect-wallet-btn")){
-                 document.getElementById("disconnect-wallet-btn").style.display = "none";
+            if (document.getElementById("disconnect-wallet-btn")) {
+                document.getElementById("disconnect-wallet-btn").style.display = "none";
             }
         } else {
             document.getElementById('walletinfo-div').style.display = "none";
         }
-         swal("Info", "Wallet disconnected from app. Please also disconnect in your wallet extension if needed.", "info");
+        swal("Info", "Wallet disconnected from app. Please also disconnect in your wallet extension if needed.", "info");
     }
 
     async function connectEVMWallet() {
-        if (typeof window.ethereum !== 'undefined') {
-            try {
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                handleWalletConnection(accounts[0]);
-            } catch (error) {
-                console.error('User rejected connection:', error);
-                swal("Error", "User rejected connection", "error");
+        // Retry logic for initialization: 50 retries * 200ms = 10 seconds
+        if (!window.reownAppKit) {
+            console.log("Waiting for Reown AppKit...");
+            let retries = 0;
+            while (!window.reownAppKit && retries < 50) {
+                await new Promise(r => setTimeout(r, 200));
+                retries++;
             }
+        }
+
+        if (window.reownAppKit) {
+            await window.reownAppKit.open();
+            // Connection is handled by subscription in global script
         } else {
-            console.log('MetaMask not installed');
-            swal("Error", "Please install MetaMask or another EVM wallet", "error");
+            console.error('Reown AppKit failed to load after retries.');
+            let errorMsg = "Wallet connection service not ready.";
+            if (window.reownError) {
+                errorMsg += " Error: " + window.reownError;
+            } else {
+                errorMsg += " Please check your internet connection.";
+            }
+            swal("Error", errorMsg, "error");
         }
     }
-    
+
     // Check if wallet is already connected
     window.addEventListener('load', async () => {
-         if (typeof window.ethereum !== 'undefined') {
-            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-            if (accounts.length > 0) {
-                handleWalletConnection(accounts[0]);
-            }
-             
-             // Listen for account changes
-            window.ethereum.on('accountsChanged', function (accounts) {
-                if(accounts.length > 0){
-                    handleWalletConnection(accounts[0]);
-                } else {
-                    disconnectWallets();
-                }
-            });
-         }
-         
-          TARGETADDRESS = '<?php echo $data9->walletaddress ?? ""; ?>';
+        // AppKit handles auto-reconnect via subscription
+        // Placeholder for legacy check if needed
+        TARGETADDRESS = '<?php echo $data9->walletaddress ?? ""; ?>';
     });
 
 
     function handleWalletConnection(address) {
         userAddress = address;
         console.log("Connected to EVM wallet:", userAddress);
-        
+
         var page_name = document.getElementById("page-file-name").getAttribute("page-name");
-        
+
         // Update UI button to show connected status (simplified)
-         const connectBtn = document.getElementById('ton-connect');
-         if(connectBtn) {
-             connectBtn.innerHTML = '<button class="btn btn-success">Connected: ' + userAddress.substring(0, 6) + '...' + userAddress.substring(userAddress.length - 4) + '</button>';
-         }
-         
-         if(document.getElementById("disconnect-wallet-btn")){
-             document.getElementById("disconnect-wallet-btn").style.display = "flex";
-         }
+        const connectBtn = document.getElementById('ton-connect');
+        if (connectBtn) {
+            connectBtn.innerHTML = '<button class="btn btn-success">Connected: ' + userAddress.substring(0, 6) + '...' + userAddress.substring(userAddress.length - 4) + '</button>';
+        }
+
+        if (document.getElementById("disconnect-wallet-btn")) {
+            document.getElementById("disconnect-wallet-btn").style.display = "flex";
+        }
 
         if (page_name === "buy-airtime" || page_name === "buy-data" || page_name === "buy-datapins" || page_name === "buy-alpha-plan" || page_name === "wallet-transfer") {
             var walletaddy = document.getElementById("walletdatainfo").getAttribute("saved-address");
             let savedwallet = document.getElementById("walletdatainfo").getAttribute("address-status");
             document.getElementById('walletdatainfo').setAttribute("connection", "0");
-            
+
             if (savedwallet !== "1") {
                 swal("Oops!", "Redirecting To Profile and Add Web3 Wallet.", "info");
                 setTimeout(() => {
@@ -2427,7 +2514,7 @@
                 }, 1000);
                 return;
             } else {
-                 // Case insensitive comparison for EVM addresses
+                // Case insensitive comparison for EVM addresses
                 if (walletaddy.toLowerCase() !== userAddress.toLowerCase()) {
                     swal({
                         title: 'Alert!!',
@@ -2450,15 +2537,15 @@
             // Profile page logic
             var walletaddy = document.getElementById("wallet-add").getAttribute("saved-address");
             let savedwallet = document.getElementById("wallet-add").getAttribute("address-status");
-            
+
             document.getElementById('walletinfo-div').style.display = "block";
-            
+
             if (savedwallet !== "1" || walletaddy === "" || walletaddy === null) {
-                 document.getElementById("wallet-add").value = userAddress;
-                 document.getElementById('saved-add').style.display = "none";
-                 document.getElementById('unsaved-add').style.display = "block";
+                document.getElementById("wallet-add").value = userAddress;
+                document.getElementById('saved-add').style.display = "none";
+                document.getElementById('unsaved-add').style.display = "block";
             } else {
-                 if (userAddress.toLowerCase() !== walletaddy.toLowerCase()) {
+                if (userAddress.toLowerCase() !== walletaddy.toLowerCase()) {
                     let changestatus = document.getElementById("wallet-add").getAttribute("changestatus");
                     if (changestatus !== "1") {
                         document.getElementById("tonconn-div").style.display = "flex";
@@ -2475,20 +2562,20 @@
                 }
             }
         }
-        
+
         // Fetch balance
         checkwalletbalance();
     }
 
-    window.startTransactions = async function(amount) {
+    window.startTransactions = async function (amount) {
         var page_name = document.getElementById("page-file-name").getAttribute("page-name");
         var transref = $('[name="transref"]').val();
         var amounttopay = $("#amounttopay").val();
-        
+
         if (typeof window.ethereum === 'undefined' || !userAddress) {
-             swal("Alert!!", "Wallet is not connected", "error");
-             $('#transpinbtn').click();
-             return;
+            swal("Alert!!", "Wallet is not connected", "error");
+            $('#transpinbtn').click();
+            return;
         }
 
         const parsedAmount = parseFloat(amount);
@@ -2500,7 +2587,7 @@
 
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
-        
+
         // Note: Ethers.js v5 syntax
         try {
             const txParams = {
@@ -2518,47 +2605,49 @@
             } else if (page_name === "buy-datapins") {
                 memo = amounttopay + "N Data Pin Purchased (" + transref + ")";
             } else if (page_name === "wallet-transfer") {
-                 memo = amounttopay + "N Wallet Transfer (" + transref + ")";
+                memo = amounttopay + "N Wallet Transfer (" + transref + ")";
             } else {
                 memo = "Payment Ref: " + transref;
             }
-            
+
             const utf8Encode = new TextEncoder();
             const hexData = "0x" + Array.from(utf8Encode.encode(memo)).map(b => b.toString(16).padStart(2, '0')).join('');
             txParams.data = hexData;
 
             const txResponse = await signer.sendTransaction(txParams);
             console.log('Transaction sent:', txResponse);
-            
+
             swal({
                 title: '<h3 class="text-center mt-4"><i class="fa fa-3x fa-spinner fa-spin" aria-hidden="true"></i></h3>',
                 text: 'Transaction sent. Waiting for confirmation...',
                 allowOutsideClick: false,
                 showConfirmButton: false,
-                 html: true
+                html: true
             });
 
             const receipt = await txResponse.wait();
             console.log('Transaction confirmed:', receipt);
-            
+
             const txHash = receipt.transactionHash;
             // const explorerLink = `https://scan.assetchain.org/tx/${txHash}`; // Adjust explorer URL
-            
+
             if (receipt.status === 1) {
                 // Populate hidden form fields for backend verification if needed
+                let blockchain_id = $("#blockchainselect").val();
                 let onchain_data = `
                     <input type="hidden" name="target_address" value="${TARGETADDRESS}" hidden />
                     <input type="text" name="tx_hash" value="${txHash}" hidden />
                     <input type="text" name="user_address" value="${userAddress}" hidden />
                     <input type="text" name="amount_paid" value="${amount}" hidden />
+                    <input type="text" name="blockchain_id" value="${blockchain_id}" hidden />
                 `;
                 $("#transaction-data").html(onchain_data);
 
-                 if (page_name === "buy-airtime" || page_name === "buy-data" || page_name === "buy-datapins" || page_name === "buy-alpha-plan" || page_name === "wallet-transfer") {
+                if (page_name === "buy-airtime" || page_name === "buy-data" || page_name === "buy-datapins" || page_name === "buy-alpha-plan" || page_name === "wallet-transfer") {
                     swal({
                         title: '<h3 class="text-center mt-4"><i class="fa fa-3x fa-spinner fa-spin" aria-hidden="true"></i></h3>',
                         text: 'Transaction confirmed. Please wait... <h5> <i style="color:orange;"><br> <br> If this is taking longer than expected, your transaction may be refunded. Please remain patient.</i></h5>',
-                         allowOutsideClick: false,
+                        allowOutsideClick: false,
                         showConfirmButton: false,
                         html: true
                     });
@@ -2567,8 +2656,8 @@
                         $('#transpinbtn').click();
                     }, 500);
                 } else {
-                     $('#thetranspin').val(5);
-                     $('#transpinbtn').click();
+                    $('#thetranspin').val(5);
+                    $('#transpinbtn').click();
                 }
             } else {
                 swal("Alert!!", "Transaction failed on chain.", "error");
@@ -2576,10 +2665,10 @@
 
         } catch (error) {
             console.error('Transaction error:', error);
-             let reason = error.message || "Transaction failed";
-             if(reason.includes("user rejected")){
-                 reason = "User rejected transaction";
-             }
+            let reason = error.message || "Transaction failed";
+            if (reason.includes("user rejected")) {
+                reason = "User rejected transaction";
+            }
             swal("Alert!!", "Failed to send transaction: " + reason, "error");
             $('#transpinbtn').click();
         }

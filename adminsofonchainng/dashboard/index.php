@@ -83,23 +83,23 @@ include("includes/custom.php");
 
 
     //Show That Form Is Been Processed
-    $(".form-submit").on("submit", function() {
+    $(".form-submit").on("submit", function () {
       $(".btn-submit").addClass("disabled");
       $(".btn-submit").html('<i class="fa fa-spinner fa-spin" aria-hidden="true"></i> Processing ...');
     });
 
-    $(".form-submit2").on("submit", function() {
+    $(".form-submit2").on("submit", function () {
       $(".btn-submit2").addClass("disabled");
       $(".btn-submit2").html('<i class="fa fa-spinner fa-spin" aria-hidden="true"></i> Processing ...');
     });
 
 
-    $(".form-submit3").on("submit", function() {
+    $(".form-submit3").on("submit", function () {
       $(".btn-submit3").addClass("disabled");
       $(".btn-submit3").html('<i class="fa fa-spinner fa-spin" aria-hidden="true"></i> Processing ...');
     });
 
-    $(".form-submit4").on("submit", function() {
+    $(".form-submit4").on("submit", function () {
       $(".btn-submit4").addClass("disabled");
       $(".btn-submit4").html('<i class="fa fa-spinner fa-spin" aria-hidden="true"></i> Processing ...');
     });
@@ -149,15 +149,15 @@ include("includes/custom.php");
         cancelButtonText: "No",
         closeOnConfirm: false,
         closeOnCancel: false
-      }, function(isConfirm) {
+      }, function (isConfirm) {
         if (isConfirm) {
           $.post("includes/route.php?reset-user-api-key", {
             id: id
-          }, function(res) {
+          }, function (res) {
 
             if (res == 0) {
               swal("Success", "API Key Reset Succesfully", "success");
-              setTimeout(function() {
+              setTimeout(function () {
                 $url = window.location.href;
                 window.location.href = $url;
               }, 1000);
@@ -183,15 +183,15 @@ include("includes/custom.php");
         cancelButtonText: "No",
         closeOnConfirm: false,
         closeOnCancel: false
-      }, function(isConfirm) {
+      }, function (isConfirm) {
         if (isConfirm) {
           $.post("includes/route.php?delete-user-account", {
             id: id
-          }, function(res) {
+          }, function (res) {
 
             if (res == 0) {
               swal("Success", "User Account Deleted Succesfully", "success");
-              setTimeout(function() {
+              setTimeout(function () {
                 window.location.href = "subscribers";
               }, 1000);
             } else {
@@ -212,7 +212,7 @@ include("includes/custom.php");
       }
       $.post("includes/route.php?get-merchant-by-phone", {
         phone: phone
-      }, function(res) {
+      }, function (res) {
         var resp = JSON.parse(res);
         if (resp !== 1 || resp != "1") {
           // console.log(resp);
@@ -233,30 +233,30 @@ include("includes/custom.php");
           document.getElementById("mEmail").value = "";
           document.getElementById("sId").setAttribute("value", "");
           swal("Error!", "Account Not Found, Please Try Again Later", "error");
-             return false;
+          return false;
         }
       });
     }
 
     function checkcoin() {
-        var checkboxes = document.querySelectorAll('input[name="coins[]"]');
-        checkboxes.forEach(function(checkbox) {
-            var coinId = checkbox.value;
-            var limitDiv = document.getElementById('limit_' + coinId);
-            var priceDiv = document.getElementById('price_' + coinId + '_div');
+      var checkboxes = document.querySelectorAll('input[name="coins[]"]');
+      checkboxes.forEach(function (checkbox) {
+        var coinId = checkbox.value;
+        var limitDiv = document.getElementById('limit_' + coinId);
+        var priceDiv = document.getElementById('price_' + coinId + '_div');
 
-            if (checkbox.checked) {
-                limitDiv.style.display = 'block';
-                priceDiv.style.display = 'block';
-                document.getElementById('limit_' + coinId).querySelector('input').required = true;
-                document.getElementById('price_' + coinId + '_div').querySelector('input').required = true;
-            } else {
-                limitDiv.style.display = 'none';
-                priceDiv.style.display = 'none';
-                document.getElementById('limit_' + coinId).querySelector('input').required = false;
-                document.getElementById('price_' + coinId + '_div').querySelector('input').required = false;
-            }
-        });
+        if (checkbox.checked) {
+          limitDiv.style.display = 'block';
+          priceDiv.style.display = 'block';
+          document.getElementById('limit_' + coinId).querySelector('input').required = true;
+          document.getElementById('price_' + coinId + '_div').querySelector('input').required = true;
+        } else {
+          limitDiv.style.display = 'none';
+          priceDiv.style.display = 'none';
+          document.getElementById('limit_' + coinId).querySelector('input').required = false;
+          document.getElementById('price_' + coinId + '_div').querySelector('input').required = false;
+        }
+      });
     }
     function terminateMerchant(id) {
       swal({
@@ -269,15 +269,15 @@ include("includes/custom.php");
         cancelButtonText: "No",
         closeOnConfirm: false,
         closeOnCancel: false
-      }, function(isConfirm) {
+      }, function (isConfirm) {
         if (isConfirm) {
           $.post("includes/route.php?delete-merchant", {
             id: id
-          }, function(res) {
+          }, function (res) {
 
             if (res == 0) {
               swal("Success", "Merchant Account Deleted Succesfully", "success");
-              setTimeout(function() {
+              setTimeout(function () {
                 window.location.href = "p2p-merchants";
               }, 1000);
             } else {
@@ -301,16 +301,16 @@ include("includes/custom.php");
         cancelButtonText: "No",
         closeOnConfirm: false,
         closeOnCancel: false
-      }, function(isConfirm) {
+      }, function (isConfirm) {
         if (isConfirm) {
           $.post("includes/route.php?block-user", {
             id: id,
             status: status
-          }, function(res) {
+          }, function (res) {
 
             if (res == 0) {
               swal("Success", "User Status Updated Succesfully", "success");
-              setTimeout(function() {
+              setTimeout(function () {
                 $url = window.location.href;
                 window.location.href = $url;
               }, 1000);
@@ -362,15 +362,15 @@ include("includes/custom.php");
         cancelButtonText: "No",
         closeOnConfirm: false,
         closeOnCancel: false
-      }, function(isConfirm) {
+      }, function (isConfirm) {
         if (isConfirm) {
           $.post("includes/route.php?delete-alpha-topup", {
             id: id
-          }, function(res) {
+          }, function (res) {
 
             if (res == 0) {
               swal("Success", "Alpha Topup Deleted Succesfully", "success");
-              setTimeout(function() {
+              setTimeout(function () {
                 $url = window.location.href;
                 window.location.href = $url;
               }, 1000);
@@ -457,15 +457,15 @@ include("includes/custom.php");
         cancelButtonText: "No",
         closeOnConfirm: false,
         closeOnCancel: false
-      }, function(isConfirm) {
+      }, function (isConfirm) {
         if (isConfirm) {
           $.post("includes/route.php?delete-data-plan", {
             id: id
-          }, function(res) {
+          }, function (res) {
 
             if (res == 0) {
               swal("Success", "Plan Deleted Succesfully", "success");
-              setTimeout(function() {
+              setTimeout(function () {
                 $url = window.location.href;
                 window.location.href = $url;
               }, 1000);
@@ -490,15 +490,15 @@ include("includes/custom.php");
         cancelButtonText: "No",
         closeOnConfirm: false,
         closeOnCancel: false
-      }, function(isConfirm) {
+      }, function (isConfirm) {
         if (isConfirm) {
           $.post("includes/custom.php?delete-media", {
             id: id
-          }, function(res) {
+          }, function (res) {
 
             if (res == 0) {
               swal("Success", "Media Deleted Succesfully", "success");
-              setTimeout(function() {
+              setTimeout(function () {
                 $url = window.location.href;
                 window.location.href = $url;
               }, 1000);
@@ -524,15 +524,15 @@ include("includes/custom.php");
         cancelButtonText: "No",
         closeOnConfirm: false,
         closeOnCancel: false
-      }, function(isConfirm) {
+      }, function (isConfirm) {
         if (isConfirm) {
           $.post("includes/route.php?delete-api", {
             id: id
-          }, function(res) {
+          }, function (res) {
 
             if (res == 0) {
               swal("Success", "API Provider Deleted Succesfully", "success");
-              setTimeout(function() {
+              setTimeout(function () {
                 $url = window.location.href;
                 window.location.href = $url;
               }, 1000);
@@ -573,15 +573,15 @@ include("includes/custom.php");
         cancelButtonText: "No",
         closeOnConfirm: false,
         closeOnCancel: false
-      }, function(isConfirm) {
+      }, function (isConfirm) {
         if (isConfirm) {
           $.post("includes/route.php?delete-data-pin", {
             id: id
-          }, function(res) {
+          }, function (res) {
 
             if (res == 0) {
               swal("Success", "Data Pin Deleted Succesfully", "success");
-              setTimeout(function() {
+              setTimeout(function () {
                 $url = window.location.href;
                 window.location.href = $url;
               }, 1000);
@@ -625,15 +625,15 @@ include("includes/custom.php");
         cancelButtonText: "No",
         closeOnConfirm: false,
         closeOnCancel: false
-      }, function(isConfirm) {
+      }, function (isConfirm) {
         if (isConfirm) {
           $.post("includes/route.php?delete-cable-plan", {
             id: id
-          }, function(res) {
+          }, function (res) {
 
             if (res == 0) {
               swal("Success", "Plan Deleted Succesfully", "success");
-              setTimeout(function() {
+              setTimeout(function () {
                 $url = window.location.href;
                 window.location.href = $url;
               }, 1000);
@@ -662,15 +662,15 @@ include("includes/custom.php");
         cancelButtonText: "No",
         closeOnConfirm: false,
         closeOnCancel: false
-      }, function(isConfirm) {
+      }, function (isConfirm) {
         if (isConfirm) {
           $.post("includes/route.php?delete-notification", {
             id: id
-          }, function(res) {
+          }, function (res) {
 
             if (res == 0) {
               swal("Success", "Notification Deleted Succesfully", "success");
-              setTimeout(function() {
+              setTimeout(function () {
                 $url = window.location.href;
                 window.location.href = $url;
               }, 1000);
@@ -700,15 +700,15 @@ include("includes/custom.php");
         cancelButtonText: "No",
         closeOnConfirm: false,
         closeOnCancel: false
-      }, function(isConfirm) {
+      }, function (isConfirm) {
         if (isConfirm) {
           $.post("includes/route.php?delete-message", {
             id: id
-          }, function(res) {
+          }, function (res) {
 
             if (res == 0) {
               swal("Success", "Message Deleted Succesfully", "success");
-              setTimeout(function() {
+              setTimeout(function () {
                 $url = window.location.href;
                 window.location.href = $url;
               }, 1000);
@@ -726,6 +726,97 @@ include("includes/custom.php");
     //  Alpha Topup Management
     // ************************************************************************************************
 
+    // ************************************************************************************************
+    //  Blockchain & Token Management
+    // ************************************************************************************************
+
+    function editBlockchain(id, chain_key, name, rpc_url, explorer_url, native_symbol, chain_id, chain_id_hex, is_active) {
+      $("#edit_id").val(id);
+      $("#edit_chain_key").val(chain_key);
+      $("#edit_name").val(name);
+      $("#edit_rpc_url").val(rpc_url);
+      $("#edit_explorer_url").val(explorer_url);
+      $("#edit_native_symbol").val(native_symbol);
+      $("#edit_chain_id").val(chain_id);
+      $("#edit_chain_id_hex").val(chain_id_hex);
+      $("#edit_is_active").val(is_active);
+      $("#editBlockchainModal").modal("show");
+    }
+
+    function deleteBlockchain(id) {
+      swal({
+        title: "Are you sure?",
+        text: "Are you sure you want to delete this blockchain? This may affect tokens linked to it.",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#DD6B55",
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+        closeOnConfirm: false,
+        closeOnCancel: false
+      }, function (isConfirm) {
+        if (isConfirm) {
+          $.get("includes/route.php?delete-blockchain", {
+            id: id
+          }, function (res) {
+            var resp = JSON.parse(res);
+            if (resp.status == 'success') {
+              swal("Success", "Blockchain Deleted Successfully", "success");
+              setTimeout(function () {
+                location.reload();
+              }, 1000);
+            } else {
+              swal("Error!", resp.msg || "Unable To Delete Blockchain", "error");
+            }
+          });
+        } else {
+          swal("Cancelled", "Action Cancelled", "error");
+        }
+      });
+    }
+
+    function editToken(id, name, contract, decimals, chain_id, is_active) {
+      $("#edit_token_id").val(id);
+      $("#edit_token_name").val(name);
+      $("#edit_token_contract").val(contract);
+      $("#edit_token_decimals").val(decimals);
+      $("#edit_token_chain_id").val(chain_id);
+      $("#edit_token_is_active").val(is_active);
+      $("#editTokenModal").modal("show");
+    }
+
+    function deleteToken(id) {
+      swal({
+        title: "Are you sure?",
+        text: "Are you sure you want to delete this token?",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#DD6B55",
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+        closeOnConfirm: false,
+        closeOnCancel: false
+      }, function (isConfirm) {
+        if (isConfirm) {
+          $.get("includes/route.php?delete-token", {
+            id: id
+          }, function (res) {
+            var resp = JSON.parse(res);
+            if (resp.status == 'success') {
+              swal("Success", "Token Deleted Successfully", "success");
+              setTimeout(function () {
+                location.reload();
+              }, 1000);
+            } else {
+              swal("Error!", resp.msg || "Unable To Delete Token", "error");
+            }
+          });
+        } else {
+          swal("Cancelled", "Action Cancelled", "error");
+        }
+      });
+    }
+
     //Alpha Topup Management
     function confirmAlphaTopupOrder(id) {
       swal({
@@ -738,15 +829,15 @@ include("includes/custom.php");
         cancelButtonText: "No",
         closeOnConfirm: false,
         closeOnCancel: false
-      }, function(isConfirm) {
+      }, function (isConfirm) {
         if (isConfirm) {
           $.post("includes/route.php?complete-alpha-order", {
             id: id
-          }, function(res) {
+          }, function (res) {
 
             if (res == 0) {
               swal("Success", "Transaction Succesfully Closed", "success");
-              setTimeout(function() {
+              setTimeout(function () {
                 $url = window.location.href;
                 window.location.href = $url;
               }, 1000);

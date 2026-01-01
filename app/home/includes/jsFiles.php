@@ -14,3 +14,12 @@
 
 <script src="https://kit.fontawesome.com/95325fb6b8.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+
+<!-- Reown AppKit Integration -->
+<!-- Reown AppKit Integration (Local Bundle) -->
+<script src="../assets/scripts/reown-bundle.js"></script>
+<script>
+    if (!window.reownAppKit && !window.reownError) {
+        console.warn("Reown bundle loaded but appKit not found immediately.");
+    }
+</script>

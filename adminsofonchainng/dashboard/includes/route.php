@@ -310,6 +310,30 @@ if (isset($_GET["complete-alpha-order"])) {
     exit();
 }
 
+// Blockchain Management
+if (isset($_POST["add-blockchain"])) {
+    $msg = $controller->addBlockchain();
+}
+if (isset($_POST["update-blockchain"])) {
+    $msg = $controller->updateBlockchain();
+}
+if (isset($_GET["delete-blockchain"])) {
+    echo $controller->deleteBlockchain();
+    exit();
+}
+
+// Token Management
+if (isset($_POST["add-token"])) {
+    $msg = $controller->addToken();
+}
+if (isset($_POST["update-token"])) {
+    $msg = $controller->updateToken();
+}
+if (isset($_GET["delete-token"])) {
+    echo $controller->deleteToken();
+    exit();
+}
+
 //Fetch The View Of The Page To Be Displayed
 createView($url);
 if ($page == "dashboard.php") {
@@ -372,7 +396,7 @@ function getDataIfAny($page)
             if (isset($_GET["mapo"])) {
                 $data = array();
                 $data[0] = $controller->getMerchantDetails(urldecode(base64_decode($_GET["mapo"])));
-                $data[1] =  $controller->getSubscribersDetails(urldecode(base64_decode($_GET["apo"])));
+                $data[1] = $controller->getSubscribersDetails(urldecode(base64_decode($_GET["apo"])));
                 $data[2] = $controller->getCoins();
                 return $data;
             } else {
@@ -425,6 +449,14 @@ function getDataIfAny($page)
 
         case "transactions":
             return $controller->getTransactions($limit);
+            break;
+
+        case "blockchain":
+            return $controller->getBlockchains();
+            break;
+
+        case "tokens":
+            return $controller->getTokens();
             break;
 
         case "transaction-details":

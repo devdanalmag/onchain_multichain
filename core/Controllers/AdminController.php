@@ -798,6 +798,76 @@ class AdminController extends Controller
 			return $this->createNotification1("alert-danger", "Unable To Update API, Please Try Again");
 		}
 	}
+
+	// Blockchain Management
+	public function getBlockchains()
+	{
+		return $this->model->getAllBlockchains();
+	}
+
+	public function addBlockchain()
+	{
+		extract($_POST);
+		$res = $this->model->upsertBlockchain(null, $chain_key, $name, $rpc_url, $explorer_url, $native_symbol, $chain_id, $chain_id_hex, $is_active);
+		if ($res['status'] == 'success') {
+			return $this->createNotification1("alert-success", "Blockchain Added Successfully");
+		} else {
+			return $this->createNotification1("alert-danger", "Error: " . $res['msg']);
+		}
+	}
+
+	public function updateBlockchain()
+	{
+		extract($_POST);
+		$res = $this->model->upsertBlockchain($id, $chain_key, $name, $rpc_url, $explorer_url, $native_symbol, $chain_id, $chain_id_hex, $is_active);
+		if ($res['status'] == 'success') {
+			return $this->createNotification1("alert-success", "Blockchain Updated Successfully");
+		} else {
+			return $this->createNotification1("alert-danger", "Error: " . $res['msg']);
+		}
+	}
+
+	public function deleteBlockchain()
+	{
+		extract($_POST);
+		$res = $this->model->deleteBlockchain($id);
+		return json_encode($res);
+	}
+
+	// Token Management
+	public function getTokens()
+	{
+		return $this->model->getAllTokens();
+	}
+
+	public function addToken()
+	{
+		extract($_POST);
+		$res = $this->model->upsertToken(null, $token_name, $token_contract, $token_decimals, $is_active, $chain_id);
+		if ($res['status'] == 'success') {
+			return $this->createNotification1("alert-success", "Token Added Successfully");
+		} else {
+			return $this->createNotification1("alert-danger", "Error: " . $res['msg']);
+		}
+	}
+
+	public function updateToken()
+	{
+		extract($_POST);
+		$res = $this->model->upsertToken($token_id, $token_name, $token_contract, $token_decimals, $is_active, $chain_id);
+		if ($res['status'] == 'success') {
+			return $this->createNotification1("alert-success", "Token Updated Successfully");
+		} else {
+			return $this->createNotification1("alert-danger", "Error: " . $res['msg']);
+		}
+	}
+
+	public function deleteToken()
+	{
+		extract($_POST);
+		$res = $this->model->deleteToken($id);
+		return json_encode($res);
+	}
 	//Delete Data Plan
 	public function deleteDataPlan()
 	{
@@ -1016,6 +1086,11 @@ class AdminController extends Controller
 			"profit" => 0,
 			"successful" => 0,
 			"failed" => 0,
+			"inflow" => 0,
+			"outflow" => 0,
+			"dexInflow" => 0,
+			"dexOutflow" => 0,
+			"refundFlow" => 0,
 			"airtimeTransactions" => 0,
 			"airtimeSales" => 0,
 			"airtimeProfit" => 0,
@@ -1043,6 +1118,25 @@ class AdminController extends Controller
 				$analysis["transactions"]++;
 				$analysis["sales"] += (float) $sales->amount;
 				$analysis["profit"] += (float) $sales->profit;
+
+				// Inflow Calculation (Wallet Credits, Deposits, etc.)
+				if ($sales->servicename == 'Wallet Credit' || $sales->servicename == 'Manual Credit' || $sales->servicename == 'Monnify Funding' || $sales->servicename == 'Paystack Funding') {
+					$analysis["inflow"] += (float) $sales->amount;
+				} else if ($sales->servicename == 'Refund') {
+					$analysis["refundFlow"] += (float) $sales->amount;
+				} else {
+					// Service Purchases are Outflow
+					$analysis["outflow"] += (float) $sales->amount;
+				}
+
+				// DEX specific
+				if (isset($sales->transaction_type) && $sales->transaction_type == 'dex') {
+					if ($sales->servicename == 'DEX Deposit' || $sales->servicename == 'DEX Buy') {
+						$analysis["dexInflow"] += (float) $sales->amount;
+					} else {
+						$analysis["dexOutflow"] += (float) $sales->amount;
+					}
+				}
 			}
 
 			if ($sales->status == 0) {
@@ -1092,6 +1186,11 @@ class AdminController extends Controller
 		//Format Sales Analysis
 		$analysis["sales"] = number_format($analysis["sales"], 2);
 		$analysis["profit"] = number_format($analysis["profit"], 2);
+		$analysis["inflow"] = number_format($analysis["inflow"], 2);
+		$analysis["outflow"] = number_format($analysis["outflow"], 2);
+		$analysis["dexInflow"] = number_format($analysis["dexInflow"], 2);
+		$analysis["dexOutflow"] = number_format($analysis["dexOutflow"], 2);
+		$analysis["refundFlow"] = number_format($analysis["refundFlow"], 2);
 		$analysis["airtimeSales"] = number_format($analysis["airtimeSales"], 2);
 		$analysis["airtimeProfit"] = number_format($analysis["airtimeProfit"], 2);
 		$analysis["dataSales"] = number_format($analysis["dataSales"], 2);

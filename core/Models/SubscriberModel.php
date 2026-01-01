@@ -92,7 +92,7 @@ class SubscriberModel extends Model
 		$queryR->execute();
 		$resultR = $queryR->fetch(PDO::FETCH_OBJ);
 		$refCount = (float) $resultR->refCount;
-		$result = (object) array_merge((array)$result, array('refCount' => $refCount));
+		$result = (object) array_merge((array) $result, array('refCount' => $refCount));
 
 
 		if (($result->sBankNo == "" || $result->sRolexBank == "") || ($result->sFidelityBank == "")) {
@@ -940,7 +940,9 @@ class SubscriberModel extends Model
 		$sql .= $addon . " AND a.sId=:id ORDER BY b.date DESC LIMIT $limit, 100";
 		$query = $dbh->prepare($sql);
 		$query->bindParam(':id', $userId, PDO::PARAM_INT);
-		if (isset($_GET["search"])): if ($search <> ""): $query->bindValue(':search', '%' . $search . '%');
+		if (isset($_GET["search"])):
+			if ($search <> ""):
+				$query->bindValue(':search', '%' . $search . '%');
 			endif;
 		endif;
 		$query->execute();
@@ -950,7 +952,7 @@ class SubscriberModel extends Model
 	public function refundTransaction($ref, $fuser_address, $amount, $token_contract = null, $token_symbol = null, $token_decimals = 18)
 	{
 		$reference = crc32($ref);
-		$check =  $this->checkIfTransactionExist($reference);
+		$check = $this->checkIfTransactionExist($reference);
 		if ($check == 0) {
 			return [
 				'status' => "fail",
@@ -1006,8 +1008,8 @@ class SubscriberModel extends Model
 
 			// Prepare request to Deno Deploy (Assetchain/EVM Service)
 			// Assuming the URL is updated or we use an env var. For now, we use the existing URL placeholder or a new one.
-            // The user asked to "Convert" the code, so we assume the endpoint handles the new logic.
-			$denoDeployUrl = "https://evm-refund.deno.dev/"; 
+			// The user asked to "Convert" the code, so we assume the endpoint handles the new logic.
+			$denoDeployUrl = "https://evm-refund.deno.dev/";
 			$ch = curl_init($denoDeployUrl);
 
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -1032,11 +1034,11 @@ class SubscriberModel extends Model
 				throw new Exception("Invalid JSON response: " . json_last_error_msg(), 500);
 			}
 
-            if (isset($data['success']) && $data['success'] === false) {
-                throw new Exception($data['message'] ?? 'Refund failed', 400);
-            }
+			if (isset($data['success']) && $data['success'] === false) {
+				throw new Exception($data['message'] ?? 'Refund failed', 400);
+			}
 
-			$checking =  $this->checktransactionbyhash($data['hash'] ?? null);
+			$checking = $this->checktransactionbyhash($data['hash'] ?? null);
 
 			if ($checking['status'] == 'fail') {
 				return [
@@ -1079,11 +1081,39 @@ class SubscriberModel extends Model
 
 	public function checkTonBalance($address)
 	{
-        // Deprecated: Use checkNativeBalance in Controller
-		return [
-			"status" => "fail",
-			"msg" => "This method is deprecated. Use EVM balance check."
-		];
+		return $this->checkNativeBalance($address);
+	}
+
+	// Get Blockchain By ID
+	public function getBlockchainById($id)
+	{
+		$dbh = self::connect();
+		$sql = "SELECT * FROM blockchain WHERE id = :id AND is_active = 1";
+		$q = $dbh->prepare($sql);
+		$q->bindParam(':id', $id);
+		$q->execute();
+		return $q->fetch(PDO::FETCH_OBJ);
+	}
+
+	// Get Blockchain By Chain ID (Hex or Decimal)
+	public function getBlockchainByChainId($chainId)
+	{
+		$dbh = self::connect();
+		$sql = "SELECT * FROM blockchain WHERE (chain_id = :id OR chain_id_hex = :id) AND is_active = 1";
+		$q = $dbh->prepare($sql);
+		$q->bindParam(':id', $chainId);
+		$q->execute();
+		return $q->fetch(PDO::FETCH_OBJ);
+	}
+
+	// Get All Active Blockchains
+	public function getAllActiveBlockchains()
+	{
+		$dbh = self::connect();
+		$sql = "SELECT * FROM blockchain WHERE is_active = 1";
+		$q = $dbh->prepare($sql);
+		$q->execute();
+		return $q->fetchAll(PDO::FETCH_OBJ);
 	}
 
 	public function checktransactionbyhash($tx_hash)
@@ -1564,64 +1594,67 @@ class SubscriberModel extends Model
 
 	// Record Onchain transaction
 
-    private function ensureTokenAmountColumn() {
-        $dbh = self::connect();
-        try {
-            $checkSql = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='transactions' AND COLUMN_NAME='token_amount'";
-            $q = $dbh->prepare($checkSql);
-            $q->execute();
-            if ($q->rowCount() == 0) {
-                 $dbh->exec("ALTER TABLE transactions ADD COLUMN token_amount VARCHAR(64) NULL");
-            }
-        } catch (\Throwable $e) {}
-    }
+	private function ensureTokenAmountColumn()
+	{
+		$dbh = self::connect();
+		try {
+			$checkSql = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='transactions' AND COLUMN_NAME='token_amount'";
+			$q = $dbh->prepare($checkSql);
+			$q->execute();
+			if ($q->rowCount() == 0) {
+				$dbh->exec("ALTER TABLE transactions ADD COLUMN token_amount VARCHAR(64) NULL");
+			}
+		} catch (\Throwable $e) {
+		}
+	}
 
 	public function recordchainTransaction($userid, $servicename, $servicedesc, $amountopay, $ref, $target_address, $tx_hash, $user_address, $nanoamount, $status, $transaction_type = 'app', $token_name = '', $token_contract = '')
 	{
 		$dbh = self::connect();
 		$sql = "SELECT * FROM transactions WHERE transref=:ref";
 		$query = $dbh->prepare($sql);
-        $query->execute([':ref' => $ref]);
+		$query->execute([':ref' => $ref]);
 		if ($query->rowCount() > 0) {
 			return ['status' => 'success', 'msg' => 'Transaction exists'];
-		} 
+		}
 		$dbh = self::connect();
 		$userid = (float) $userid;
 		$status = (float) $status;
 		$date = date("Y-m-d H:i:s");
 		$oldbalance = '0';
 		$newbalance = '0';
-        $this->ensureTokenAmountColumn();
-        
-        // Ensure extra columns exist
-        try {
-            $dbh->exec("ALTER TABLE transactions ADD COLUMN transaction_type VARCHAR(20) DEFAULT 'app'");
-            $dbh->exec("ALTER TABLE transactions ADD COLUMN token_name VARCHAR(20) NULL");
-            $dbh->exec("ALTER TABLE transactions ADD COLUMN token_contract VARCHAR(100) NULL");
-        } catch (\Throwable $e) {}
+		$this->ensureTokenAmountColumn();
+
+		// Ensure extra columns exist
+		try {
+			$dbh->exec("ALTER TABLE transactions ADD COLUMN transaction_type VARCHAR(20) DEFAULT 'app'");
+			$dbh->exec("ALTER TABLE transactions ADD COLUMN token_name VARCHAR(20) NULL");
+			$dbh->exec("ALTER TABLE transactions ADD COLUMN token_contract VARCHAR(100) NULL");
+		} catch (\Throwable $e) {
+		}
 
 		//Record Transaction
 		$sql = "INSERT INTO transactions (sId, transref, servicename, servicedesc, amount, status, oldbal, newbal, txhash, targetaddress, senderaddress, token_amount, date, transaction_type, token_name, token_contract) 
         VALUES (:user, :ref, :sn, :sd, :a, :s, :ob, :nb, :txh, :taddy, :uaddy, :token_amount, :d, :ttype, :tname, :tcon)";
 		$query = $dbh->prepare($sql);
 		$query->execute([
-            ':user' => $userid,
-            ':ref' => $ref,
-            ':sn' => $servicename,
-            ':sd' => $servicedesc,
-            ':a' => $amountopay,
-            ':s' => $status,
-            ':ob' => $oldbalance,
-            ':nb' => $newbalance,
-            ':txh' => $tx_hash,
-            ':taddy' => $target_address,
-            ':uaddy' => $user_address,
-            ':token_amount' => $nanoamount,
-            ':d' => $date,
-            ':ttype' => $transaction_type,
-            ':tname' => $token_name,
-            ':tcon' => $token_contract
-        ]);
+			':user' => $userid,
+			':ref' => $ref,
+			':sn' => $servicename,
+			':sd' => $servicedesc,
+			':a' => $amountopay,
+			':s' => $status,
+			':ob' => $oldbalance,
+			':nb' => $newbalance,
+			':txh' => $tx_hash,
+			':taddy' => $target_address,
+			':uaddy' => $user_address,
+			':token_amount' => $nanoamount,
+			':d' => $date,
+			':ttype' => $transaction_type,
+			':tname' => $token_name,
+			':tcon' => $token_contract
+		]);
 
 		$lastInsertId = $dbh->lastInsertId();
 		if ($lastInsertId) {
@@ -1631,7 +1664,8 @@ class SubscriberModel extends Model
 		}
 	}
 
-    public function recordrefundchainTransaction($userid, $servicename, $servicedesc, $amount, $ref, $targetaddress, $txhash, $senderaddress, $tokenamount, $status, $transaction_type = 'app', $token_name = '', $token_contract = '') {
-        return $this->recordchainTransaction($userid, $servicename, $servicedesc, $amount, $ref, $targetaddress, $txhash, $senderaddress, $tokenamount, $status, $transaction_type, $token_name, $token_contract);
-    }
+	public function recordrefundchainTransaction($userid, $servicename, $servicedesc, $amount, $ref, $targetaddress, $txhash, $senderaddress, $tokenamount, $status, $transaction_type = 'app', $token_name = '', $token_contract = '')
+	{
+		return $this->recordchainTransaction($userid, $servicename, $servicedesc, $amount, $ref, $targetaddress, $txhash, $senderaddress, $tokenamount, $status, $transaction_type, $token_name, $token_contract);
+	}
 }

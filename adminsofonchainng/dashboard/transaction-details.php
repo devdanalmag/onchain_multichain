@@ -17,6 +17,9 @@
                         <b>Service:</b><?php echo $data->servicename; ?>
                     </li>
                     <li class="list-group-item">
+                        <b>Blockchain:</b> <?php echo $data->blockchain_name ?? 'N/A'; ?>
+                    </li>
+                    <li class="list-group-item">
                         <b>Description:</b> <?php echo $data->servicedesc; ?>
                     </li>
                     <li class="list-group-item">
@@ -31,13 +34,15 @@
                         <?php echo $data->txhash; ?>
                     </li>
                     <li class="list-group-item">
-                        <b>Transaction Type:</b> <?php echo isset($data->transaction_type)? strtoupper($data->transaction_type):'APP'; ?>
+                        <b>Transaction Type:</b>
+                        <?php echo isset($data->transaction_type) ? strtoupper($data->transaction_type) : 'APP'; ?>
                     </li>
                     <li class="list-group-item">
-                        <b>Token:</b> <?php echo isset($data->token_name)? $data->token_name:''; ?>
+                        <b>Token:</b> <?php echo isset($data->token_name) ? $data->token_name : ''; ?>
                     </li>
                     <li class="list-group-item">
-                        <b>Contract:</b> <span style="font-family: monospace; font-size: 12px;"><?php echo isset($data->token_contract)? $data->token_contract:''; ?></span>
+                        <b>Contract:</b> <span
+                            style="font-family: monospace; font-size: 12px;"><?php echo isset($data->token_contract) ? $data->token_contract : ''; ?></span>
                     </li>
                     <li class="list-group-item">
                         <b>Sender Wallet:</b>
@@ -80,7 +85,8 @@
                                 </select>
                                 <input type="hidden" name="trans" value="<?php echo base64_encode($_GET['ref']); ?>" />
                                 <input type="hidden" name="user" value="<?php echo base64_encode($data->sId); ?>" />
-                                <input type="hidden" name="amount" value="<?php echo base64_encode($data->amount); ?>" />
+                                <input type="hidden" name="amount"
+                                    value="<?php echo base64_encode($data->amount); ?>" />
                                 <button name="update-trans-status" class="btn btn-danger mt-2">Update Status</button>
                             </form>
 
@@ -90,7 +96,8 @@
                 </ul>
 
                 <br />
-                <a href="transactions" class="btn btn-success btn-block"><i class="fa fa-home" aria-hidden="true"></i> Back To Transactions</a>
+                <a href="transactions" class="btn btn-success btn-block"><i class="fa fa-home" aria-hidden="true"></i>
+                    Back To Transactions</a>
             </div>
             <!-- /.box-body -->
         </div>

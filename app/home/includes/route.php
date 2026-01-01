@@ -1,11 +1,11 @@
 <?php
 
 /*
-        * Route For Subscribers
-        * Login
-        * Posts
-        * Forms
-    */
+ * Route For Subscribers
+ * Login
+ * Posts
+ * Forms
+ */
 
 session_start();
 //ini_set("display_errors",1); 
@@ -97,6 +97,11 @@ else:
     } else {
         global $controller;
         $controller = new Subscriber;
+        // The following lines are from the user's instruction, but appear to be misplaced
+        // as $this is not defined in this global scope and variables like $target_address
+        // are not initialized here. This code would typically reside within a class method.
+        // $blockchain_id = $_POST['blockchain_id'] ?? null;
+        // $checkveryfy  = $this->verifyonchainTransaction($target_address, $tx_hash, $tx_lt, $user_address, $nanoamount, $blockchain_id);
         $transRef = $controller->generateTransactionRef();
     }
 
@@ -148,19 +153,23 @@ else:
 
     // Check Native Price (AssetChain/EVM)
     if (isset($_GET["check-ton-price"]) || isset($_GET["check-native-price"])) {
-        echo $response = $controller->checkNativePrice();
+        $blockchain_id = $_GET['blockchain_id'] ?? null;
+        echo $controller->checkNativePrice($blockchain_id);
         exit();
     }
 
     // Get Native Balance in Wallet 
     if (isset($_GET["check-ton-balance"]) || isset($_GET["check-native-balance"])) {
-        if (isset($_GET["address"])) {
-            $address = $_GET["address"];
-            $response = $controller->checkNativeBalance($address);
-            echo $response;
-        } else {
-            echo json_encode(["error" => "No address provided"]);
-        }
+        $address = $_GET['address'] ?? '';
+        $blockchain_id = $_GET['blockchain_id'] ?? null;
+        echo $controller->checkNativeBalance($address, $blockchain_id);
+        exit();
+    }
+
+    // Get Blockchain Configuration
+    if (isset($_GET["get-blockchain-config"])) {
+        $blockchain_id = $_GET['blockchain_id'];
+        echo $controller->getBlockchainConfig($blockchain_id);
         exit();
     }
 
@@ -436,7 +445,8 @@ function getDataIfAny($page)
                 $data[1] = $controller->validateIUCNumber();
                 $data[9] = $controller->getSiteSettings();
                 return $data;
-            else: header("Location: cable-tv");
+            else:
+                header("Location: cable-tv");
             endif;
             break;
 
@@ -456,7 +466,8 @@ function getDataIfAny($page)
                 $data[1] = $controller->validateMeterNumber();
                 $data[9] = $controller->getSiteSettings();
                 return $data;
-            else: header("Location: electricity");
+            else:
+                header("Location: electricity");
             endif;
             break;
 

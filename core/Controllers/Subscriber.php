@@ -3,8 +3,8 @@
 class Subscriber extends Controller
 {
 
-	public  $userId;
-	public  $loginAccount;
+	public $userId;
+	public $loginAccount;
 
 	public $pageCount = 1;
 	public $nextPage = 2;
@@ -121,18 +121,24 @@ class Subscriber extends Controller
 		return $check;
 	}
 	// Check Native Balance (AssetChain/EVM) with TON Fallback
-	public function checkNativeBalance($address)
+	public function checkNativeBalance($address, $blockchain_id = null)
 	{
+		$config = null;
+		if ($blockchain_id) {
+			$config = (array) $this->model->getBlockchainById($blockchain_id);
+		}
+
 		// EVM Address Check (Asset Chain)
 		if (preg_match('/^0x[a-fA-F0-9]{40}$/', $address)) {
-			$response = $this->callJsonRpc('eth_getBalance', [$address, 'latest']);
-			
+			$response = $this->callJsonRpc('eth_getBalance', [$address, 'latest'], $config);
+
 			if (isset($response['result'])) {
 				$wei = hexdec($response['result']);
 				$balance = $wei / 1e18; // Convert Wei to Ether
 				return json_encode([
 					"status" => "success",
 					"balance" => $balance,
+					"target_address" => $config['site_address'] ?? null,
 					"msg" => "Balance retrieved successfully"
 				]);
 			} else {
@@ -154,12 +160,19 @@ class Subscriber extends Controller
 	}
 
 	// Check Native Price (AssetChain/EVM)
-	public function checkNativePrice()
+	public function checkNativePrice($blockchain_id = null)
 	{
 		$curl = curl_init();
 		$settings = $this->model->getSiteSettings();
-		$coinId = $settings->native_coin_id ?? 'ethereum'; // Default to ethereum if not set
-		
+		$coinId = $settings->native_coin_id ?? 'ethereum'; // Default global fallback
+
+		if ($blockchain_id) {
+			$chain = $this->model->getBlockchainById($blockchain_id);
+			if ($chain && !empty($chain->chain_key)) {
+				$coinId = $chain->chain_key; // Using chain_key as CoinGecko ID
+			}
+		}
+
 		curl_setopt_array($curl, [
 			CURLOPT_URL => "https://api.coingecko.com/api/v3/simple/price?ids={$coinId}&vs_currencies=ngn",
 			CURLOPT_RETURNTRANSFER => true,
@@ -186,26 +199,31 @@ class Subscriber extends Controller
 		}
 	}
 
-	public function verifyonchainTransaction($target_address, $tx_hash, $tx_lt, $user_address, $nanoamount)
+	public function verifyonchainTransaction($target_address, $tx_hash, $tx_lt, $user_address, $nanoamount, $blockchain_id = null)
 	{
+		$config = null;
+		if ($blockchain_id) {
+			$config = (array) $this->model->getBlockchainById($blockchain_id);
+		}
+
 		// EVM Transaction Check (Asset Chain)
 		if (preg_match('/^0x[a-fA-F0-9]{64}$/', $tx_hash)) {
-			$response = $this->callJsonRpc('eth_getTransactionByHash', [$tx_hash]);
-			
+			$response = $this->callJsonRpc('eth_getTransactionByHash', [$tx_hash], $config);
+
 			if (isset($response['result'])) {
 				$tx = $response['result'];
-				
+
 				// Normalize for comparison
 				$txTo = strtolower($tx['to']);
 				$txFrom = strtolower($tx['from']);
 				$target = strtolower($target_address);
 				$user = strtolower($user_address);
-				$txValue = (string)hexdec($tx['value']); // Wei
-				$expectedAmount = (string)$nanoamount;
+				$txValue = (string) hexdec($tx['value']); // Wei
+				$expectedAmount = (string) $nanoamount;
 
 				// Basic Verification
 				if ($txTo === $target && $txFrom === $user && $txValue === $expectedAmount) {
-					 return [
+					return [
 						"status" => "success",
 						"msg" => "Transaction verified successfully.",
 						"code" => "verified",
@@ -237,6 +255,12 @@ class Subscriber extends Controller
 			"code" => "invalid_input"
 		];
 	}
+	public function getBlockchainConfig($blockchain_id)
+	{
+		$config = $this->model->getBlockchainById($blockchain_id);
+		return json_encode($config);
+	}
+
 	//Disable User Pin
 	public function disableUserPin()
 	{
@@ -296,12 +320,12 @@ class Subscriber extends Controller
 		return $check;
 	}
 
-public function getCoins()
+	public function getCoins()
 	{
 		$data = $this->model->getCoins();
 		return $data;
 	}
-	
+
 	public function getMerchants()
 	{
 		$check = $this->model->getMerchants();
@@ -353,15 +377,15 @@ public function getCoins()
 		$tx_lt = filter_var($_POST['tx_lt'], FILTER_SANITIZE_NUMBER_INT);
 		$user_address = htmlspecialchars(strip_tags($_POST['user_address'] ?? ''));
 		$nanoamount = filter_var($_POST['nanoamount'], FILTER_SANITIZE_NUMBER_INT);
-		
+
 		// Handle EVM Address
 		$fuser_address = $this->normalizeEvmAddress($user_address);
 		$ftarget_address = $this->normalizeEvmAddress($target_address);
 		$tonamount = $nanoamount / 1e18; // EVM uses 18 decimals
 
 		// Verify transaction pin
-		
-		
+
+
 		$check = $this->model->verifyTransactionPin($this->userId, $transkey);
 		if (!is_object($check)) {
 			$errorMsg = "Incorrect Pin, Please Try Again.";
@@ -416,7 +440,8 @@ public function getCoins()
 			} else {
 				$errorMsg = "Network error: " . $error;
 			}
-			$checkveryfy  = $this->verifyonchainTransaction($target_address, $tx_hash, $tx_lt, $user_address, $nanoamount);
+			$blockchain_id = $_POST['blockchain_id'] ?? null;
+			$checkveryfy = $this->verifyonchainTransaction($target_address, $tx_hash, $tx_lt, $user_address, $nanoamount, $blockchain_id);
 			$userid = $this->userId;
 			$servicename = "Airtime";
 			$servicedesc = "Airtime Purchase for $phone on $network";
@@ -429,19 +454,19 @@ public function getCoins()
 				$token_contract = $_POST['token_contract'] ?? null;
 				$token_symbol = $_POST['token_symbol'] ?? null;
 				$token_decimals = $_POST['token_decimals'] ?? 18;
-				$checkrefund = $this->model->refundTransaction($transref,  $fuser_address, $tonamount, $token_contract, $token_symbol, $token_decimals);
+				$checkrefund = $this->model->refundTransaction($transref, $fuser_address, $tonamount, $token_contract, $token_symbol, $token_decimals);
 				if ($checkrefund['status'] == "fail") {
 					$errorMsg .= " Refund failed: " . $checkrefund['msg'] ?? "Unknown error";
 					$refund_hash = $checkrefund["hash"] ?? "N/A";
 					$servicedesc = "Refund For {$transref} Transactions Failed Due To: " . $checkrefund['msg'] ?? "Unknown error";
 					$refundref = crc32($transref);
-					$this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00",  $ftarget_address, $refund_hash, $fuser_address, $tonamount, "1");
+					$this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00", $ftarget_address, $refund_hash, $fuser_address, $tonamount, "1");
 				} else {
 					$errorMsg .= " Refund successful.";
 					$refund_hash = $checkrefund["hash"] ?? "N/A";
 					$servicedesc = "Refund For {$transref} Transactions";
 					$refundref = crc32($transref);
-					$this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00",  $ftarget_address, $refund_hash, $fuser_address, $tonamount, "9");
+					$this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00", $ftarget_address, $refund_hash, $fuser_address, $tonamount, "9");
 				}
 			}
 			// Record the transaction in the database
@@ -453,7 +478,8 @@ public function getCoins()
 		$result = json_decode($response);
 		if (json_last_error() !== JSON_ERROR_NONE) {
 			$errorMsg = "Invalid response from server";
-			$checkveryfy  = $this->verifyonchainTransaction($target_address, $tx_hash, $tx_lt, $user_address, $nanoamount);
+			$blockchain_id = $_POST['blockchain_id'] ?? null;
+			$checkveryfy = $this->verifyonchainTransaction($target_address, $tx_hash, $tx_lt, $user_address, $nanoamount, $blockchain_id);
 			$userid = $this->userId;
 			$servicename = "Airtime";
 			$servicedesc = "Airtime Purchase for $phone on $network";
@@ -466,19 +492,19 @@ public function getCoins()
 				$token_contract = $_POST['token_contract'] ?? null;
 				$token_symbol = $_POST['token_symbol'] ?? null;
 				$token_decimals = $_POST['token_decimals'] ?? 18;
-				$checkrefund = $this->model->refundTransaction($transref,  $fuser_address, $tonamount, $token_contract, $token_symbol, $token_decimals);
+				$checkrefund = $this->model->refundTransaction($transref, $fuser_address, $tonamount, $token_contract, $token_symbol, $token_decimals);
 				if ($checkrefund['status'] == "fail") {
 					$errorMsg .= " Refund failed: " . $checkrefund['msg'] ?? "Unknown error";
 					$refund_hash = $checkrefund["hash"] ?? "N/A";
 					$servicedesc = "Refund For {$transref} Transactions Failed Due To: " . $checkrefund['msg'] ?? "Unknown error";
 					$refundref = crc32($transref);
-					$this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00",  $ftarget_address, $refund_hash, $fuser_address, $tonamount, "1");
+					$this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00", $ftarget_address, $refund_hash, $fuser_address, $tonamount, "1");
 				} else {
 					$errorMsg .= " Refund successful.";
 					$refund_hash = $checkrefund["hash"] ?? "N/A";
 					$servicedesc = "Refund For {$transref} Transactions";
 					$refundref = crc32($transref);
-					$this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00",  $ftarget_address, $refund_hash, $fuser_address, $tonamount, "9");
+					$this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00", $ftarget_address, $refund_hash, $fuser_address, $tonamount, "9");
 				}
 			}
 			$this->logError($errorMsg . " - Response: " . $response);
@@ -511,7 +537,8 @@ public function getCoins()
 		file_put_contents($logFile, $logMessage, FILE_APPEND | LOCK_EX);
 	}
 	// Helper to get Asset Chain Config
-	private function getAssetChainConfig() {
+	private function getAssetChainConfig()
+	{
 		$path = __DIR__ . '/../../config/assetchain.json';
 		if (file_exists($path)) {
 			return json_decode(file_get_contents($path), true);
@@ -523,10 +550,14 @@ public function getCoins()
 	}
 
 	// Helper for JSON-RPC
-	private function callJsonRpc($method, $params = []) {
-		$config = $this->getAssetChainConfig();
-		$url = $config['rpc_url'];
-		
+	private function callJsonRpc($method, $params = [], $config = null)
+	{
+		if (!$config) {
+			$config = $this->getAssetChainConfig();
+		}
+
+		$url = $config['rpc_url'] ?? 'https://mainnet-rpc.assetchain.org/';
+
 		$data = [
 			'jsonrpc' => '2.0',
 			'method' => $method,
@@ -539,10 +570,10 @@ public function getCoins()
 		curl_setopt($ch, CURLOPT_POST, true);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
 		curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-		
+
 		$response = curl_exec($ch);
 		curl_close($ch);
-		
+
 		return json_decode($response, true);
 	}
 	//----------------------------------------------------------------------------------------------------------------
@@ -766,184 +797,186 @@ public function getCoins()
 	// 		return $this->createPopMessage("Error!!", "Incorrect Pin, Please Try Again.", "red");
 	// 	}
 	// }
-public function purchaseData()
-{
-    // Validate required fields
-    $requiredFields = [
-        'network',
-        'phone',
-        'transkey',
-        'transref',
-        'dataplan',
-        'target_address',
-        'tx_hash',
-        'tx_lt',
-        'user_address',
-        'nanoamount'
-    ];
+	public function purchaseData()
+	{
+		// Validate required fields
+		$requiredFields = [
+			'network',
+			'phone',
+			'transkey',
+			'transref',
+			'dataplan',
+			'target_address',
+			'tx_hash',
+			'tx_lt',
+			'user_address',
+			'nanoamount'
+		];
 
-    foreach ($requiredFields as $field) {
-        if (!isset($_POST[$field]) || empty($_POST[$field])) {
-            $errorMsg = "Missing required field: $field";
-            $this->logError($errorMsg);
-            return $this->createPopMessage("Error!!", $errorMsg, "red");
-        }
-    }
+		foreach ($requiredFields as $field) {
+			if (!isset($_POST[$field]) || empty($_POST[$field])) {
+				$errorMsg = "Missing required field: $field";
+				$this->logError($errorMsg);
+				return $this->createPopMessage("Error!!", $errorMsg, "red");
+			}
+		}
 
-    // Sanitize input
-    $transkey = htmlspecialchars(strip_tags($_POST['transkey'] ?? ''));
-    $network = htmlspecialchars(strip_tags($_POST['network'] ?? ''));
-    $phone = filter_var($_POST['phone'] ?? '', FILTER_SANITIZE_NUMBER_INT);
-    $transref = htmlspecialchars(strip_tags($_POST['transref'] ?? ''));
-    $dataplan = htmlspecialchars(strip_tags($_POST['dataplan'] ?? ''));
-    $target_address = htmlspecialchars(strip_tags($_POST['target_address'] ?? ''));
-    $tx_hash = htmlspecialchars(strip_tags($_POST['tx_hash'] ?? ''));
-    $tx_lt = filter_var($_POST['tx_lt'], FILTER_SANITIZE_NUMBER_INT);
-    $user_address = htmlspecialchars(strip_tags($_POST['user_address'] ?? ''));
-    $nanoamount = filter_var($_POST['nanoamount'], FILTER_SANITIZE_NUMBER_INT);
-    
-    // EVM addresses are used directly
-    $fuser_address = $user_address;
-    $ftarget_address = $target_address;
+		// Sanitize input
+		$transkey = htmlspecialchars(strip_tags($_POST['transkey'] ?? ''));
+		$network = htmlspecialchars(strip_tags($_POST['network'] ?? ''));
+		$phone = filter_var($_POST['phone'] ?? '', FILTER_SANITIZE_NUMBER_INT);
+		$transref = htmlspecialchars(strip_tags($_POST['transref'] ?? ''));
+		$dataplan = htmlspecialchars(strip_tags($_POST['dataplan'] ?? ''));
+		$target_address = htmlspecialchars(strip_tags($_POST['target_address'] ?? ''));
+		$tx_hash = htmlspecialchars(strip_tags($_POST['tx_hash'] ?? ''));
+		$tx_lt = filter_var($_POST['tx_lt'], FILTER_SANITIZE_NUMBER_INT);
+		$user_address = htmlspecialchars(strip_tags($_POST['user_address'] ?? ''));
+		$nanoamount = filter_var($_POST['nanoamount'], FILTER_SANITIZE_NUMBER_INT);
 
-    // Verify transaction pin
-    $check = $this->model->verifyTransactionPin($this->userId, $transkey);
-    if (!is_object($check)) {
-        $errorMsg = "Incorrect Pin, Please Try Again.";
-        $this->logError($errorMsg);
-        return $this->createPopMessage("Error!!", $errorMsg, "red");
-    }
+		// EVM addresses are used directly
+		$fuser_address = $user_address;
+		$ftarget_address = $target_address;
 
-    // Handle ported number
-    $ported_number = isset($_POST["ported_number"]) && $_POST["ported_number"] == "on" ? "true" : "false";
+		// Verify transaction pin
+		$check = $this->model->verifyTransactionPin($this->userId, $transkey);
+		if (!is_object($check)) {
+			$errorMsg = "Incorrect Pin, Please Try Again.";
+			$this->logError($errorMsg);
+			return $this->createPopMessage("Error!!", $errorMsg, "red");
+		}
 
-    // Prepare API request
-    $postData = [
-        "network" => $network,
-        "phone" => $phone,
-        "ported_number" => $ported_number,
-        "ref" => $transref,
-        "data_plan" => $dataplan,
-        "target_address" => $target_address,
-        "tx_hash" => $tx_hash,
-        "tx_lt" => $tx_lt,
-        "user_address" => $user_address,
-        "nanoamount" => $nanoamount
-    ];
+		// Handle ported number
+		$ported_number = isset($_POST["ported_number"]) && $_POST["ported_number"] == "on" ? "true" : "false";
 
-    $curl = curl_init();
-    curl_setopt_array($curl, [
-        CURLOPT_URL => $this->siteurl . "/api/data/",
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 60,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => json_encode($postData),
-        CURLOPT_HTTPHEADER => [
-            "Content-Type: application/json",
-            "Token: Token $check->sApiKey"
-        ],
-    ]);
+		// Prepare API request
+		$postData = [
+			"network" => $network,
+			"phone" => $phone,
+			"ported_number" => $ported_number,
+			"ref" => $transref,
+			"data_plan" => $dataplan,
+			"target_address" => $target_address,
+			"tx_hash" => $tx_hash,
+			"tx_lt" => $tx_lt,
+			"user_address" => $user_address,
+			"nanoamount" => $nanoamount
+		];
 
-    $response = curl_exec($curl);
-    $error = curl_error($curl);
-    $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-    curl_close($curl);
-    $tonamount = $nanoamount / 1e9;
-    $refund_hash = "";
+		$curl = curl_init();
+		curl_setopt_array($curl, [
+			CURLOPT_URL => $this->siteurl . "/api/data/",
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_ENCODING => '',
+			CURLOPT_MAXREDIRS => 10,
+			CURLOPT_TIMEOUT => 60,
+			CURLOPT_FOLLOWLOCATION => true,
+			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+			CURLOPT_CUSTOMREQUEST => 'POST',
+			CURLOPT_POSTFIELDS => json_encode($postData),
+			CURLOPT_HTTPHEADER => [
+				"Content-Type: application/json",
+				"Token: Token $check->sApiKey"
+			],
+		]);
 
-    if ($error) {
-        if ($httpCode >= 500) {
-            $errorMsg = "Server error: " . $error;
-        } else {
-            $errorMsg = "Network error: " . $error;
-        }
-        $checkveryfy = $this->verifyonchainTransaction($target_address, $tx_hash, $tx_lt, $user_address, $nanoamount);
-            $userid = $this->userId;
-            $servicename = "Data";
-            $servicedesc = "Data Purchase for $phone on $network (Plan: $dataplan)";
-            $amountopay = $dataplan; // Using data plan as amount
-            $this->model->recordchainTransaction($userid, $servicename, $servicedesc, $transref, $amountopay, $ftarget_address, $tx_hash, $fuser_address, $tonamount, "1");
-            
-            if ($checkveryfy['status'] == "fail") {
-                $errorMsg .= " and Transaction verification failed: " . $checkveryfy['msg'] ?? "Unknown error";
-            } else {
-                $errorMsg .= " and Transaction verification successful.";
-                // Assuming CNGN for now if not specified in POST, or we could add token_contract to POST
-                $token_contract = $_POST['token_contract'] ?? null;
-                $token_symbol = $_POST['token_symbol'] ?? null; 
-                $token_decimals = $_POST['token_decimals'] ?? 18;
+		$response = curl_exec($curl);
+		$error = curl_error($curl);
+		$httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+		curl_close($curl);
+		$tonamount = $nanoamount / 1e9;
+		$refund_hash = "";
 
-                $checkrefund = $this->model->refundTransaction($transref, $fuser_address, $tonamount, $token_contract, $token_symbol, $token_decimals);
-                if ($checkrefund['status'] == "fail") {
-                    $errorMsg .= " Refund failed: " . $checkrefund['msg'] ?? "Unknown error";
-                    $refund_hash = $checkrefund["hash"] ?? "N/A";
-                    $servicedesc = "Refund For {$transref} Transactions Failed Due To: " . $checkrefund['msg'] ?? "Unknown error";
-                    $refundref = crc32($transref);
-                    $this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00", $ftarget_address, $refund_hash, $fuser_address, $tonamount, "1");
-                } else {
-                    $errorMsg .= " Refund successful.";
-                    $refund_hash = $checkrefund["hash"] ?? "N/A";
-                    $servicedesc = "Refund For {$transref} Transactions";
-                    $refundref = crc32($transref);
-                    $this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00", $ftarget_address, $refund_hash, $fuser_address, $tonamount, "9");
-                }
-            }
-        $this->logError($errorMsg);
-        return $this->createPopMessage("Error!!", $errorMsg, "red");
-    }
+		if ($error) {
+			if ($httpCode >= 500) {
+				$errorMsg = "Server error: " . $error;
+			} else {
+				$errorMsg = "Network error: " . $error;
+			}
+			$blockchain_id = $_POST['blockchain_id'] ?? null;
+			$checkveryfy = $this->verifyonchainTransaction($target_address, $tx_hash, $tx_lt, $user_address, $nanoamount, $blockchain_id);
+			$userid = $this->userId;
+			$servicename = "Data";
+			$servicedesc = "Data Purchase for $phone on $network (Plan: $dataplan)";
+			$amountopay = $dataplan; // Using data plan as amount
+			$this->model->recordchainTransaction($userid, $servicename, $servicedesc, $transref, $amountopay, $ftarget_address, $tx_hash, $fuser_address, $tonamount, "1");
 
-    $result = json_decode($response);
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        $errorMsg = "Invalid response from server";
-            $checkveryfy = $this->verifyonchainTransaction($target_address, $tx_hash, $tx_lt, $user_address, $nanoamount);
-            $userid = $this->userId;
-            $servicename = "Data";
-            $servicedesc = "Data Purchase for $phone on $network (Plan: $dataplan)";
-            $amountopay = $dataplan; // Using data plan as amount
-            $this->model->recordchainTransaction($userid, $servicename, $servicedesc, $transref, $amountopay, $ftarget_address, $tx_hash, $fuser_address, $tonamount, "1");
-            
-            if ($checkveryfy['status'] == "fail") {
-                $errorMsg .= " and Transaction verification failed: " . $checkveryfy['msg'] ?? "Unknown error";
-            } else {
-                $errorMsg .= " and Transaction verification successful.";
-                
-                // Assuming CNGN for now if not specified in POST, or we could add token_contract to POST
-                $token_contract = $_POST['token_contract'] ?? null;
-                $token_symbol = $_POST['token_symbol'] ?? null; 
-                $token_decimals = $_POST['token_decimals'] ?? 18;
+			if ($checkveryfy['status'] == "fail") {
+				$errorMsg .= " and Transaction verification failed: " . $checkveryfy['msg'] ?? "Unknown error";
+			} else {
+				$errorMsg .= " and Transaction verification successful.";
+				// Assuming CNGN for now if not specified in POST, or we could add token_contract to POST
+				$token_contract = $_POST['token_contract'] ?? null;
+				$token_symbol = $_POST['token_symbol'] ?? null;
+				$token_decimals = $_POST['token_decimals'] ?? 18;
 
-                $checkrefund = $this->model->refundTransaction($transref, $fuser_address, $tonamount, $token_contract, $token_symbol, $token_decimals);
-                if ($checkrefund['status'] == "fail") {
-                    $errorMsg .= " Refund failed: " . $checkrefund['msg'] ?? "Unknown error";
-                    $refund_hash = $checkrefund["hash"] ?? "N/A";
-                    $servicedesc = "Refund For {$transref} Transactions Failed Due To: " . $checkrefund['msg'] ?? "Unknown error";
-                    $refundref = crc32($transref);
-                    $this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00", $ftarget_address, $refund_hash, $fuser_address, $tonamount, "1");
-                } else {
-                    $errorMsg .= " Refund successful.";
-                    $refund_hash = $checkrefund["hash"] ?? "N/A";
-                    $servicedesc = "Refund For {$transref} Transactions";
-                    $refundref = crc32($transref);
-                    $this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00", $ftarget_address, $refund_hash, $fuser_address, $tonamount, "9");
-                }
-            }
-        $this->logError($errorMsg . " - Response: " . $response);
-        return $this->createPopMessage("Error!!", $errorMsg, "red");
-    }
+				$checkrefund = $this->model->refundTransaction($transref, $fuser_address, $tonamount, $token_contract, $token_symbol, $token_decimals);
+				if ($checkrefund['status'] == "fail") {
+					$errorMsg .= " Refund failed: " . $checkrefund['msg'] ?? "Unknown error";
+					$refund_hash = $checkrefund["hash"] ?? "N/A";
+					$servicedesc = "Refund For {$transref} Transactions Failed Due To: " . $checkrefund['msg'] ?? "Unknown error";
+					$refundref = crc32($transref);
+					$this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00", $ftarget_address, $refund_hash, $fuser_address, $tonamount, "1");
+				} else {
+					$errorMsg .= " Refund successful.";
+					$refund_hash = $checkrefund["hash"] ?? "N/A";
+					$servicedesc = "Refund For {$transref} Transactions";
+					$refundref = crc32($transref);
+					$this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00", $ftarget_address, $refund_hash, $fuser_address, $tonamount, "9");
+				}
+			}
+			$this->logError($errorMsg);
+			return $this->createPopMessage("Error!!", $errorMsg, "red");
+		}
 
-    if ($result->status == "success") {
-        header("Location: transaction-details?ref=" . urlencode($transref));
-        exit;
-    } else {
-        $errorMsg = isset($result->msg) ? $result->msg : "Unknown error occurred";
-        $this->logError("API Error: " . $errorMsg . " - Response: " . json_encode($result));
-        return $this->createPopMessage("Error!!", "Error: " . $errorMsg, "red");
-    }
-}
+		$result = json_decode($response);
+		if (json_last_error() !== JSON_ERROR_NONE) {
+			$errorMsg = "Invalid response from server";
+			$blockchain_id = $_POST['blockchain_id'] ?? null;
+			$checkveryfy = $this->verifyonchainTransaction($target_address, $tx_hash, $tx_lt, $user_address, $nanoamount, $blockchain_id);
+			$userid = $this->userId;
+			$servicename = "Data";
+			$servicedesc = "Data Purchase for $phone on $network (Plan: $dataplan)";
+			$amountopay = $dataplan; // Using data plan as amount
+			$this->model->recordchainTransaction($userid, $servicename, $servicedesc, $transref, $amountopay, $ftarget_address, $tx_hash, $fuser_address, $tonamount, "1");
+
+			if ($checkveryfy['status'] == "fail") {
+				$errorMsg .= " and Transaction verification failed: " . $checkveryfy['msg'] ?? "Unknown error";
+			} else {
+				$errorMsg .= " and Transaction verification successful.";
+
+				// Assuming CNGN for now if not specified in POST, or we could add token_contract to POST
+				$token_contract = $_POST['token_contract'] ?? null;
+				$token_symbol = $_POST['token_symbol'] ?? null;
+				$token_decimals = $_POST['token_decimals'] ?? 18;
+
+				$checkrefund = $this->model->refundTransaction($transref, $fuser_address, $tonamount, $token_contract, $token_symbol, $token_decimals);
+				if ($checkrefund['status'] == "fail") {
+					$errorMsg .= " Refund failed: " . $checkrefund['msg'] ?? "Unknown error";
+					$refund_hash = $checkrefund["hash"] ?? "N/A";
+					$servicedesc = "Refund For {$transref} Transactions Failed Due To: " . $checkrefund['msg'] ?? "Unknown error";
+					$refundref = crc32($transref);
+					$this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00", $ftarget_address, $refund_hash, $fuser_address, $tonamount, "1");
+				} else {
+					$errorMsg .= " Refund successful.";
+					$refund_hash = $checkrefund["hash"] ?? "N/A";
+					$servicedesc = "Refund For {$transref} Transactions";
+					$refundref = crc32($transref);
+					$this->model->recordchainTransaction($userid, "Refund", $servicedesc, $refundref, "0.00", $ftarget_address, $refund_hash, $fuser_address, $tonamount, "9");
+				}
+			}
+			$this->logError($errorMsg . " - Response: " . $response);
+			return $this->createPopMessage("Error!!", $errorMsg, "red");
+		}
+
+		if ($result->status == "success") {
+			header("Location: transaction-details?ref=" . urlencode($transref));
+			exit;
+		} else {
+			$errorMsg = isset($result->msg) ? $result->msg : "Unknown error occurred";
+			$this->logError("API Error: " . $errorMsg . " - Response: " . json_encode($result));
+			return $this->createPopMessage("Error!!", "Error: " . $errorMsg, "red");
+		}
+	}
 	//Purchase Data
 	public function purchaseDataPin()
 	{

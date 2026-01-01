@@ -1482,18 +1482,27 @@ class AdminModel extends Model
 			}
 		}
 
-        $sql = "SELECT a.sFname,a.sPhone,a.sEmail,a.sType,b.* FROM transactions b LEFT JOIN subscribers a ON a.sId=b.sId WHERE 1=1 ";
-        // Optional transaction_type filter
-        $txType = isset($_GET['tx_type']) ? strtolower(trim($_GET['tx_type'])) : '';
-        $allowedTxType = ($txType === 'dex' || $txType === 'app');
-        if ($allowedTxType) {
-            $sql .= " AND b.transaction_type = :tx_type ";
-        }
-        $sql .= $addon . " ORDER BY b.date DESC LIMIT $limit, 1000";
-        $query = $dbh->prepare($sql);
-        if (isset($_GET["search"])): if ($search <> ""): $query->bindValue(':search', '%' . $search . '%'); endif; endif;
-        if ($allowedTxType) { $query->bindValue(':tx_type', $txType); }
-        $query->execute();
+		$sql = "SELECT a.sFname,a.sPhone,a.sEmail,a.sType,bc.name as blockchain_name,b.* FROM transactions b 
+		LEFT JOIN subscribers a ON a.sId=b.sId 
+		LEFT JOIN blockchain bc ON bc.id=b.blockchain_id
+		WHERE 1=1 ";
+		// Optional transaction_type filter
+		$txType = isset($_GET['tx_type']) ? strtolower(trim($_GET['tx_type'])) : '';
+		$allowedTxType = ($txType === 'dex' || $txType === 'app');
+		if ($allowedTxType) {
+			$sql .= " AND b.transaction_type = :tx_type ";
+		}
+		$sql .= $addon . " ORDER BY b.date DESC LIMIT $limit, 1000";
+		$query = $dbh->prepare($sql);
+		if (isset($_GET["search"])):
+			if ($search <> ""):
+				$query->bindValue(':search', '%' . $search . '%');
+			endif;
+		endif;
+		if ($allowedTxType) {
+			$query->bindValue(':tx_type', $txType);
+		}
+		$query->execute();
 		$results = $query->fetchAll(PDO::FETCH_OBJ);
 		return $results;
 	}
@@ -1502,49 +1511,53 @@ class AdminModel extends Model
 	public function getTransactionsByAddress($address, $page = 0, $perPage = 10, $blockchain_id = null)
 	{
 		$dbh = self::connect();
-		$address = trim((string)$address);
-        // Detect if EVM (starts with 0x) or other (e.g. TON)
-        $isEvm = (stripos($address, '0x') === 0);
-        
-        // For EVM, we normalize to lowercase for case-insensitive matching.
-        // For TON (Base64), case matters, so we use exact match.
+		$address = trim((string) $address);
+		// Detect if EVM (starts with 0x) or other (e.g. TON)
+		$isEvm = (stripos($address, '0x') === 0);
+
+		// For EVM, we normalize to lowercase for case-insensitive matching.
+		// For TON (Base64), case matters, so we use exact match.
 		$addrParam = $isEvm ? strtolower($address) : $address;
 
-		$page = max(0, (int)$page);
-		$perPage = max(1, (int)$perPage);
+		$page = max(0, (int) $page);
+		$perPage = max(1, (int) $perPage);
 		$offset = $page * $perPage;
-        
-        $chainFilter = "";
-        if ($blockchain_id !== null) {
-            $chainFilter = " AND b.blockchain_id = :bid ";
-        }
+
+		$chainFilter = "";
+		if ($blockchain_id !== null) {
+			$chainFilter = " AND b.blockchain_id = :bid ";
+		}
 
 		// Count total
-        if ($isEvm) {
-		    $sqlC = "SELECT COUNT(*) AS cnt FROM transactions b WHERE (LOWER(b.senderaddress)=LOWER(:addr) OR LOWER(b.targetaddress)=LOWER(:addr))" . $chainFilter;
-        } else {
-            // Case-sensitive match for non-EVM
-            $sqlC = "SELECT COUNT(*) AS cnt FROM transactions b WHERE (b.senderaddress=:addr OR b.targetaddress=:addr)" . $chainFilter;
-        }
+		if ($isEvm) {
+			$sqlC = "SELECT COUNT(*) AS cnt FROM transactions b WHERE (LOWER(b.senderaddress)=LOWER(:addr) OR LOWER(b.targetaddress)=LOWER(:addr))" . $chainFilter;
+		} else {
+			// Case-sensitive match for non-EVM
+			$sqlC = "SELECT COUNT(*) AS cnt FROM transactions b WHERE (b.senderaddress=:addr OR b.targetaddress=:addr)" . $chainFilter;
+		}
 		$qC = $dbh->prepare($sqlC);
 		$qC->bindParam(':addr', $addrParam, PDO::PARAM_STR);
-        if ($blockchain_id !== null) { $qC->bindValue(':bid', $blockchain_id, PDO::PARAM_INT); }
+		if ($blockchain_id !== null) {
+			$qC->bindValue(':bid', $blockchain_id, PDO::PARAM_INT);
+		}
 		$qC->execute();
-		$total = (int)($qC->fetch(PDO::FETCH_ASSOC)['cnt'] ?? 0);
+		$total = (int) ($qC->fetch(PDO::FETCH_ASSOC)['cnt'] ?? 0);
 
 		// Fetch items
-        if ($isEvm) {
-		    $sql = "SELECT a.sEmail,a.sPhone,a.sType,b.* FROM transactions b LEFT JOIN subscribers a ON a.sId=b.sId WHERE (LOWER(b.senderaddress)=LOWER(:addr) OR LOWER(b.targetaddress)=LOWER(:addr)) " . $chainFilter . " ORDER BY b.date DESC LIMIT $offset, $perPage";
-        } else {
-            $sql = "SELECT a.sEmail,a.sPhone,a.sType,b.* FROM transactions b LEFT JOIN subscribers a ON a.sId=b.sId WHERE (b.senderaddress=:addr OR b.targetaddress=:addr) " . $chainFilter . " ORDER BY b.date DESC LIMIT $offset, $perPage";
-        }
+		if ($isEvm) {
+			$sql = "SELECT a.sEmail,a.sPhone,a.sType,b.* FROM transactions b LEFT JOIN subscribers a ON a.sId=b.sId WHERE (LOWER(b.senderaddress)=LOWER(:addr) OR LOWER(b.targetaddress)=LOWER(:addr)) " . $chainFilter . " ORDER BY b.date DESC LIMIT $offset, $perPage";
+		} else {
+			$sql = "SELECT a.sEmail,a.sPhone,a.sType,b.* FROM transactions b LEFT JOIN subscribers a ON a.sId=b.sId WHERE (b.senderaddress=:addr OR b.targetaddress=:addr) " . $chainFilter . " ORDER BY b.date DESC LIMIT $offset, $perPage";
+		}
 		$q = $dbh->prepare($sql);
 		$q->bindParam(':addr', $addrParam, PDO::PARAM_STR);
-        if ($blockchain_id !== null) { $q->bindValue(':bid', $blockchain_id, PDO::PARAM_INT); }
+		if ($blockchain_id !== null) {
+			$q->bindValue(':bid', $blockchain_id, PDO::PARAM_INT);
+		}
 		$q->execute();
 		$items = $q->fetchAll(PDO::FETCH_OBJ);
 
-		return [ 'total' => $total, 'page' => $page, 'perPage' => $perPage, 'items' => $items ];
+		return ['total' => $total, 'page' => $page, 'perPage' => $perPage, 'items' => $items];
 	}
 
 	// Tokens CRUD
@@ -1560,40 +1573,130 @@ class AdminModel extends Model
 	public function getAllTokens()
 	{
 		$dbh = self::connect();
-		$sql = "SELECT token_id, token_name, token_contract, token_decimals, is_active, created_at, updated_at FROM tokens ORDER BY token_name ASC";
+		$sql = "SELECT token_id, token_name, token_contract, token_decimals, chain_id, is_active, created_at, updated_at FROM tokens ORDER BY token_name ASC";
 		$q = $dbh->prepare($sql);
 		$q->execute();
 		return $q->fetchAll(PDO::FETCH_OBJ);
 	}
 
-	public function upsertToken($tokenId, $name, $contract, $decimals, $active)
+	public function upsertToken($tokenId, $name, $contract, $decimals, $active, $chain_id = 1)
 	{
 		$dbh = self::connect();
-		$name = trim($name); $contract = strtolower(trim($contract)); $dec = (int)$decimals; $active = (int)$active;
-		if (!preg_match('/^0x[a-fA-F0-9]{40}$/', $contract)) { return ['status'=>'fail','msg'=>'Invalid contract address']; }
-		if ($dec <= 0 || $dec > 36) { return ['status'=>'fail','msg'=>'Invalid decimals']; }
+		$name = trim($name);
+		$contract = strtolower(trim($contract));
+		$dec = (int) $decimals;
+		$active = (int) $active;
+		$chain_id = (int) $chain_id;
+
+		if (!preg_match('/^0x[a-fA-F0-9]{40}$/', $contract) && $contract != 'native') {
+			return ['status' => 'fail', 'msg' => 'Invalid contract address'];
+		}
+		if ($dec < 0 || $dec > 36) {
+			return ['status' => 'fail', 'msg' => 'Invalid decimals'];
+		}
+
 		if ($tokenId) {
-			$sql = "UPDATE tokens SET token_name=:n, token_contract=:c, token_decimals=:d, is_active=:a WHERE token_id=:id";
+			$sql = "UPDATE tokens SET token_name=:n, token_contract=:c, token_decimals=:d, is_active=:a, chain_id=:ci WHERE token_id=:id";
 			$q = $dbh->prepare($sql);
 			$q->bindParam(':id', $tokenId, PDO::PARAM_INT);
 		} else {
-			$sql = "INSERT INTO tokens (token_name, token_contract, token_decimals, is_active) VALUES (:n,:c,:d,:a)";
+			$sql = "INSERT INTO tokens (token_name, token_contract, token_decimals, is_active, chain_id) VALUES (:n,:c,:d,:a,:ci)";
 			$q = $dbh->prepare($sql);
 		}
 		$q->bindParam(':n', $name, PDO::PARAM_STR);
 		$q->bindParam(':c', $contract, PDO::PARAM_STR);
 		$q->bindParam(':d', $dec, PDO::PARAM_INT);
 		$q->bindParam(':a', $active, PDO::PARAM_INT);
-		if ($q->execute()) { return ['status'=>'success']; }
-		return ['status'=>'fail','msg'=>'DB error'];
+		$q->bindParam(':ci', $chain_id, PDO::PARAM_INT);
+
+		if ($q->execute()) {
+			return ['status' => 'success'];
+		}
+		return ['status' => 'fail', 'msg' => 'DB error'];
 	}
 
+
+	// Blockchain CRUD
+	public function getAllBlockchains()
+	{
+		$dbh = self::connect();
+		$sql = "SELECT * FROM blockchain ORDER BY id ASC";
+		$q = $dbh->prepare($sql);
+		$q->execute();
+		return $q->fetchAll(PDO::FETCH_OBJ);
+	}
+
+	public function getBlockchainById($id)
+	{
+		$dbh = self::connect();
+		$sql = "SELECT * FROM blockchain WHERE id = :id LIMIT 1";
+		$q = $dbh->prepare($sql);
+		$q->bindParam(':id', $id, PDO::PARAM_INT);
+		$q->execute();
+		return $q->fetch(PDO::FETCH_OBJ);
+	}
+
+	public function upsertBlockchain($id, $chain_key, $name, $rpc_url, $explorer_url, $native_symbol, $chain_id, $chain_id_hex, $is_active)
+	{
+		$dbh = self::connect();
+		$name = trim($name);
+		$rpc_url = trim($rpc_url);
+		$explorer_url = trim($explorer_url);
+		$native_symbol = strtoupper(trim($native_symbol));
+		$is_active = (int) $is_active;
+
+		if ($id) {
+			$sql = "UPDATE blockchain SET chain_key=:ck, name=:n, rpc_url=:r, explorer_url=:e, native_symbol=:s, chain_id=:ci, chain_id_hex=:ch, is_active=:a WHERE id=:id";
+			$q = $dbh->prepare($sql);
+			$q->bindParam(':id', $id, PDO::PARAM_INT);
+		} else {
+			$sql = "INSERT INTO blockchain (chain_key, name, rpc_url, explorer_url, native_symbol, chain_id, chain_id_hex, is_active) VALUES (:ck,:n,:r,:e,:s,:ci,:ch,:a)";
+			$q = $dbh->prepare($sql);
+		}
+		$q->bindParam(':ck', $chain_key, PDO::PARAM_STR);
+		$q->bindParam(':n', $name, PDO::PARAM_STR);
+		$q->bindParam(':r', $rpc_url, PDO::PARAM_STR);
+		$q->bindParam(':e', $explorer_url, PDO::PARAM_STR);
+		$q->bindParam(':s', $native_symbol, PDO::PARAM_STR);
+		$q->bindParam(':ci', $chain_id, PDO::PARAM_INT);
+		$q->bindParam(':ch', $chain_id_hex, PDO::PARAM_STR);
+		$q->bindParam(':a', $is_active, PDO::PARAM_INT);
+
+		if ($q->execute()) {
+			return ['status' => 'success'];
+		}
+		return ['status' => 'fail', 'msg' => 'DB error'];
+	}
+
+	public function deleteBlockchain($id)
+	{
+		$dbh = self::connect();
+		$sql = "DELETE FROM blockchain WHERE id=:id";
+		$q = $dbh->prepare($sql);
+		$q->bindParam(':id', $id, PDO::PARAM_INT);
+		if ($q->execute()) {
+			return ['status' => 'success'];
+		}
+		return ['status' => 'fail', 'msg' => 'DB error'];
+	}
+
+	public function deleteToken($id)
+	{
+		$dbh = self::connect();
+		$sql = "DELETE FROM tokens WHERE token_id=:id";
+		$q = $dbh->prepare($sql);
+		$q->bindParam(':id', $id, PDO::PARAM_INT);
+		if ($q->execute()) {
+			return ['status' => 'success'];
+		}
+		return ['status' => 'fail', 'msg' => 'DB error'];
+	}
 
 	//Get Transaction Details
 	public function getTransactionDetails($ref)
 	{
 		$dbh = self::connect();
-        $sql = "SELECT a.sFname,a.sPhone,a.sEmail,a.sType,b.* FROM transactions b LEFT JOIN subscribers a ON a.sId=b.sId WHERE transref=:ref";
+		$sql = "SELECT a.sFname,a.sPhone,a.sEmail,a.sType,bc.name as blockchain_name,b.* FROM transactions b LEFT JOIN subscribers a ON a.sId=b.sId LEFT JOIN blockchain bc ON bc.id=b.blockchain_id WHERE transref=:ref";
 		$query = $dbh->prepare($sql);
 		$query->bindParam(':ref', $ref, PDO::PARAM_STR);
 		$query->execute();
@@ -1694,27 +1797,77 @@ class AdminModel extends Model
 	{
 		$dbh = self::connect();
 
-		//Filter All Service
-		$addon = " AND ((b.servicename='Cable TV' OR b.servicename='Data Pin') ";
-		$addon .= " OR (b.servicename='Airtime' OR b.servicename='Data') ";
-		$addon .= " OR (b.servicename='Electricity Bill' OR b.servicename='Exam Pin'))";
+		$addon = "";
 
 		//Get Specific Service
 		if ($service <> "All") {
-			if ($service == "Airtime") {
-				$addon = " AND b.servicename = 'Airtime' ";
-			}
-			if ($service == "Data") {
-				$addon = " AND b.servicename = 'Data' ";
-			}
+			$addon = " AND b.servicename = :service ";
 		}
 
 		//Get Transactions
-		$sql = "SELECT a.sType,b.* FROM subscribers a, transactions b WHERE a.sId=b.sId ";
-		$sql .= $addon . " AND (date BETWEEN '$datefrom' AND '$dateto') ORDER BY b.servicename DESC";
+		$sql = "SELECT a.sType, b.* FROM subscribers a, transactions b WHERE a.sId=b.sId ";
+		$sql .= $addon . " AND (b.date BETWEEN :df AND :dt) ORDER BY b.date DESC";
 		$query = $dbh->prepare($sql);
+		if ($service <> "All") {
+			$query->bindParam(':service', $service);
+		}
+		$query->bindParam(':df', $datefrom);
+		$query->bindParam(':dt', $dateto);
 		$query->execute();
 		$results = $query->fetchAll(PDO::FETCH_OBJ);
+		return $results;
+	}
+
+	public function getBlockchainBalances()
+	{
+		$blockchains = $this->getAllBlockchains();
+		$tokens = $this->getAllTokens();
+		$results = [];
+
+		$apiModel = new ApiModel();
+
+		foreach ($blockchains as $b) {
+			if (!$b->is_active)
+				continue;
+
+			$address = $b->refunding_address;
+			if (empty($address))
+				continue;
+
+			// Native Balance
+			$nativeBalance = "0";
+			$nativeRes = $apiModel->callJsonRpc('eth_getBalance', [$address, 'latest'], (array) $b);
+			if (isset($nativeRes['result'])) {
+				$nativeBalance = hexdec($nativeRes['result']) / 1e18; // Assuming 18 decimals for native
+			}
+
+			$chainTokens = [];
+			foreach ($tokens as $t) {
+				if ($t->chain_id == $b->id && $t->is_active && $t->token_contract != 'native') {
+					// Token Balance
+					$tokenBal = "0";
+					$data = '0x70a08231' . str_pad(substr($address, 2), 64, '0', STR_PAD_LEFT);
+					$tokenRes = $apiModel->callJsonRpc('eth_call', [['to' => $t->token_contract, 'data' => $data], 'latest'], (array) $b);
+					if (isset($tokenRes['result']) && $tokenRes['result'] != '0x') {
+						$tokenBal = hexdec($tokenRes['result']) / pow(10, $t->token_decimals);
+					}
+					$chainTokens[] = [
+						'name' => $t->token_name,
+						'balance' => $tokenBal,
+						'symbol' => $t->token_name // Fallback
+					];
+				}
+			}
+
+			$results[] = [
+				'chain_name' => $b->name,
+				'address' => $address,
+				'native_balance' => $nativeBalance,
+				'native_symbol' => $b->native_symbol,
+				'tokens' => $chainTokens
+			];
+		}
+
 		return $results;
 	}
 
@@ -1850,6 +2003,7 @@ class AdminModel extends Model
 
 		$data["alphaCount"] = $results14->alphaCount;
 
+		$data["blockchainBalances"] = $this->getBlockchainBalances();
 
 		return $data;
 	}

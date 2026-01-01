@@ -301,7 +301,7 @@ require_once("includes/custom.php");
           if (Scustom::checkpage($page) == 'notfound') {
             $reason = 'No Longer Available';
           }
-        ?>
+          ?>
           <div class="page-content header-clear-medium">
             <div class="card card-style">
               <div class="content">
@@ -311,8 +311,8 @@ require_once("includes/custom.php");
               </div>
             </div>
           </div><?php
-              }
-                ?>
+        }
+        ?>
         <!-- Page content ends here-->
       </div>
     </div>
@@ -324,7 +324,8 @@ require_once("includes/custom.php");
     <!-- Models -->
 
     <button id="continue-transaction-prompt-btn" data-menu="continue-transaction-prompt" class="d-none"></button>
-    <button id="continue-transaction-in-wallet-prompt-btn" data-menu="continue-transaction-in-wallet-prompt" class="d-none"></button>
+    <button id="continue-transaction-in-wallet-prompt-btn" data-menu="continue-transaction-in-wallet-prompt"
+      class="d-none"></button>
     <button id="p2p-prompt-btn" data-menu="p2p-prompt" class="d-none"></button>
 
     <!-- Verify transaction Prompt Model -->
@@ -336,8 +337,7 @@ require_once("includes/custom.php");
       <p class="boxed-text-xl" id="continue-transaction-prompt-msg"></p>
       <div class="row mb-0 me-3 ms-3">
         <div class="col-6">
-          <a href="#"
-            class="btn close-menu btn-full btn-m color-red-dark border-red-dark font-600 rounded-s">No</a>
+          <a href="#" class="btn close-menu btn-full btn-m color-red-dark border-red-dark font-600 rounded-s">No</a>
         </div>
         <div class="col-6">
           <?php if ($pinstatus == 0): ?>
@@ -352,8 +352,8 @@ require_once("includes/custom.php");
       </div>
     </div>
     <!-- P2P Prompt Model -->
-    <div id="p2p-prompt" class="menu menu-box-modal rounded-m" data-menu-height="300"
-      data-menu-width="350" style="overflow: auto;">
+    <div id="p2p-prompt" class="menu menu-box-modal rounded-m" data-menu-height="300" data-menu-width="350"
+      style="overflow: auto;">
       <h1 class="text-center mt-4"><i
           class="fa fa-3x fa-whatsapp scale-box color-green-dark shadow-xl rounded-circle"></i></h1>
       <h3 class="text-center mt-3 font-700"></h3>
@@ -378,8 +378,7 @@ require_once("includes/custom.php");
       data-menu-width="400" style="display: none;">
       <br>
       <h3 class="text-center mt-3 font-700" id="continue-transaction-in-wallet-prompt-text">Continue In Your Wallet</h3>
-      <h1 class="text-center mt-4"><i
-          class="fa fa-3x fa-spinner fa-spin" aria-hidden="true"></i></h1>
+      <h1 class="text-center mt-4"><i class="fa fa-3x fa-spinner fa-spin" aria-hidden="true"></i></h1>
       <a href="#" id="myautoclick"></a>
     </div>
 
@@ -398,8 +397,7 @@ require_once("includes/custom.php");
           <div class="col-12">
             <div class="input-style input-style-always-active has-borders mb-4">
               <label for="form1" class="color-highlight">Transaction Pin</label>
-              <input type="number" id="thetranspin" maxlength="4" class="form-control" placeholder="1234"
-                required>
+              <input type="number" id="thetranspin" maxlength="4" class="form-control" placeholder="1234" required>
             </div>
           </div>
         </div>
@@ -433,8 +431,7 @@ require_once("includes/custom.php");
             <?php if ($pinstatus == 0): ?>
               <div class="col-12">
                 <div class="input-style input-style-always-active has-borders mb-4">
-                  <input type="password" name="kpin" maxlength="4" class="form-control" placeholder="1234"
-                    required>
+                  <input type="password" name="kpin" maxlength="4" class="form-control" placeholder="1234" required>
                   <label for="form1" class="color-highlight">Transaction Pin</label>
                 </div>
               </div>
@@ -470,8 +467,7 @@ require_once("includes/custom.php");
           <div class="row mb-0">
             <div class="col-12">
               <div class="input-style input-style-always-active has-borders mb-4">
-                <input type="password" name="kpin" maxlength="4" class="form-control" placeholder="1234"
-                  required>
+                <input type="password" name="kpin" maxlength="4" class="form-control" placeholder="1234" required>
                 <label for="form1" class="color-highlight">Transaction Pin</label>
               </div>
             </div>
@@ -552,12 +548,11 @@ require_once("includes/custom.php");
 
   <?php include_once("includes/jsFiles.php"); ?>
   <?php include_once("includes/chainscript.php"); ?>
-  <script type="module" src="includes/tonconnect-js.php"></script>
 
   <!-- Now load the script -->
   <!-- Add html2canvas from CDN -->
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 </body>
 
